@@ -1,3 +1,4 @@
+
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,9 +9,10 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel';
-import { ArrowRight, Trophy, Users, Newspaper } from 'lucide-react';
+import { ArrowRight, Trophy, Users, Newspaper, Signal } from 'lucide-react';
 import Link from 'next/link';
 import RecommendationEngine from '@/components/ai/recommendation-engine';
+import { db } from '@/lib/firebase-admin';
 
 const tournaments = [
   {
@@ -68,6 +70,49 @@ const communityPosts = [
   },
 ];
 
+async function getLiveStream() {
+    try {
+        const streamSnapshot = await db.collection('streams').where('status', '==', 'Live').limit(1).get();
+        if (streamSnapshot.empty) {
+            return null;
+        }
+        return streamSnapshot.docs[0].data();
+    } catch (error) {
+        console.error("Error fetching live stream:", error);
+        return null;
+    }
+}
+
+async function LiveStreamSection() {
+    const liveStream = await getLiveStream();
+
+    if (!liveStream) {
+        return null; // Don't render the section if no one is live
+    }
+
+    return (
+        <section id="live" className="w-full bg-destructive/80 py-12 text-white">
+            <div className="container mx-auto text-center">
+                 <h2 className="text-4xl font-headline font-bold mb-2 flex items-center justify-center gap-3">
+                    <Signal className="animate-pulse" /> LIVE NOW
+                </h2>
+                <p className="mb-6 text-destructive-foreground">{liveStream.title}</p>
+                <div className="aspect-video max-w-4xl mx-auto rounded-lg overflow-hidden border-4 border-destructive-foreground shadow-2xl">
+                    <iframe
+                        width="100%"
+                        height="100%"
+                        src={liveStream.youtubeUrl}
+                        title={liveStream.title}
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                    ></iframe>
+                </div>
+            </div>
+        </section>
+    );
+}
+
 export default function Home() {
   return (
     <div className="flex flex-col items-center">
@@ -101,6 +146,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Live Stream Section */}
+      <LiveStreamSection />
 
       {/* Featured Tournaments Section */}
       <section id="tournaments" className="w-full max-w-7xl py-16 px-4">

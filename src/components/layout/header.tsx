@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -14,6 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 const navLinks = [
   { href: '/tournaments', label: 'Tournaments' },
   { href: '/leaderboards', label: 'Leaderboards' },
+  { href: '/streams', label: 'Streams' },
 ];
 
 export default function Header() {

@@ -117,7 +117,7 @@ export async function createTournament(formData: FormData) {
     }
 
     try {
-        const { id, ...dataToSave } = validatedFields.data; // zod adds this if not specified
+        const { ...dataToSave } = validatedFields.data;
         await db.collection('tournaments').add(dataToSave);
         revalidatePath('/tournaments');
         revalidatePath('/admin/tournaments');
@@ -161,6 +161,91 @@ export async function deleteTournament(id: string) {
         return { success: true, message: 'Tournament deleted successfully.' };
     } catch (error) {
         console.error('Error deleting tournament:', error);
+        return { success: false, message: 'An unexpected error occurred.' };
+    }
+}
+
+// Helper to extract YouTube video ID from various URL formats
+const getYouTubeVideoId = (url: string): string | null => {
+    try {
+      const urlObj = new URL(url);
+      if (urlObj.hostname === 'youtu.be') {
+        return urlObj.pathname.slice(1);
+      }
+      if (urlObj.hostname.includes('youtube.com')) {
+        return urlObj.searchParams.get('v');
+      }
+      return null;
+    } catch (error) {
+      return null;
+    }
+};
+
+const streamSchema = z.object({
+  title: z.string().min(3, 'Title must be at least 3 characters.'),
+  youtubeUrl: z.string().url('Must be a valid YouTube URL.').transform((url, ctx) => {
+    const videoId = getYouTubeVideoId(url);
+    if (!videoId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Invalid YouTube URL provided.",
+      });
+      return z.NEVER;
+    }
+    return `https://www.youtube.com/embed/${videoId}`;
+  }),
+  status: z.enum(['Live', 'Upcoming', 'Past']),
+});
+
+export async function createStream(formData: FormData) {
+    const rawData = Object.fromEntries(formData.entries());
+    const validatedFields = streamSchema.safeParse(rawData);
+
+    if (!validatedFields.success) {
+        return { success: false, message: 'Invalid stream data.', errors: validatedFields.error.flatten().fieldErrors };
+    }
+
+    try {
+        await db.collection('streams').add({ ...validatedFields.data, createdAt: new Date() });
+        revalidatePath('/streams');
+        revalidatePath('/admin/streams');
+        return { success: true, message: 'Stream created successfully.' };
+    } catch (error) {
+        console.error('Error creating stream:', error);
+        return { success: false, message: 'An unexpected error occurred.' };
+    }
+}
+
+export async function updateStream(id: string, formData: FormData) {
+    const rawData = Object.fromEntries(formData.entries());
+    const validatedFields = streamSchema.safeParse(rawData);
+
+    if (!validatedFields.success) {
+        return { success: false, message: 'Invalid stream data.', errors: validatedFields.error.flatten().fieldErrors };
+    }
+
+    try {
+        await db.collection('streams').doc(id).update(validatedFields.data);
+        revalidatePath('/streams');
+        revalidatePath('/admin/streams');
+        return { success: true, message: 'Stream updated successfully.' };
+    } catch (error) {
+        console.error('Error updating stream:', error);
+        return { success: false, message: 'An unexpected error occurred.' };
+    }
+}
+
+export async function deleteStream(id: string) {
+    if (!id) {
+        return { success: false, message: 'Stream ID is required.' };
+    }
+    try {
+        await db.collection('streams').doc(id).delete();
+        revalidatePath('/streams');
+        revalidatePath('/admin/streams');
+        return { success: true, message: 'Stream deleted successfully.' };
+    } catch (error) {
+        console.error('Error deleting stream:', error);
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }

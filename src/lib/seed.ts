@@ -57,6 +57,12 @@ const initialRegistrations = [
     { tournamentId: '1', registeredById: 'user3', registeredByName: 'CharlieTeam', teamName: 'Charlie Dragons', teamTag: 'CD', status: 'pending', players: samplePlayers },
 ];
 
+const streamData = [
+    { id: '1', title: 'Grand Finals - Arena Clash: Season 4', youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', status: 'Live', createdAt: new Date() },
+    { id: '2', title: 'Upcoming: Pro Player Interview with ShadowStriker', youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', status: 'Upcoming', createdAt: new Date(Date.now() - 86400000 * 1) },
+    { id: '3', title: 'Top 10 Plays from the Summer Skirmish', youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', status: 'Past', createdAt: new Date(Date.now() - 86400000 * 2) },
+    { id: '4', title: 'Patch 25.2 Rundown and Analysis', youtubeUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', status: 'Past', createdAt: new Date(Date.now() - 86400000 * 3) },
+];
 
 export async function seedDatabase() {
   const batch = db.batch();
@@ -93,6 +99,13 @@ export async function seedDatabase() {
   });
   console.log('Initial registrations queued for seeding.');
 
+  // Seed Streams
+  const streamsCol = db.collection('streams');
+  streamData.forEach(s => {
+      const docRef = streamsCol.doc(s.id);
+      batch.set(docRef, s);
+  });
+  console.log('Streams queued for seeding.');
 
   try {
     await batch.commit();

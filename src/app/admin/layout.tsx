@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -14,7 +15,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, Gamepad2, Users, Trophy, Settings, LogOut, ShieldAlert } from "lucide-react";
+import { LayoutDashboard, Gamepad2, Users, Trophy, Settings, LogOut, ShieldAlert, Clapperboard } from "lucide-react";
 import Link from "next/link";
 import { Logo } from "@/components/icons/logo";
 import { useAuth } from "@/hooks/use-auth";
@@ -26,6 +27,7 @@ const adminNavItems = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/tournaments", label: "Tournaments", icon: Gamepad2 },
   { href: "/admin/users", label: "Users", icon: Users },
+  { href: "/admin/streams", label: "Streams", icon: Clapperboard },
   { href: "/admin/prizes", label: "Prizes", icon: Trophy },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
@@ -33,7 +35,7 @@ const adminNavItems = [
 function AdminNavContent({ children }: { children: React.ReactNode }) {
     const { user } = useAuth();
     const pathname = usePathname();
-    const currentPage = adminNavItems.find(item => item.href === pathname)?.label || 'Dashboard';
+    const currentPage = adminNavItems.find(item => pathname.startsWith(item.href))?.label || 'Dashboard';
 
     return (
         <SidebarProvider>
@@ -49,7 +51,7 @@ function AdminNavContent({ children }: { children: React.ReactNode }) {
                 {adminNavItems.map((item) => (
                 <SidebarMenuItem key={item.label}>
                     <Link href={item.href}>
-                    <SidebarMenuButton isActive={pathname === item.href}>
+                    <SidebarMenuButton isActive={pathname.startsWith(item.href)}>
                         <item.icon />
                         <span>{item.label}</span>
                     </SidebarMenuButton>

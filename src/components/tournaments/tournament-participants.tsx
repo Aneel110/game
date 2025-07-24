@@ -21,24 +21,26 @@ export default function TournamentParticipants({ participants, title, icon: Icon
                     <span className="font-medium">{p.teamName}</span>
                     <span className="text-sm text-muted-foreground ml-2">[{p.teamTag}]</span>
                   </div>
-                   <Accordion type="single" collapsible className="w-full mt-1">
-                      <AccordionItem value="item-1">
-                          <AccordionTrigger className="text-xs py-1 hover:no-underline">View Players ({p.players.length})</AccordionTrigger>
-                          <AccordionContent>
-                              <ul className="list-none space-y-2 pt-2">
-                                  {p.players.map((player: any, index: number) => (
-                                      <li key={index} className="flex items-center gap-2 text-xs">
-                                          <User className="w-3 h-3 text-muted-foreground" />
-                                          <div>
-                                              <span className="font-semibold">{player.pubgName}</span> 
-                                              <span className="text-muted-foreground"> ({player.pubgId})</span>
-                                          </div>
-                                      </li>
-                                  ))}
-                              </ul>
-                          </AccordionContent>
-                      </AccordionItem>
-                  </Accordion>
+                  {Array.isArray(p.players) && p.players.length > 0 && (
+                     <Accordion type="single" collapsible className="w-full mt-1">
+                        <AccordionItem value="item-1">
+                            <AccordionTrigger className="text-xs py-1 hover:no-underline">View Players ({p.players.length})</AccordionTrigger>
+                            <AccordionContent>
+                                <ul className="list-none space-y-2 pt-2">
+                                    {p.players.map((player: any, index: number) => (
+                                        <li key={index} className="flex items-center gap-2 text-xs">
+                                            <User className="w-3 h-3 text-muted-foreground" />
+                                            <div>
+                                                <span className="font-semibold">{player.pubgName}</span> 
+                                                <span className="text-muted-foreground"> ({player.pubgId})</span>
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </AccordionContent>
+                        </AccordionItem>
+                    </Accordion>
+                  )}
               </div>
           ))
         ) : (

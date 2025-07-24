@@ -43,10 +43,17 @@ const userData = {
   ],
 };
 
+const samplePlayers = [
+    { pubgName: 'PlayerOne', pubgId: '5123456789' },
+    { pubgName: 'PlayerTwo', pubgId: '5234567890' },
+    { pubgName: 'PlayerThree', pubgId: '5345678901' },
+    { pubgName: 'PlayerFour', pubgId: '5456789012' },
+];
+
 const initialRegistrations = [
-    { tournamentId: '1', userId: 'shadowstriker_profile', userName: 'ShadowStriker', userAvatar: "https://placehold.co/40x40.png", status: 'approved' },
-    { tournamentId: '1', userId: 'phoenix_profile', userName: 'Phoenix', userAvatar: "https://placehold.co/40x40.png", status: 'approved' },
-    { tournamentId: '1', userId: 'viper_profile', userName: 'Viper', userAvatar: "https://placehold.co/40x40.png", status: 'pending' },
+    { tournamentId: '1', registeredById: 'user1', registeredByName: 'AlphaTeam', teamName: 'Alpha Wolves', teamTag: 'AW', status: 'approved', players: samplePlayers },
+    { tournamentId: '1', registeredById: 'user2', registeredByName: 'BravoTeam', teamName: 'Bravo Knights', teamTag: 'BK', status: 'approved', players: samplePlayers },
+    { tournamentId: '1', registeredById: 'user3', registeredByName: 'CharlieTeam', teamName: 'Charlie Dragons', teamTag: 'CD', status: 'pending', players: samplePlayers },
 ];
 
 
@@ -77,7 +84,7 @@ export async function seedDatabase() {
   
   // Seed initial registrations
   initialRegistrations.forEach(reg => {
-    const regRef = db.collection('tournaments').doc(reg.tournamentId).collection('registrations').doc(reg.userId);
+    const regRef = db.collection('tournaments').doc(reg.tournamentId).collection('registrations').doc(reg.registeredById);
     batch.set(regRef, {
         ...reg,
         registeredAt: new Date()

@@ -31,9 +31,25 @@ async function getTournamentData(id: string) {
     return docSnap.exists ? { id: docSnap.id, ...docSnap.data() } : null;
 }
 
+// We already have a server action for this, but to fix the serialization issue,
+// it's cleaner to handle it directly here and convert the timestamp.
+async function getSerializableRegistrations(tournamentId: string) {
+    const registrationsSnapshot = await db.collection('tournaments').doc(tournamentId).collection('registrations').get();
+    const registrations = registrationsSnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+            id: doc.id,
+            ...data,
+            // Convert Firestore Timestamp to a serializable format (ISO string)
+            registeredAt: data.registeredAt.toDate().toISOString(),
+        };
+    });
+    return registrations;
+}
+
 export default async function AdminTournamentDetailPage({ params }: AdminTournamentDetailPageProps) {
     const tournament = await getTournamentData(params.id);
-    const { success, data: registrations } = await getTournamentRegistrations(params.id);
+    const registrations = await getSerializableRegistrations(params.id);
 
     if (!tournament) {
         return <div>Tournament not found.</div>;
@@ -67,7 +83,7 @@ export default async function AdminTournamentDetailPage({ params }: AdminTournam
                                     </div>
                                 </TableCell>
                                 <TableCell>
-                                    {new Date(reg.registeredAt._seconds * 1000).toLocaleString()}
+                                    {new Date(reg.registeredAt).toLocaleString()}
                                 </TableCell>
                                 <TableCell>{getStatusBadge(reg.status)}</TableCell>
                                 <TableCell className="text-right">

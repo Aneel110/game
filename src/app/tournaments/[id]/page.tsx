@@ -20,7 +20,15 @@ async function getTournamentData(id: string) {
 
 async function getRegistrations(id: string) {
     const registrationsSnapshot = await db.collection('tournaments').doc(id).collection('registrations').get();
-    const registrations = registrationsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    // Convert Firestore Timestamps to serializable strings
+    const registrations = registrationsSnapshot.docs.map(doc => {
+        const data = doc.data();
+        return { 
+            id: doc.id, 
+            ...data,
+            registeredAt: data.registeredAt.toDate().toISOString(),
+        };
+    });
     return registrations;
 }
 

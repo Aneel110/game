@@ -1,6 +1,9 @@
+'use client';
+
 import Link from 'next/link';
 import { Logo } from '../icons/logo';
 import { Button } from '../ui/button';
+import { useAuth } from '@/hooks/use-auth';
 
 const socialLinks = [
   { name: 'Twitter', href: '#' },
@@ -15,6 +18,24 @@ const footerLinks = [
   { name: 'Privacy Policy', href: '#' },
   { name: 'Terms of Service', href: '#' },
 ];
+
+function AdminFooterLink() {
+    const { isAdmin } = useAuth();
+    if (!isAdmin) return null;
+
+    return (
+        <div>
+            <h3 className="font-semibold mb-4">Admin</h3>
+            <ul className="space-y-2">
+                <li>
+                    <Link href="/admin/dashboard" className="text-sm text-muted-foreground hover:text-primary">
+                        Admin Panel
+                    </Link>
+                </li>
+            </ul>
+        </div>
+    )
+}
 
 export default function Footer() {
   return (
@@ -55,16 +76,7 @@ export default function Footer() {
                 ))}
               </ul>
             </div>
-            <div>
-                <h3 className="font-semibold mb-4">Admin</h3>
-                <ul className="space-y-2">
-                    <li>
-                        <Link href="/admin/dashboard" className="text-sm text-muted-foreground hover:text-primary">
-                            Admin Panel
-                        </Link>
-                    </li>
-                </ul>
-            </div>
+            <AdminFooterLink />
           </div>
         </div>
         <div className="mt-8 pt-8 border-t flex flex-col sm:flex-row justify-between items-center">

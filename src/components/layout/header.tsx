@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import { Logo } from '../icons/logo';
 import { useAuth } from '@/hooks/use-auth';
 import { auth } from '@/lib/firebase';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const navLinks = [
   { href: '/tournaments', label: 'Tournaments' },
@@ -63,6 +64,7 @@ export default function Header() {
         </nav>
 
         <div className="hidden md:flex items-center gap-2">
+          {loading && <div className="h-10 w-36"><Skeleton className='h-full w-full' /></div>}
           {!user && !loading && (
             <>
               <Button variant="outline" asChild>
@@ -111,6 +113,7 @@ export default function Header() {
                   )}
                 </nav>
                 <div className="mt-auto flex flex-col gap-2">
+                  {loading && <div className="h-10 w-full"><Skeleton className='h-full w-full' /></div>}
                   {!user && !loading && (
                     <>
                       <Button variant="outline" asChild>

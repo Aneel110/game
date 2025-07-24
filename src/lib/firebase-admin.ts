@@ -1,25 +1,32 @@
-import { initializeApp, getApps, cert } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
+import { getFirestore, Firestore } from 'firebase-admin/firestore';
 
 // This file is for server-side Firebase access ONLY.
 
-let db: FirebaseFirestore.Firestore;
+let app: App;
+let db: Firestore;
 
-if (!getApps().length) {
-    try {
-        if (!process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
-            throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY is not set in the environment variables.');
-        }
-        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
-        initializeApp({
-            credential: cert(serviceAccount),
-        });
-        console.log("Firebase Admin SDK initialized successfully.");
-    } catch(e: any) {
-        console.error("Failed to initialize Firebase Admin SDK. Please ensure your FIREBASE_SERVICE_ACCOUNT_KEY is set correctly in your environment variables.", e.message);
+if (getApps().length) {
+  app = getApps()[0];
+} else {
+  try {
+    if (!process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+      throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY is not set in the environment variables.');
     }
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+    app = initializeApp({
+      credential: cert(serviceAccount),
+    });
+    console.log("Firebase Admin SDK initialized successfully.");
+  } catch (e: any) {
+    console.error("Failed to initialize Firebase Admin SDK. Please ensure your FIREBASE_SERVICE_ACCOUNT_KEY is set correctly in your environment variables.", e.message);
+  }
 }
 
-db = getFirestore();
+// @ts-ignore
+if (app) {
+    db = getFirestore(app);
+}
 
+// @ts-ignore
 export { db };

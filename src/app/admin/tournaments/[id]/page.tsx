@@ -1,10 +1,11 @@
+
 import { db } from "@/lib/firebase-admin";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import RegistrationActions from "./registration-actions";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { User } from "lucide-react";
+import { User, Mail } from "lucide-react";
 
 type AdminTournamentDetailPageProps = {
     params: {
@@ -65,7 +66,7 @@ export default async function AdminTournamentDetailPage({ params }: AdminTournam
                     <TableHeader>
                         <TableRow>
                             <TableHead>Team Name</TableHead>
-                            <TableHead>Registered By</TableHead>
+                            <TableHead>Contact</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
@@ -95,7 +96,15 @@ export default async function AdminTournamentDetailPage({ params }: AdminTournam
                                         </AccordionItem>
                                     </Accordion>
                                 </TableCell>
-                                <TableCell>{reg.registeredByName}</TableCell>
+                                <TableCell>
+                                    <div className="text-sm">{reg.registeredByName}</div>
+                                    {reg.discordUsername && (
+                                        <div className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-message-circle-code"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/><path d="m10 10-2 2 2 2"/><path d="m14 10 2 2-2 2"/></svg>
+                                            {reg.discordUsername}
+                                        </div>
+                                    )}
+                                </TableCell>
                                 <TableCell>{getStatusBadge(reg.status)}</TableCell>
                                 <TableCell className="text-right">
                                    {reg.status === 'pending' && <RegistrationActions tournamentId={params.id} registrationId={reg.id} />}

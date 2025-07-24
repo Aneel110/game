@@ -1,3 +1,4 @@
+
 'use server';
 
 import { db } from '@/lib/firebase-admin';
@@ -21,6 +22,7 @@ interface Player {
 interface RegistrationData {
   teamName: string;
   teamTag: string;
+  discordUsername: string;
   players: Player[];
   registeredById: string;
   registeredByName: string;

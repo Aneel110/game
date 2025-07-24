@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -38,6 +39,7 @@ const playerSchema = z.object({
 const registrationSchema = z.object({
   teamName: z.string().min(3, 'Team name must be at least 3 characters.'),
   teamTag: z.string().min(2, 'Team tag must be 2-4 characters.').max(4),
+  discordUsername: z.string().min(2, 'Discord username is required.'),
   players: z.array(playerSchema).min(4, 'You must register at least 4 players.').max(6, 'You can register a maximum of 6 players.'),
 });
 
@@ -60,6 +62,7 @@ export default function TournamentRegistrationForm({ tournamentId, isLoggedIn, i
     defaultValues: {
       teamName: '',
       teamTag: '',
+      discordUsername: '',
       players: [{ pubgName: '', pubgId: '' }, { pubgName: '', pubgId: '' }, { pubgName: '', pubgId: '' }, { pubgName: '', pubgId: '' }],
     },
   });
@@ -143,7 +146,7 @@ export default function TournamentRegistrationForm({ tournamentId, isLoggedIn, i
             </DialogHeader>
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <FormField
                     control={form.control}
                     name="teamName"
@@ -165,6 +168,19 @@ export default function TournamentRegistrationForm({ tournamentId, isLoggedIn, i
                         <FormLabel>Team Tag</FormLabel>
                         <FormControl>
                             <Input placeholder="e.g., VPR" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                     <FormField
+                    control={form.control}
+                    name="discordUsername"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Discord Username</FormLabel>
+                        <FormControl>
+                            <Input placeholder="e.g., user#1234" {...field} />
                         </FormControl>
                         <FormMessage />
                         </FormItem>

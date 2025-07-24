@@ -1,3 +1,4 @@
+
 'use server';
 
 import { db } from './firebase-admin';
@@ -51,9 +52,9 @@ const samplePlayers = [
 ];
 
 const initialRegistrations = [
-    { tournamentId: '1', registeredById: 'user1', registeredByName: 'AlphaTeam', teamName: 'Alpha Wolves', teamTag: 'AW', status: 'approved', players: samplePlayers },
-    { tournamentId: '1', registeredById: 'user2', registeredByName: 'BravoTeam', teamName: 'Bravo Knights', teamTag: 'BK', status: 'approved', players: samplePlayers },
-    { tournamentId: '1', registeredById: 'user3', registeredByName: 'CharlieTeam', teamName: 'Charlie Dragons', teamTag: 'CD', status: 'pending', players: samplePlayers },
+    { tournamentId: '1', registeredById: 'user1', registeredByName: 'AlphaTeam', teamName: 'Alpha Wolves', teamTag: 'AW', status: 'approved', players: samplePlayers, discordUsername: 'alpha#1111' },
+    { tournamentId: '1', registeredById: 'user2', registeredByName: 'BravoTeam', teamName: 'Bravo Knights', teamTag: 'BK', status: 'approved', players: samplePlayers, discordUsername: 'bravo#2222' },
+    { tournamentId: '1', registeredById: 'user3', registeredByName: 'CharlieTeam', teamName: 'Charlie Dragons', teamTag: 'CD', status: 'pending', players: samplePlayers, discordUsername: 'charlie#3333' },
 ];
 
 

@@ -3,30 +3,29 @@ import { getFirestore, Firestore } from 'firebase-admin/firestore';
 
 // This file is for server-side Firebase access ONLY.
 
-let app: App;
-let db: Firestore;
+let db: Firestore | null = null;
 
-if (getApps().length) {
-  app = getApps()[0];
-} else {
-  try {
-    if (!process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
-      throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY is not set in the environment variables.');
+try {
+    const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+
+    if (serviceAccountKey) {
+        const serviceAccount = JSON.parse(serviceAccountKey);
+        
+        if (getApps().length === 0) {
+            initializeApp({
+                credential: cert(serviceAccount),
+            });
+            console.log("Firebase Admin SDK initialized successfully.");
+        }
+        
+        db = getFirestore();
+    } else {
+        console.warn("FIREBASE_SERVICE_ACCOUNT_KEY is not set. Server-side Firebase features will be disabled.");
     }
-    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
-    app = initializeApp({
-      credential: cert(serviceAccount),
-    });
-    console.log("Firebase Admin SDK initialized successfully.");
-  } catch (e: any) {
-    console.error("Failed to initialize Firebase Admin SDK. Please ensure your FIREBASE_SERVICE_ACCOUNT_KEY is set correctly in your environment variables.", e.message);
-  }
+
+} catch (e: any) {
+    console.error("Failed to initialize Firebase Admin SDK. Please ensure your FIREBASE_SERVICE_ACCOUNT_KEY is set correctly.", e.message);
 }
 
-// @ts-ignore
-if (app) {
-    db = getFirestore(app);
-}
 
-// @ts-ignore
 export { db };

@@ -2,11 +2,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { db } from "@/lib/firebase-admin";
-import { Eye, Badge, PlusCircle, Edit, Trash2 } from "lucide-react";
+import { Eye, Badge, PlusCircle, Edit, Trash2, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import DeleteTournamentButton from "./delete-tournament-button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 async function getTournamentsWithRegistrationCounts() {
+    if (!db) {
+        return { error: "Firebase Admin is not configured. Please set FIREBASE_SERVICE_ACCOUNT_KEY." }
+    }
     const tournamentsSnapshot = await db.collection('tournaments').orderBy('date', 'desc').get();
     const tournaments = [];
 
@@ -16,11 +20,21 @@ async function getTournamentsWithRegistrationCounts() {
         tournaments.push({ ...tournament, pendingCount: registrationsSnapshot.size });
     }
 
-    return tournaments;
+    return { tournaments };
 }
 
 export default async function AdminTournamentsPage() {
-    const tournaments = await getTournamentsWithRegistrationCounts();
+    const { tournaments, error } = await getTournamentsWithRegistrationCounts();
+
+    if (error) {
+        return (
+             <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Server Configuration Error</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+            </Alert>
+        )
+    }
 
     return (
         <Card>

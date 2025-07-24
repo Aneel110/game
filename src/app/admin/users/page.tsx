@@ -3,10 +3,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { db } from "@/lib/firebase-admin";
 import { Badge } from "@/components/ui/badge";
 import RoleSwitcher from "./role-switcher";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertTriangle } from "lucide-react";
 
 async function getUsers() {
+    if (!db) {
+        return { error: "Firebase Admin is not configured. Please set FIREBASE_SERVICE_ACCOUNT_KEY." };
+    }
     const usersSnapshot = await db.collection('users').get();
-    return usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return { users: usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) };
 }
 
 const getRoleBadge = (role: string) => {
@@ -21,7 +26,17 @@ const getRoleBadge = (role: string) => {
 }
 
 export default async function AdminUsersPage() {
-    const users = await getUsers();
+    const { users, error } = await getUsers();
+
+    if (error) {
+        return (
+             <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Server Configuration Error</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+            </Alert>
+        )
+    }
 
     return (
         <Card>

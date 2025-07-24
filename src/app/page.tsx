@@ -71,6 +71,10 @@ const communityPosts = [
 ];
 
 async function getLiveStream() {
+    if (!db) {
+        console.log("Live stream check skipped: Firebase Admin not configured.");
+        return null;
+    }
     try {
         const streamSnapshot = await db.collection('streams').where('status', '==', 'Live').limit(1).get();
         if (streamSnapshot.empty) {

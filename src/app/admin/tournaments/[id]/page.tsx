@@ -1,10 +1,10 @@
-import { getTournamentRegistrations } from "@/lib/actions";
 import { db } from "@/lib/firebase-admin";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import RegistrationActions from "./registration-actions";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { User } from "lucide-react";
 
 type AdminTournamentDetailPageProps = {
     params: {
@@ -31,8 +31,6 @@ async function getTournamentData(id: string) {
     return docSnap.exists ? { id: docSnap.id, ...docSnap.data() } : null;
 }
 
-// We already have a server action for this, but to fix the serialization issue,
-// it's cleaner to handle it directly here and convert the timestamp.
 async function getSerializableRegistrations(tournamentId: string) {
     const registrationsSnapshot = await db.collection('tournaments').doc(tournamentId).collection('registrations').get();
     const registrations = registrationsSnapshot.docs.map(doc => {
@@ -40,7 +38,6 @@ async function getSerializableRegistrations(tournamentId: string) {
         return {
             id: doc.id,
             ...data,
-            // Convert Firestore Timestamp to a serializable format (ISO string)
             registeredAt: data.registeredAt.toDate().toISOString(),
         };
     });
@@ -59,13 +56,16 @@ export default async function AdminTournamentDetailPage({ params }: AdminTournam
         <Card>
             <CardHeader>
                 <CardTitle>Registrations for: {tournament.name}</CardTitle>
+                <CardDescription>
+                    Review and manage team registrations for this tournament.
+                </CardDescription>
             </CardHeader>
             <CardContent>
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Player</TableHead>
-                            <TableHead>Registered At</TableHead>
+                            <TableHead>Team Name</TableHead>
+                            <TableHead>Registered By</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
@@ -74,23 +74,41 @@ export default async function AdminTournamentDetailPage({ params }: AdminTournam
                         {registrations.map((reg: any) => (
                              <TableRow key={reg.id}>
                                 <TableCell>
-                                    <div className="flex items-center gap-2">
-                                        <Avatar className="h-8 w-8">
-                                            <AvatarImage src={reg.userAvatar} />
-                                            <AvatarFallback>{reg.userName.charAt(0)}</AvatarFallback>
-                                        </Avatar>
-                                        <span>{reg.userName}</span>
-                                    </div>
+                                    <div className="font-medium">{reg.teamName}</div>
+                                    <div className="text-sm text-muted-foreground">[{reg.teamTag}]</div>
+                                     <Accordion type="single" collapsible className="w-full mt-2">
+                                        <AccordionItem value="item-1">
+                                            <AccordionTrigger className="text-xs py-1">View Players ({reg.players.length})</AccordionTrigger>
+                                            <AccordionContent>
+                                                <ul className="list-none space-y-2 pt-2">
+                                                    {reg.players.map((player: any, index: number) => (
+                                                        <li key={index} className="flex items-center gap-2 text-xs">
+                                                            <User className="w-3 h-3 text-muted-foreground" />
+                                                            <div>
+                                                                <span className="font-semibold">{player.pubgName}</span> 
+                                                                <span className="text-muted-foreground"> ({player.pubgId})</span>
+                                                            </div>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </AccordionContent>
+                                        </AccordionItem>
+                                    </Accordion>
                                 </TableCell>
-                                <TableCell>
-                                    {new Date(reg.registeredAt).toLocaleString()}
-                                </TableCell>
+                                <TableCell>{reg.registeredByName}</TableCell>
                                 <TableCell>{getStatusBadge(reg.status)}</TableCell>
                                 <TableCell className="text-right">
                                    {reg.status === 'pending' && <RegistrationActions tournamentId={params.id} registrationId={reg.id} />}
                                 </TableCell>
                             </TableRow>
                         ))}
+                         {registrations.length === 0 && (
+                            <TableRow>
+                                <TableCell colSpan={4} className="h-24 text-center">
+                                    No registrations yet.
+                                </TableCell>
+                            </TableRow>
+                        )}
                     </TableBody>
                 </Table>
             </CardContent>

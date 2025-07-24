@@ -5,12 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Gamepad2, Trophy, Users, ShieldCheck, ShieldAlert } from "lucide-react";
+import { Calendar, Gamepad2, Trophy, ShieldCheck, ShieldAlert } from "lucide-react";
 import TournamentParticipants from "./tournament-participants";
-import { Button } from "../ui/button";
-import { registerForTournament } from "@/lib/actions";
-import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import TournamentRegistrationForm from "./registration-form";
+import { useAuth } from "@/hooks/use-auth";
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -26,27 +24,11 @@ const getStatusColor = (status: string) => {
 };
 
 export default function TournamentDetail({ tournament, registrations }: { tournament: any, registrations: any[] }) {
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleRegister = async () => {
-    setIsLoading(true);
-    try {
-      const result = await registerForTournament(tournament.id);
-      if (result.success) {
-        toast({ title: 'Success', description: result.message });
-      } else {
-        toast({ title: 'Error', description: result.message, variant: 'destructive' });
-      }
-    } catch (error) {
-      toast({ title: 'Error', description: 'An unexpected error occurred.', variant: 'destructive' });
-    } finally {
-      setIsLoading(false);
-    }
-  }
+  const { user, loading } = useAuth();
 
   const approvedParticipants = registrations.filter(r => r.status === 'approved');
   const pendingParticipants = registrations.filter(r => r.status === 'pending');
+  const isAlreadyRegistered = user && registrations.some(r => r.registeredById === user.uid);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -58,10 +40,12 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
                 <Badge className={`text-white mb-2 ${getStatusColor(tournament.status)}`}>{tournament.status}</Badge>
                 <h1 className="text-5xl font-headline font-bold text-white shadow-lg">{tournament.name}</h1>
             </div>
-             {tournament.status === 'Upcoming' && (
-                <Button size="lg" onClick={handleRegister} disabled={isLoading}>
-                  {isLoading ? 'Registering...' : 'Register for this Tournament'}
-                </Button>
+             {tournament.status === 'Upcoming' && !loading && (
+                <TournamentRegistrationForm 
+                  tournamentId={tournament.id}
+                  isLoggedIn={!!user}
+                  isAlreadyRegistered={isAlreadyRegistered}
+                />
             )}
         </div>
       </div>
@@ -85,6 +69,7 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
                     <li>No cheating, scripting, or exploiting bugs.</li>
                     <li>Admins have the final say in all disputes.</li>
                     <li>Check-in is required 30 minutes before the tournament starts.</li>
+                    <li>Teams must have between 4 and 6 players.</li>
                   </ul>
                 </TabsContent>
                 <TabsContent value="prizes">
@@ -133,7 +118,7 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
           </Card>
            <TournamentParticipants 
             icon={ShieldCheck}
-            title="Approved Participants"
+            title="Approved Teams"
             participants={approvedParticipants} 
           />
           <TournamentParticipants 

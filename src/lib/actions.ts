@@ -2,6 +2,7 @@
 
 import { db } from '@/lib/firebase-admin';
 import { revalidatePath } from 'next/cache';
+import { auth } from 'firebase-admin';
 
 // In a real app, you'd get the user's ID from their session.
 // For now, we'll use a mock user.
@@ -12,24 +13,38 @@ const MOCK_USER = {
   role: 'user'
 };
 
-export async function registerForTournament(tournamentId: string) {
+interface Player {
+  pubgName: string;
+  pubgId: string;
+}
+
+interface RegistrationData {
+  teamName: string;
+  teamTag: string;
+  players: Player[];
+  registeredById: string;
+  registeredByName: string;
+}
+
+export async function registerForTournament(tournamentId: string, data: RegistrationData) {
   if (!tournamentId) {
     return { success: false, message: 'Tournament ID is required.' };
   }
+  if (!data.registeredById) {
+      return { success: false, message: 'User is not logged in.' };
+  }
 
   try {
-    const registrationRef = db.collection('tournaments').doc(tournamentId).collection('registrations').doc(MOCK_USER.id);
+    const registrationRef = db.collection('tournaments').doc(tournamentId).collection('registrations').doc(data.registeredById);
 
     const doc = await registrationRef.get();
 
     if (doc.exists) {
-        return { success: false, message: 'You are already registered for this tournament.' };
+        return { success: false, message: 'You have already registered a team for this tournament.' };
     }
 
     await registrationRef.set({
-      userId: MOCK_USER.id,
-      userName: MOCK_USER.name,
-      userAvatar: MOCK_USER.avatar,
+      ...data,
       status: 'pending',
       registeredAt: new Date(),
     });
@@ -38,7 +53,7 @@ export async function registerForTournament(tournamentId: string) {
     return { success: true, message: 'Registration successful! Your registration is pending approval.' };
   } catch (error) {
     console.error('Error registering for tournament:', error);
-    return { success: false, message: 'An unexpected error occurred.' };
+    return { success: false, message: 'An unexpected error occurred during registration.' };
   }
 }
 

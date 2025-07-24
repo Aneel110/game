@@ -1,25 +1,14 @@
 'use server';
 
-import { initializeApp, getApps, cert } from 'firebase-admin/app';
-import { getFirestore, Timestamp } from 'firebase-admin/firestore';
-
-const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY!);
-
-if (!getApps().length) {
-  initializeApp({
-    credential: cert(serviceAccount),
-  });
-}
-
-const db = getFirestore();
+import { db } from './firebase-admin';
 
 const tournamentData = [
-  { id: '1', name: 'Arena Clash: Season 5', date: '2024-08-15', prize: '50000', status: 'Upcoming', image: 'https://placehold.co/600x400.png', dataAiHint: 'esports battle' },
-  { id: '2', name: 'Solo Survival Challenge', date: '2024-08-20', prize: '10000', status: 'Upcoming', image: 'https://placehold.co/600x400.png', dataAiHint: 'lone soldier' },
-  { id: '3', name: 'Duo Destruction Derby', date: '2024-08-25', prize: '25000', status: 'Upcoming', image: 'https://placehold.co/600x400.png', dataAiHint: 'gaming partners' },
-  { id: '4', name: 'Squad Goals Championship', date: '2024-09-01', prize: '100000', status: 'Upcoming', image: 'https://placehold.co/600x400.png', dataAiHint: 'team victory' },
-  { id: '5', name: 'Summer Skirmish', date: '2024-07-10', prize: '20000', status: 'Ongoing', image: 'https://placehold.co/600x400.png', dataAiHint: 'intense conflict' },
-  { id: '6', name: 'King of the Hill', date: '2024-07-01', prize: '5000', status: 'Finished', image: 'https://placehold.co/600x400.png', dataAiHint: 'royal crown' },
+  { id: '1', name: 'Arena Clash: Season 5', date: '2024-08-15', prize: '50000', status: 'Upcoming', image: 'https://placehold.co/600x400.png', dataAiHint: 'esports battle', description: 'The fifth season of the epic Arena Clash. Squads will battle it out for a massive prize pool and eternal glory.' },
+  { id: '2', name: 'Solo Survival Challenge', date: '2024-08-20', prize: '10000', status: 'Upcoming', image: 'https://placehold.co/600x400.png', dataAiHint: 'lone soldier', description: 'Think you have what it takes to be the last one standing? Prove your skills in this high-stakes solo tournament.' },
+  { id: '3', name: 'Duo Destruction Derby', date: '2024-08-25', prize: '25000', status: 'Upcoming', image: 'https://placehold.co/600x400.png', dataAiHint: 'gaming partners', description: 'Grab a partner and get ready for a chaotic derby. Teamwork and strategy are key to victory.' },
+  { id: '4', name: 'Squad Goals Championship', date: '2024-09-01', prize: '100000', status: 'Upcoming', image: 'https://placehold.co/600x400.png', dataAiHint: 'team victory', description: 'The ultimate test for any squad. Compete against the best of the best for the championship title.' },
+  { id: '5', name: 'Summer Skirmish', date: '2024-07-10', prize: '20000', status: 'Ongoing', image: 'https://placehold.co/600x400.png', dataAiHint: 'intense conflict', description: 'A fast-paced tournament to celebrate the summer season. Quick matches, constant action.' },
+  { id: '6', name: 'King of the Hill', date: '2024-07-01', prize: '5000', status: 'Finished', image: 'https://placehold.co/600x400.png', dataAiHint: 'royal crown', description: 'A classic King of the Hill tournament. Hold the objective to score points and claim your crown.' },
 ];
 
 const leaderboardData = [
@@ -53,6 +42,12 @@ const userData = {
   ],
 };
 
+const initialRegistrations = [
+    { tournamentId: '1', userId: 'shadowstriker_profile', userName: 'ShadowStriker', userAvatar: "https://placehold.co/40x40.png", status: 'approved' },
+    { tournamentId: '1', userId: 'phoenix_profile', userName: 'Phoenix', userAvatar: "https://placehold.co/40x40.png", status: 'approved' },
+    { tournamentId: '1', userId: 'viper_profile', userName: 'Viper', userAvatar: "https://placehold.co/40x40.png", status: 'pending' },
+];
+
 
 export async function seedDatabase() {
   const batch = db.batch();
@@ -78,6 +73,17 @@ export async function seedDatabase() {
   const userRef = usersCol.doc('shadowstriker_profile');
   batch.set(userRef, userData);
   console.log('User profile queued for seeding.');
+  
+  // Seed initial registrations
+  initialRegistrations.forEach(reg => {
+    const regRef = db.collection('tournaments').doc(reg.tournamentId).collection('registrations').doc(reg.userId);
+    batch.set(regRef, {
+        ...reg,
+        registeredAt: new Date()
+    });
+  });
+  console.log('Initial registrations queued for seeding.');
+
 
   try {
     await batch.commit();

@@ -1,10 +1,16 @@
+'use client';
+
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Gamepad2, Trophy, Users } from "lucide-react";
+import { Calendar, Gamepad2, Trophy, Users, ShieldCheck, ShieldAlert } from "lucide-react";
 import TournamentParticipants from "./tournament-participants";
+import { Button } from "../ui/button";
+import { registerForTournament } from "@/lib/actions";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -19,15 +25,44 @@ const getStatusColor = (status: string) => {
   }
 };
 
-export default function TournamentDetail({ tournament }: { tournament: any }) {
+export default function TournamentDetail({ tournament, registrations }: { tournament: any, registrations: any[] }) {
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleRegister = async () => {
+    setIsLoading(true);
+    try {
+      const result = await registerForTournament(tournament.id);
+      if (result.success) {
+        toast({ title: 'Success', description: result.message });
+      } else {
+        toast({ title: 'Error', description: result.message, variant: 'destructive' });
+      }
+    } catch (error) {
+      toast({ title: 'Error', description: 'An unexpected error occurred.', variant: 'destructive' });
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  const approvedParticipants = registrations.filter(r => r.status === 'approved');
+  const pendingParticipants = registrations.filter(r => r.status === 'pending');
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="relative w-full h-64 md:h-96 rounded-lg overflow-hidden mb-8">
         <Image src={tournament.image} alt={tournament.name} layout="fill" objectFit="cover" data-ai-hint={tournament.dataAiHint} />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-        <div className="absolute bottom-0 left-0 p-8">
-          <Badge className={`text-white mb-2 ${getStatusColor(tournament.status)}`}>{tournament.status}</Badge>
-          <h1 className="text-5xl font-headline font-bold text-white shadow-lg">{tournament.name}</h1>
+        <div className="absolute bottom-0 left-0 p-8 flex justify-between items-end w-full">
+            <div>
+                <Badge className={`text-white mb-2 ${getStatusColor(tournament.status)}`}>{tournament.status}</Badge>
+                <h1 className="text-5xl font-headline font-bold text-white shadow-lg">{tournament.name}</h1>
+            </div>
+             {tournament.status === 'Upcoming' && (
+                <Button size="lg" onClick={handleRegister} disabled={isLoading}>
+                  {isLoading ? 'Registering...' : 'Register for this Tournament'}
+                </Button>
+            )}
         </div>
       </div>
 
@@ -96,7 +131,16 @@ export default function TournamentDetail({ tournament }: { tournament: any }) {
               </div>
             </CardContent>
           </Card>
-          <TournamentParticipants participants={tournament.participants} />
+           <TournamentParticipants 
+            icon={ShieldCheck}
+            title="Approved Participants"
+            participants={approvedParticipants} 
+          />
+          <TournamentParticipants 
+            icon={ShieldAlert}
+            title="Pending Approval"
+            participants={pendingParticipants} 
+           />
         </div>
       </div>
     </div>

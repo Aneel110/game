@@ -1,6 +1,5 @@
 import TournamentDetail from "@/components/tournaments/tournament-detail";
-import { db } from "@/lib/firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase-admin";
 
 type TournamentDetailPageProps = {
     params: {
@@ -9,19 +8,26 @@ type TournamentDetailPageProps = {
 }
 
 async function getTournamentData(id: string) {
-    const docRef = doc(db, "tournaments", id);
-    const docSnap = await getDoc(docRef);
+    const docRef = db.collection("tournaments").doc(id);
+    const docSnap = await docRef.get();
 
-    if (docSnap.exists()) {
+    if (docSnap.exists) {
         return { id: docSnap.id, ...docSnap.data() };
     } else {
         return null;
     }
 }
 
+async function getRegistrations(id: string) {
+    const registrationsSnapshot = await db.collection('tournaments').doc(id).collection('registrations').get();
+    const registrations = registrationsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return registrations;
+}
+
 
 export default async function TournamentDetailPage({ params }: TournamentDetailPageProps) {
     const tournament = await getTournamentData(params.id);
+    const registrations = await getRegistrations(params.id);
 
     if (!tournament) {
         return (
@@ -32,5 +38,5 @@ export default async function TournamentDetailPage({ params }: TournamentDetailP
         )
     }
 
-    return <TournamentDetail tournament={tournament} />;
+    return <TournamentDetail tournament={tournament} registrations={registrations} />;
 }

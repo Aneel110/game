@@ -16,17 +16,19 @@ const firebaseConfig: FirebaseOptions = {
 
 // Initialize Firebase
 let app: FirebaseApp;
-let auth: Auth;
-let db: Firestore;
+let auth: Auth | null = null;
+let db: Firestore | null = null;
 
-if (getApps().length) {
-  app = getApps()[0];
+if (firebaseConfig.apiKey) {
+    if (getApps().length === 0) {
+        app = initializeApp(firebaseConfig);
+    } else {
+        app = getApps()[0];
+    }
+    auth = getAuth(app);
+    db = getFirestore(app);
 } else {
-  app = initializeApp(firebaseConfig);
+    console.warn("Firebase client-side config is missing. Firebase features will be disabled.");
 }
-
-auth = getAuth(app);
-db = getFirestore(app);
-
 
 export { app, auth, db };

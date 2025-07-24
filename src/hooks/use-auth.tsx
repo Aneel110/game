@@ -24,6 +24,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Check if Firebase auth is initialized
+    if (!auth || !db) {
+        console.warn("Firebase is not initialized. Auth features will be disabled.");
+        setLoading(false);
+        return;
+    }
+
     const unsubscribe = onIdTokenChanged(auth, async (user) => {
       if (user) {
         setUser(user);

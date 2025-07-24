@@ -1,4 +1,5 @@
 
+
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,10 +10,11 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel';
-import { ArrowRight, Trophy, Users, Newspaper, Signal } from 'lucide-react';
+import { ArrowRight, Trophy, Users, Newspaper, Signal, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import RecommendationEngine from '@/components/ai/recommendation-engine';
 import { db } from '@/lib/firebase-admin';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const tournaments = [
   {
@@ -73,22 +75,34 @@ const communityPosts = [
 async function getLiveStream() {
     if (!db) {
         console.log("Live stream check skipped: Firebase Admin not configured.");
-        return null;
+        return { error: "Firebase Admin not configured." };
     }
     try {
         const streamSnapshot = await db.collection('streams').where('status', '==', 'Live').limit(1).get();
         if (streamSnapshot.empty) {
-            return null;
+            return { liveStream: null };
         }
-        return streamSnapshot.docs[0].data();
+        return { liveStream: streamSnapshot.docs[0].data() };
     } catch (error) {
         console.error("Error fetching live stream:", error);
-        return null;
+        return { error: "Could not connect to the database." };
     }
 }
 
 async function LiveStreamSection() {
-    const liveStream = await getLiveStream();
+    const { liveStream, error } = await getLiveStream();
+
+    if (error) {
+        return (
+            <div className="container mx-auto py-8">
+                <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>Server Configuration Error</AlertTitle>
+                    <AlertDescription>{error} Please set FIREBASE_SERVICE_ACCOUNT_KEY.</AlertDescription>
+                </Alert>
+            </div>
+        )
+    }
 
     if (!liveStream) {
         return null; // Don't render the section if no one is live

@@ -24,10 +24,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!auth || !db) {
-        setLoading(false);
-        return;
-    }
     const unsubscribe = onIdTokenChanged(auth, async (user) => {
       if (user) {
         setUser(user);

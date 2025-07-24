@@ -15,27 +15,24 @@ const firebaseConfig: FirebaseOptions = {
 };
 
 // Initialize Firebase
-let app: FirebaseApp | undefined;
-let auth: Auth | undefined;
-let db: Firestore | undefined;
+let app: FirebaseApp;
+let auth: Auth;
+let db: Firestore;
 
-if (firebaseConfig.apiKey) {
-    if (typeof window !== 'undefined' && !getApps().length) {
-        try {
-            app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            db = getFirestore(app);
-        } catch (e: any) {
-            console.error("Failed to initialize Firebase", e);
-        }
-    } else if (getApps().length) {
-        app = getApps()[0];
+if (typeof window !== 'undefined' && !getApps().length) {
+    try {
+        app = initializeApp(firebaseConfig);
         auth = getAuth(app);
         db = getFirestore(app);
+    } catch (e: any) {
+        console.error("Failed to initialize Firebase", e);
     }
-} else {
-    // Gracefully handle missing API key without throwing an error or logging to console
-    // Firebase features will be unavailable until the .env file is configured
+} else if (getApps().length) {
+    app = getApps()[0];
+    auth = getAuth(app);
+    db = getFirestore(app);
 }
 
+
 export { app, auth, db };
+

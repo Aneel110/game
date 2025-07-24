@@ -2,8 +2,8 @@
 
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { onIdTokenChanged, User } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
-import { Skeleton } from '@/components/ui/skeleton';
+import { auth, db } from '@/lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 
 type AuthContextType = {
   user: User | null;
@@ -26,8 +26,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const unsubscribe = onIdTokenChanged(auth, async (user) => {
       if (user) {
         setUser(user);
-        const tokenResult = await user.getIdTokenResult();
-        setIsAdmin(tokenResult.claims.isAdmin === true);
+        // Fetch user document from Firestore to check role
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDocSnap = await getDoc(userDocRef);
+
+        if (userDocSnap.exists()) {
+          setIsAdmin(userDocSnap.data().role === 'admin');
+        } else {
+          setIsAdmin(false);
+        }
+
       } else {
         setUser(null);
         setIsAdmin(false);

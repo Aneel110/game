@@ -27,8 +27,6 @@ if (firebaseConfig.apiKey) {
     }
     auth = getAuth(app);
     db = getFirestore(app);
-} else {
-    console.warn("Firebase client-side config is missing. Firebase features will be disabled.");
 }
 
 export { app, auth, db };

@@ -20,7 +20,7 @@ type Tournament = {
 
 async function getTournaments() {
   if (!db) {
-    return { success: false, error: "Server-side Firebase is not configured. Please set the FIREBASE_SERVICE_ACCOUNT_KEY in your .env file." };
+    return { success: false, error: "Server-side Firebase is not configured correctly." };
   }
   try {
     const q = query(collection(db, "tournaments"), orderBy("date", "desc"));
@@ -75,7 +75,7 @@ export default async function TournamentsPage() {
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Database Connection Error</AlertTitle>
           <AlertDescription>
-            {error} Please follow the setup instructions to enable Firestore in the Firebase Console.
+            {error}
           </AlertDescription>
         </Alert>
       )}
@@ -116,7 +116,7 @@ export default async function TournamentsPage() {
       {success && tournaments?.length === 0 && (
          <Card className="text-center p-8">
             <CardTitle>No Tournaments Found</CardTitle>
-            <p className="text-muted-foreground mt-2">It looks like the database is empty. Have you seeded the data from the admin dashboard?</p>
+            <p className="text-muted-foreground mt-2">Check back soon for new tournaments!</p>
           </Card>
       )}
     </div>

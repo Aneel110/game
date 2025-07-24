@@ -3,27 +3,32 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trophy, Shield, GitCommitHorizontal } from "lucide-react";
+import { Edit, Trophy, Shield, GitCommitHorizontal, AlertTriangle } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 // Helper to get user data - in a real app, you'd get the current user's ID
 async function getUserData(userId = "shadowstriker_profile") {
+  try {
     const docRef = doc(db, "users", userId);
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
-        return docSnap.data();
+        return { success: true, data: docSnap.data() };
     } else {
-        // Return a default or empty object if the user is not found
-        return {
+        return { success: true, data: {
             name: "Player Not Found",
             avatar: "https://placehold.co/128x128.png",
-            bio: "This player profile could not be retrieved from the database.",
+            bio: "This player profile could not be retrieved from the database. Please seed the database from the admin dashboard.",
             stats: [],
             achievements: [],
-        };
+        }};
     }
+  } catch(error) {
+    console.error("Error fetching user data:", error);
+    return { success: false, error: "Could not connect to the database. Please ensure Firestore is enabled in your Firebase project." };
+  }
 }
 
 const iconMap: { [key: string]: React.ElementType } = {
@@ -33,7 +38,21 @@ const iconMap: { [key: string]: React.ElementType } = {
 };
 
 export default async function ProfilePage() {
-  const user = await getUserData();
+  const { success, data: user, error } = await getUserData();
+
+  if (!success) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Database Connection Error</AlertTitle>
+          <AlertDescription>
+            {error} Please follow the setup instructions to enable Firestore in the Firebase Console.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">

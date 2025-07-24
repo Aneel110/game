@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Gamepad2, Trophy, DollarSign } from "lucide-react";
+import SeedDatabaseButton from "./seed-button";
 
 const stats = [
     { title: "Total Users", value: "12,345", icon: Users },
@@ -23,6 +24,17 @@ export default function AdminDashboardPage() {
                     </CardContent>
                 </Card>
             ))}
+        </div>
+
+        <div className="mt-8">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Admin Actions</CardTitle>
+                </CardHeader>
+                <CardContent>
+                   <SeedDatabaseButton />
+                </CardContent>
+            </Card>
         </div>
 
         <div className="mt-8">

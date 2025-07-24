@@ -2,19 +2,20 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Trophy } from "lucide-react";
+import { db } from "@/lib/firebase";
+import { collection, getDocs, query, orderBy } from "firebase/firestore";
+import { Card } from "@/components/ui/card";
 
-const leaderboardData = [
-  { rank: 1, player: 'ShadowStriker', points: 5420, wins: 25, tier: 'Conqueror' },
-  { rank: 2, player: 'Phoenix', points: 5310, wins: 22, tier: 'Conqueror' },
-  { rank: 3, player: 'Viper', points: 5150, wins: 19, tier: 'Ace Master' },
-  { rank: 4, player: 'Ghost', points: 4980, wins: 15, tier: 'Ace Master' },
-  { rank: 5, player: 'Blitz', points: 4800, wins: 18, tier: 'Ace' },
-  { rank: 6, player: 'Rogue', points: 4650, wins: 12, tier: 'Ace' },
-  { rank: 7, player: 'Reaper', points: 4500, wins: 14, tier: 'Crown' },
-  { rank: 8, player: 'Fury', points: 4350, wins: 10, tier: 'Crown' },
-  { rank: 9, player: 'Warden', points: 4200, wins: 9, tier: 'Diamond' },
-  { rank: 10, player: 'Nomad', points: 4100, wins: 11, tier: 'Diamond' },
-];
+async function getLeaderboardData() {
+    const q = query(collection(db, "leaderboard"), orderBy("rank", "asc"));
+    const querySnapshot = await getDocs(q);
+    const data: any[] = [];
+    querySnapshot.forEach((doc) => {
+        data.push({ id: doc.id, ...doc.data() });
+    });
+    return data;
+}
+
 
 const getTierColor = (tier: string) => {
   if (tier === 'Conqueror') return 'text-red-400';
@@ -24,7 +25,9 @@ const getTierColor = (tier: string) => {
   return 'text-muted-foreground';
 }
 
-export default function LeaderboardsPage() {
+export default async function LeaderboardsPage() {
+  const leaderboardData = await getLeaderboardData();
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="text-center mb-12">

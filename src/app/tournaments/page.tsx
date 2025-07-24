@@ -4,15 +4,19 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight, Calendar, Trophy } from 'lucide-react';
+import { db } from "@/lib/firebase";
+import { collection, getDocs, query, orderBy } from "firebase/firestore";
 
-const tournaments = [
-  { id: '1', name: 'Arena Clash: Season 5', date: '2024-08-15', prize: '50,000', status: 'Upcoming', image: 'https://placehold.co/600x400.png', dataAiHint: 'esports battle' },
-  { id: '2', name: 'Solo Survival Challenge', date: '2024-08-20', prize: '10,000', status: 'Upcoming', image: 'https://placehold.co/600x400.png', dataAiHint: 'lone soldier' },
-  { id: '3', name: 'Duo Destruction Derby', date: '2024-08-25', prize: '25,000', status: 'Upcoming', image: 'https://placehold.co/600x400.png', dataAiHint: 'gaming partners' },
-  { id: '4', name: 'Squad Goals Championship', date: '2024-09-01', prize: '100,000', status: 'Upcoming', image: 'https://placehold.co/600x400.png', dataAiHint: 'team victory' },
-  { id: '5', name: 'Summer Skirmish', date: '2024-07-10', prize: '20,000', status: 'Ongoing', image: 'https://placehold.co/600x400.png', dataAiHint: 'intense conflict' },
-  { id: '6', name: 'King of the Hill', date: '2024-07-01', prize: '5,000', status: 'Finished', image: 'https://placehold.co/600x400.png', dataAiHint: 'royal crown' },
-];
+async function getTournaments() {
+    const q = query(collection(db, "tournaments"), orderBy("date", "desc"));
+    const querySnapshot = await getDocs(q);
+    const data: any[] = [];
+    querySnapshot.forEach((doc) => {
+        data.push({ id: doc.id, ...doc.data() });
+    });
+    return data;
+}
+
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -27,7 +31,9 @@ const getStatusColor = (status: string) => {
   }
 };
 
-export default function TournamentsPage() {
+export default async function TournamentsPage() {
+  const tournaments = await getTournaments();
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="text-center mb-12">

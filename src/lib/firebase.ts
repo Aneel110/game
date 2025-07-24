@@ -1,11 +1,10 @@
-// Import the functions you need from the SDKs you need
-import { initializeApp, getApps } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
+// Import the functions you need from the SDKs you need
+import { initializeApp, getApps, type FirebaseOptions, type FirebaseApp } from "firebase/app";
+import { getAuth, type Auth } from "firebase/auth";
+import { getFirestore, type Firestore } from "firebase/firestore";
+
+const firebaseConfig: FirebaseOptions = {
   apiKey: process.env.NEXT_PUBLIC_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_AUTH_DOMAIN,
   projectId: process.env.NEXT_PUBLIC_PROJECT_ID,
@@ -16,14 +15,26 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-let app;
-if (!getApps().length) {
-  app = initializeApp(firebaseConfig);
-} else {
-  app = getApps()[0];
-}
+let app: FirebaseApp | undefined;
+let auth: Auth | undefined;
+let db: Firestore | undefined;
 
-const auth = getAuth(app);
-const db = getFirestore(app);
+if (firebaseConfig.apiKey) {
+    if (typeof window !== 'undefined' && !getApps().length) {
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+        } catch (e: any) {
+            console.error("Failed to initialize Firebase", e);
+        }
+    } else if (getApps().length) {
+        app = getApps()[0];
+        auth = getAuth(app);
+        db = getFirestore(app);
+    }
+} else {
+    console.error('Firebase API key is not defined. Please check your .env file and restart the server.');
+}
 
 export { app, auth, db };

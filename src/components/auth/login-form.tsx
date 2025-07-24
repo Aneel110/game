@@ -7,21 +7,33 @@ import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+import { useRouter } from "next/navigation";
 
 export function LoginForm() {
   const { toast } = useToast();
+  const router = useRouter();
+
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
     const email = (form.elements.namedItem("email") as HTMLInputElement).value;
     const password = (form.elements.namedItem("password") as HTMLInputElement).value;
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      const tokenResult = await userCredential.user.getIdTokenResult();
+      
       toast({
         title: "Login Successful",
         description: "Welcome back!",
       });
-      // TODO: Redirect user to their dashboard or profile page
+
+      if (tokenResult.claims.isAdmin) {
+        router.push('/admin/dashboard');
+      } else {
+        router.push('/profile');
+      }
+
     } catch (error: any) {
       toast({
         title: "Login Failed",

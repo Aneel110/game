@@ -4,18 +4,24 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, X } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Logo } from '../icons/logo';
+import { useAuth } from '@/hooks/use-auth';
+import { auth } from '@/lib/firebase';
 
 const navLinks = [
   { href: '/tournaments', label: 'Tournaments' },
   { href: '/leaderboards', label: 'Leaderboards' },
-  { href: '/profile', label: 'My Profile' },
 ];
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
+  const { user, isAdmin, loading } = useAuth();
+  
+  const handleLogout = () => {
+    auth.signOut();
+  }
 
   useEffect(() => {
     const handleScroll = () => {
@@ -44,15 +50,32 @@ export default function Header() {
               {link.label}
             </Link>
           ))}
+           {user && (
+            <Link href="/profile" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
+              My Profile
+            </Link>
+          )}
+          {isAdmin && (
+             <Link href="/admin/dashboard" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
+              Admin
+            </Link>
+          )}
         </nav>
 
         <div className="hidden md:flex items-center gap-2">
-          <Button variant="outline" asChild>
-            <Link href="/login">Log In</Link>
-          </Button>
-          <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground">
-            <Link href="/signup">Sign Up</Link>
-          </Button>
+          {!user && !loading && (
+            <>
+              <Button variant="outline" asChild>
+                <Link href="/login">Log In</Link>
+              </Button>
+              <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                <Link href="/signup">Sign Up</Link>
+              </Button>
+            </>
+          )}
+           {user && !loading && (
+             <Button variant="outline" onClick={handleLogout}>Log Out</Button>
+           )}
         </div>
 
         <div className="md:hidden">
@@ -76,14 +99,31 @@ export default function Header() {
                       {link.label}
                     </Link>
                   ))}
+                   {user && (
+                    <Link href="/profile" className="text-lg font-medium text-foreground transition-colors hover:text-primary">
+                      My Profile
+                    </Link>
+                  )}
+                  {isAdmin && (
+                    <Link href="/admin/dashboard" className="text-lg font-medium text-foreground transition-colors hover:text-primary">
+                      Admin
+                    </Link>
+                  )}
                 </nav>
                 <div className="mt-auto flex flex-col gap-2">
-                  <Button variant="outline" asChild>
-                    <Link href="/login">Log In</Link>
-                  </Button>
-                  <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                    <Link href="/signup">Sign Up</Link>
-                  </Button>
+                  {!user && !loading && (
+                    <>
+                      <Button variant="outline" asChild>
+                        <Link href="/login">Log In</Link>
+                      </Button>
+                      <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                        <Link href="/signup">Sign Up</Link>
+                      </Button>
+                    </>
+                  )}
+                  {user && !loading && (
+                    <Button variant="outline" onClick={handleLogout}>Log Out</Button>
+                  )}
                 </div>
               </div>
             </SheetContent>

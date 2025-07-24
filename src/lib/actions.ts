@@ -8,7 +8,8 @@ import { revalidatePath } from 'next/cache';
 const MOCK_USER = {
   id: 'mock_user_1',
   name: 'NewChallenger',
-  avatar: 'https://placehold.co/40x40.png'
+  avatar: 'https://placehold.co/40x40.png',
+  role: 'user'
 };
 
 export async function registerForTournament(tournamentId: string) {

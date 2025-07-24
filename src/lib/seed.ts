@@ -28,6 +28,7 @@ const userData = {
   name: "ShadowStriker",
   avatar: "https://placehold.co/128x128.png",
   bio: "Pro player since 2018. IGL for team Vipers. Streaming competitive gameplay daily.",
+  role: "admin",
   stats: [
     { label: "K/D Ratio", value: "4.75" },
     { label: "Wins", value: "128" },

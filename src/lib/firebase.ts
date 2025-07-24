@@ -34,7 +34,8 @@ if (firebaseConfig.apiKey) {
         db = getFirestore(app);
     }
 } else {
-    console.error('Firebase API key is not defined. Please check your .env file and restart the server.');
+    // Gracefully handle missing API key without throwing an error or logging to console
+    // Firebase features will be unavailable until the .env file is configured
 }
 
 export { app, auth, db };

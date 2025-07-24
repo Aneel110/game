@@ -4,25 +4,46 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { auth, db } from "@/lib/firebase";
+import { useRouter } from "next/navigation";
+import { doc, setDoc } from "firebase/firestore";
 
 export function SignupForm() {
     const { toast } = useToast();
+    const router = useRouter();
 
     const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const form = e.currentTarget;
         const email = (form.elements.namedItem("email") as HTMLInputElement).value;
         const password = (form.elements.namedItem("password") as HTMLInputElement).value;
+        const username = (form.elements.namedItem("username") as HTMLInputElement).value;
 
         try {
-            await createUserWithEmailAndPassword(auth, email, password);
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            // Update user profile
+            await updateProfile(user, { displayName: username });
+
+            // Create user document in Firestore
+            await setDoc(doc(db, "users", user.uid), {
+                uid: user.uid,
+                displayName: username,
+                email: user.email,
+                role: 'user', // Default role
+                createdAt: new Date(),
+            });
+
             toast({
                 title: "Account Created",
-                description: "You have successfully signed up.",
+                description: "Welcome! You have successfully signed up.",
             });
-            // TODO: Redirect user to their profile page or to the login page
+
+            // Redirect user to the homepage
+            router.push('/');
+
         } catch (error: any) {
             toast({
                 title: "Signup Failed",

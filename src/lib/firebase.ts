@@ -19,20 +19,14 @@ let app: FirebaseApp;
 let auth: Auth;
 let db: Firestore;
 
-if (typeof window !== 'undefined' && !getApps().length) {
-    try {
-        app = initializeApp(firebaseConfig);
-        auth = getAuth(app);
-        db = getFirestore(app);
-    } catch (e: any) {
-        console.error("Failed to initialize Firebase", e);
-    }
-} else if (getApps().length) {
-    app = getApps()[0];
-    auth = getAuth(app);
-    db = getFirestore(app);
+if (getApps().length) {
+  app = getApps()[0];
+} else {
+  app = initializeApp(firebaseConfig);
 }
+
+auth = getAuth(app);
+db = getFirestore(app);
 
 
 export { app, auth, db };
-

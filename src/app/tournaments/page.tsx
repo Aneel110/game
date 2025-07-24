@@ -4,23 +4,45 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight, Calendar, Trophy, AlertTriangle } from 'lucide-react';
-import { db } from "@/lib/firebase";
-import { collection, getDocs, query, orderBy } from "firebase/firestore";
+import { db } from "@/lib/firebase-admin";
+import { collection, getDocs, query, orderBy, Timestamp } from "firebase/firestore";
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
+type Tournament = {
+  id: string;
+  name: string;
+  date: string | Timestamp;
+  prize: string;
+  status: string;
+  image: string;
+  dataAiHint?: string;
+};
+
 async function getTournaments() {
+  if (!db) {
+    return { success: false, error: "Server-side Firebase is not configured. Please set the FIREBASE_SERVICE_ACCOUNT_KEY in your .env file." };
+  }
   try {
     const q = query(collection(db, "tournaments"), orderBy("date", "desc"));
     const querySnapshot = await getDocs(q);
-    const data: any[] = [];
+    const data: Tournament[] = [];
     querySnapshot.forEach((doc) => {
-        data.push({ id: doc.id, ...doc.data() });
+        const docData = doc.data();
+        data.push({ 
+          id: doc.id, 
+          name: docData.name,
+          // Convert Timestamp to a serializable format if it's a Timestamp object
+          date: docData.date instanceof Timestamp ? docData.date.toDate().toISOString().split('T')[0] : docData.date,
+          prize: docData.prize,
+          status: docData.status,
+          image: docData.image,
+          dataAiHint: docData.dataAiHint,
+        });
     });
     return { success: true, data };
   } catch (error) {
     console.error("Error fetching tournaments:", error);
-    // This often means Firestore is not enabled in the Firebase project.
-    return { success: false, error: "Could not connect to the database. Please ensure Firestore is enabled in your Firebase project." };
+    return { success: false, error: "Could not connect to the database. Please ensure Firestore is enabled and permissions are correct." };
   }
 }
 
@@ -60,7 +82,7 @@ export default async function TournamentsPage() {
 
       {tournaments && tournaments.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {tournaments.map((t) => (
+          {tournaments.map((t: Tournament) => (
             <Card key={t.id} className="flex flex-col overflow-hidden hover:shadow-primary/20 hover:shadow-lg transition-all duration-300">
               <CardHeader className="p-0 relative">
                 <Image src={t.image} alt={t.name} width={600} height={400} className="w-full h-48 object-cover" data-ai-hint={t.dataAiHint} />
@@ -71,7 +93,7 @@ export default async function TournamentsPage() {
                 <div className="flex items-center text-muted-foreground text-sm mb-4">
                   <div className="flex items-center mr-4">
                     <Calendar className="w-4 h-4 mr-2" />
-                    <span>{t.date}</span>
+                    <span>{typeof t.date === 'string' ? t.date : t.date.toDateString()}</span>
                   </div>
                   <div className="flex items-center">
                     <Trophy className="w-4 h-4 mr-2 text-primary" />

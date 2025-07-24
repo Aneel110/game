@@ -3,26 +3,16 @@
 
 import { db } from '@/lib/firebase-admin';
 import { revalidatePath } from 'next/cache';
-import { auth } from 'firebase-admin';
-
-// In a real app, you'd get the user's ID from their session.
-// For now, we'll use a mock user.
-const MOCK_USER = {
-  id: 'mock_user_1',
-  name: 'NewChallenger',
-  avatar: 'https://placehold.co/40x40.png',
-  role: 'user'
-};
 
 interface Player {
   pubgName: string;
   pubgId: string;
+  discordUsername?: string;
 }
 
 interface RegistrationData {
   teamName: string;
   teamTag: string;
-  discordUsername: string;
   players: Player[];
   registeredById: string;
   registeredByName: string;
@@ -52,6 +42,7 @@ export async function registerForTournament(tournamentId: string, data: Registra
     });
 
     revalidatePath(`/tournaments/${tournamentId}`);
+    revalidatePath(`/admin/tournaments/${tournamentId}`);
     return { success: true, message: 'Registration successful! Your registration is pending approval.' };
   } catch (error) {
     console.error('Error registering for tournament:', error);
@@ -82,6 +73,7 @@ export async function updateRegistrationStatus(tournamentId: string, registratio
         const registrationRef = db.collection('tournaments').doc(tournamentId).collection('registrations').doc(registrationId);
         await registrationRef.update({ status });
         revalidatePath(`/admin/tournaments/${tournamentId}`);
+        revalidatePath(`/tournaments/${tournamentId}`);
         return { success: true, message: `Registration status updated to ${status}.` };
     } catch (error) {
         console.error('Error updating registration status:', error);

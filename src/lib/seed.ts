@@ -45,16 +45,16 @@ const userData = {
 };
 
 const samplePlayers = [
-    { pubgName: 'PlayerOne', pubgId: '5123456789' },
+    { pubgName: 'PlayerOne', pubgId: '5123456789', discordUsername: 'playerone#1111' },
     { pubgName: 'PlayerTwo', pubgId: '5234567890' },
-    { pubgName: 'PlayerThree', pubgId: '5345678901' },
+    { pubgName: 'PlayerThree', pubgId: '5345678901', discordUsername: 'playerthree#3333' },
     { pubgName: 'PlayerFour', pubgId: '5456789012' },
 ];
 
 const initialRegistrations = [
-    { tournamentId: '1', registeredById: 'user1', registeredByName: 'AlphaTeam', teamName: 'Alpha Wolves', teamTag: 'AW', status: 'approved', players: samplePlayers, discordUsername: 'alpha#1111' },
-    { tournamentId: '1', registeredById: 'user2', registeredByName: 'BravoTeam', teamName: 'Bravo Knights', teamTag: 'BK', status: 'approved', players: samplePlayers, discordUsername: 'bravo#2222' },
-    { tournamentId: '1', registeredById: 'user3', registeredByName: 'CharlieTeam', teamName: 'Charlie Dragons', teamTag: 'CD', status: 'pending', players: samplePlayers, discordUsername: 'charlie#3333' },
+    { tournamentId: '1', registeredById: 'user1', registeredByName: 'AlphaTeam', teamName: 'Alpha Wolves', teamTag: 'AW', status: 'approved', players: samplePlayers },
+    { tournamentId: '1', registeredById: 'user2', registeredByName: 'BravoTeam', teamName: 'Bravo Knights', teamTag: 'BK', status: 'approved', players: samplePlayers },
+    { tournamentId: '1', registeredById: 'user3', registeredByName: 'CharlieTeam', teamName: 'Charlie Dragons', teamTag: 'CD', status: 'pending', players: samplePlayers },
 ];
 
 

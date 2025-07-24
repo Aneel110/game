@@ -66,7 +66,7 @@ export default async function AdminTournamentDetailPage({ params }: AdminTournam
                     <TableHeader>
                         <TableRow>
                             <TableHead>Team Name</TableHead>
-                            <TableHead>Contact</TableHead>
+                            <TableHead>Registered By</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
@@ -79,16 +79,24 @@ export default async function AdminTournamentDetailPage({ params }: AdminTournam
                                     <div className="text-sm text-muted-foreground">[{reg.teamTag}]</div>
                                      <Accordion type="single" collapsible className="w-full mt-2">
                                         <AccordionItem value="item-1">
-                                            <AccordionTrigger className="text-xs py-1">View Players ({reg.players.length})</AccordionTrigger>
+                                            <AccordionTrigger className="text-xs py-1">View Players ({Array.isArray(reg.players) ? reg.players.length : 0})</AccordionTrigger>
                                             <AccordionContent>
                                                 <ul className="list-none space-y-2 pt-2">
-                                                    {reg.players.map((player: any, index: number) => (
-                                                        <li key={index} className="flex items-center gap-2 text-xs">
-                                                            <User className="w-3 h-3 text-muted-foreground" />
-                                                            <div>
-                                                                <span className="font-semibold">{player.pubgName}</span> 
-                                                                <span className="text-muted-foreground"> ({player.pubgId})</span>
+                                                    {Array.isArray(reg.players) && reg.players.map((player: any, index: number) => (
+                                                        <li key={index} className="flex flex-col items-start gap-1 text-xs">
+                                                            <div className="flex items-center gap-2">
+                                                                <User className="w-3 h-3 text-muted-foreground" />
+                                                                <div>
+                                                                    <span className="font-semibold">{player.pubgName}</span> 
+                                                                    <span className="text-muted-foreground"> ({player.pubgId})</span>
+                                                                </div>
                                                             </div>
+                                                            {player.discordUsername && (
+                                                                <div className="text-xs text-muted-foreground flex items-center gap-1.5 ml-5">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-message-circle-code"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/><path d="m10 10-2 2 2 2"/><path d="m14 10 2 2-2 2"/></svg>
+                                                                    {player.discordUsername}
+                                                                </div>
+                                                            )}
                                                         </li>
                                                     ))}
                                                 </ul>
@@ -98,12 +106,6 @@ export default async function AdminTournamentDetailPage({ params }: AdminTournam
                                 </TableCell>
                                 <TableCell>
                                     <div className="text-sm">{reg.registeredByName}</div>
-                                    {reg.discordUsername && (
-                                        <div className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-message-circle-code"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/><path d="m10 10-2 2 2 2"/><path d="m14 10 2 2-2 2"/></svg>
-                                            {reg.discordUsername}
-                                        </div>
-                                    )}
                                 </TableCell>
                                 <TableCell>{getStatusBadge(reg.status)}</TableCell>
                                 <TableCell className="text-right">

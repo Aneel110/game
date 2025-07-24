@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, PlusCircle, Trash2, X } from 'lucide-react';
+import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { registerForTournament } from '@/lib/actions';
 import Link from 'next/link';
@@ -34,12 +34,12 @@ import Link from 'next/link';
 const playerSchema = z.object({
   pubgName: z.string().min(1, 'Player name is required.'),
   pubgId: z.string().min(1, 'Player ID is required.'),
+  discordUsername: z.string().optional(),
 });
 
 const registrationSchema = z.object({
   teamName: z.string().min(3, 'Team name must be at least 3 characters.'),
   teamTag: z.string().min(2, 'Team tag must be 2-4 characters.').max(4),
-  discordUsername: z.string().min(2, 'Discord username is required.'),
   players: z.array(playerSchema).min(4, 'You must register at least 4 players.').max(6, 'You can register a maximum of 6 players.'),
 });
 
@@ -62,8 +62,12 @@ export default function TournamentRegistrationForm({ tournamentId, isLoggedIn, i
     defaultValues: {
       teamName: '',
       teamTag: '',
-      discordUsername: '',
-      players: [{ pubgName: '', pubgId: '' }, { pubgName: '', pubgId: '' }, { pubgName: '', pubgId: '' }, { pubgName: '', pubgId: '' }],
+      players: [
+        { pubgName: '', pubgId: '', discordUsername: '' }, 
+        { pubgName: '', pubgId: '', discordUsername: '' }, 
+        { pubgName: '', pubgId: '', discordUsername: '' }, 
+        { pubgName: '', pubgId: '', discordUsername: '' }
+      ],
     },
   });
 
@@ -146,7 +150,7 @@ export default function TournamentRegistrationForm({ tournamentId, isLoggedIn, i
             </DialogHeader>
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                     control={form.control}
                     name="teamName"
@@ -173,27 +177,14 @@ export default function TournamentRegistrationForm({ tournamentId, isLoggedIn, i
                         </FormItem>
                     )}
                     />
-                     <FormField
-                    control={form.control}
-                    name="discordUsername"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Discord Username</FormLabel>
-                        <FormControl>
-                            <Input placeholder="e.g., user#1234" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
                 </div>
 
                 <div>
                     <FormLabel>Players</FormLabel>
                     <div className="space-y-4 mt-2">
                     {fields.map((field, index) => (
-                        <div key={field.id} className="flex items-center gap-2">
-                        <div className="grid grid-cols-2 gap-2 flex-grow">
+                        <div key={field.id} className="flex items-start gap-2">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 flex-grow">
                             <FormField
                             control={form.control}
                             name={`players.${index}.pubgName`}
@@ -218,6 +209,18 @@ export default function TournamentRegistrationForm({ tournamentId, isLoggedIn, i
                                 </FormItem>
                             )}
                             />
+                            <FormField
+                            control={form.control}
+                            name={`players.${index}.discordUsername`}
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormControl>
+                                    <Input placeholder="Discord (Optional)" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
                         </div>
                         <Button
                             type="button"
@@ -225,6 +228,7 @@ export default function TournamentRegistrationForm({ tournamentId, isLoggedIn, i
                             size="icon"
                             onClick={() => remove(index)}
                             disabled={fields.length <= 4}
+                            className="mt-1"
                         >
                             <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
@@ -237,7 +241,7 @@ export default function TournamentRegistrationForm({ tournamentId, isLoggedIn, i
                         variant="outline"
                         size="sm"
                         className="mt-2"
-                        onClick={() => append({ pubgName: '', pubgId: '' })}
+                        onClick={() => append({ pubgName: '', pubgId: '', discordUsername: '' })}
                         disabled={fields.length >= 6}
                         >
                         <PlusCircle className="mr-2 h-4 w-4" />
@@ -278,7 +282,7 @@ export default function TournamentRegistrationForm({ tournamentId, isLoggedIn, i
       <DialogTrigger asChild>
         {getTriggerButton()}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[625px]">
+      <DialogContent className="sm:max-w-[725px]">
         {renderContent()}
       </DialogContent>
     </Dialog>

@@ -1,10 +1,9 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Trophy, AlertTriangle } from "lucide-react";
+import { Crown, Drumstick, Swords, Trophy, AlertTriangle } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 async function getLeaderboardData() {
@@ -22,25 +21,17 @@ async function getLeaderboardData() {
   }
 }
 
-const getTierColor = (tier: string) => {
-  if (tier === 'Conqueror') return 'text-red-400';
-  if (tier.includes('Ace')) return 'text-orange-400';
-  if (tier === 'Crown') return 'text-yellow-400';
-  if (tier === 'Diamond') return 'text-blue-400';
-  return 'text-muted-foreground';
-}
-
 export default async function LeaderboardsPage() {
   const { success, data: leaderboardData, error } = await getLeaderboardData();
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="text-center mb-12">
-        <h1 className="text-5xl font-headline font-bold flex items-center justify-center gap-4">
-          <Trophy className="w-12 h-12 text-primary" />
-          Leaderboards
+        <h1 className="text-5xl md:text-6xl font-headline font-bold flex items-center justify-center gap-4 text-shadow-lg animate-fade-in-down">
+          <Trophy className="w-12 h-12 text-primary animate-pulse" />
+          HALL OF FAME
         </h1>
-        <p className="text-muted-foreground mt-2">See who's dominating the arena.</p>
+        <p className="text-muted-foreground mt-2 text-lg">See who's dominating the arena.</p>
       </div>
 
        {!success && (
@@ -54,45 +45,55 @@ export default async function LeaderboardsPage() {
       )}
 
       {leaderboardData && leaderboardData.length > 0 && (
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden bg-card/80 backdrop-blur-sm border-primary/20">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead className="text-center">Rank</TableHead>
+              <TableRow className="border-b-primary/20">
+                <TableHead className="text-center w-[100px]">Rank</TableHead>
                 <TableHead>Player</TableHead>
-                <TableHead className="text-center">Tier</TableHead>
+                <TableHead className="text-center">Matches</TableHead>
+                <TableHead className="text-center">Chicken Dinners</TableHead>
                 <TableHead className="text-right">Points</TableHead>
-                <TableHead className="text-right">Wins</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {leaderboardData.map((p) => (
-                <TableRow key={p.rank} className="hover:bg-primary/5">
-                  <TableCell className="text-center font-bold text-lg">
-                    {p.rank <= 3 ? (
-                      <span className={p.rank === 1 ? 'text-yellow-400' : p.rank === 2 ? 'text-gray-300' : 'text-orange-400'}>
-                        {p.rank}
+              {leaderboardData.map((p, index) => (
+                <TableRow 
+                  key={p.rank} 
+                  className="border-b-primary/10 hover:bg-primary/10 transition-colors duration-300"
+                  style={{ animation: `fadeInUp 0.5s ${index * 0.05}s ease-out both` }}
+                >
+                  <TableCell className="text-center font-bold text-2xl">
+                    {p.rank === 1 ? (
+                      <span className="text-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.8)] flex items-center justify-center">
+                        <Crown className="w-8 h-8 mr-1" /> {p.rank}
                       </span>
+                    ) : p.rank === 2 ? (
+                      <span className="text-gray-300 drop-shadow-[0_0_5px_rgba(209,213,219,0.7)]">{p.rank}</span>
+                    ) : p.rank === 3 ? (
+                      <span className="text-orange-400 drop-shadow-[0_0_5px_rgba(251,146,60,0.7)]">{p.rank}</span>
                     ) : (
-                      p.rank
+                      <span className="text-muted-foreground">{p.rank}</span>
                     )}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-4">
-                      <Avatar>
+                      <Avatar className="h-12 w-12 border-2 border-primary/50">
                         <AvatarImage src={`https://placehold.co/40x40.png?text=${p.player.charAt(0)}`} />
                         <AvatarFallback>{p.player.charAt(0)}</AvatarFallback>
                       </Avatar>
-                      <span className="font-medium">{p.player}</span>
+                      <span className="font-medium text-lg">{p.player}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-center">
-                    <Badge variant="outline" className={`font-bold ${getTierColor(p.tier)} border-current`}>
-                      {p.tier}
-                    </Badge>
+                  <TableCell className="text-center font-mono text-lg flex items-center justify-center gap-2">
+                    <Swords className="w-5 h-5 text-muted-foreground" />
+                    {p.matches}
                   </TableCell>
-                  <TableCell className="text-right font-mono">{p.points.toLocaleString()}</TableCell>
-                  <TableCell className="text-right font-mono">{p.wins}</TableCell>
+                  <TableCell className="text-center font-mono text-lg flex items-center justify-center gap-2">
+                     <Drumstick className="w-5 h-5 text-amber-500" />
+                    {p.chickenDinners}
+                  </TableCell>
+                  <TableCell className="text-right font-bold text-primary text-lg">{p.points.toLocaleString()}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -101,7 +102,7 @@ export default async function LeaderboardsPage() {
       )}
       
       {success && leaderboardData?.length === 0 && (
-         <Card className="text-center p-8">
+         <Card className="text-center p-8 bg-card/50">
             <CardTitle>No Leaderboard Data</CardTitle>
             <p className="text-muted-foreground mt-2">It looks like the database is empty. Have you seeded the data from the admin dashboard?</p>
           </Card>

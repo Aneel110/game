@@ -13,16 +13,16 @@ const tournamentData = [
 ];
 
 const leaderboardData = [
-  { rank: 1, player: 'ShadowStriker', points: 5420, wins: 25, tier: 'Conqueror' },
-  { rank: 2, player: 'Phoenix', points: 5310, wins: 22, tier: 'Conqueror' },
-  { rank: 3, player: 'Viper', points: 5150, wins: 19, tier: 'Ace Master' },
-  { rank: 4, player: 'Ghost', points: 4980, wins: 15, tier: 'Ace Master' },
-  { rank: 5, player: 'Blitz', points: 4800, wins: 18, tier: 'Ace' },
-  { rank: 6, player: 'Rogue', points: 4650, wins: 12, tier: 'Ace' },
-  { rank: 7, player: 'Reaper', points: 4500, wins: 14, tier: 'Crown' },
-  { rank: 8, player: 'Fury', points: 4350, wins: 10, tier: 'Crown' },
-  { rank: 9, player: 'Warden', points: 4200, wins: 9, tier: 'Diamond' },
-  { rank: 10, player: 'Nomad', points: 4100, wins: 11, tier: 'Diamond' },
+  { rank: 1, player: 'ShadowStriker', points: 5420, matches: 150, chickenDinners: 25 },
+  { rank: 2, player: 'Phoenix', points: 5310, matches: 145, chickenDinners: 22 },
+  { rank: 3, player: 'Viper', points: 5150, matches: 140, chickenDinners: 19 },
+  { rank: 4, player: 'Ghost', points: 4980, matches: 160, chickenDinners: 15 },
+  { rank: 5, player: 'Blitz', points: 4800, matches: 130, chickenDinners: 18 },
+  { rank: 6, player: 'Rogue', points: 4650, matches: 125, chickenDinners: 12 },
+  { rank: 7, player: 'Reaper', points: 4500, matches: 135, chickenDinners: 14 },
+  { rank: 8, player: 'Fury', points: 4350, matches: 110, chickenDinners: 10 },
+  { rank: 9, player: 'Warden', points: 4200, matches: 100, chickenDinners: 9 },
+  { rank: 10, player: 'Nomad', points: 4100, matches: 115, chickenDinners: 11 },
 ];
 
 const userData = {

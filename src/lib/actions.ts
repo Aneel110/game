@@ -80,3 +80,18 @@ export async function updateRegistrationStatus(tournamentId: string, registratio
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }
+
+export async function updateUserRole(userId: string, role: 'admin' | 'user') {
+    if (!userId || !role) {
+        return { success: false, message: 'Missing required parameters.' };
+    }
+    try {
+        const userRef = db.collection('users').doc(userId);
+        await userRef.update({ role });
+        revalidatePath('/admin/users');
+        return { success: true, message: `User role updated to ${role}.` };
+    } catch (error) {
+        console.error('Error updating user role:', error);
+        return { success: false, message: 'An unexpected error occurred.' };
+    }
+}

@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
+import { doc, getDoc } from "firebase/firestore";
 
 export function LoginForm() {
   const { toast } = useToast();
@@ -21,17 +22,18 @@ export function LoginForm() {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       
-      const tokenResult = await userCredential.user.getIdTokenResult();
+      const userDocRef = doc(db, 'users', userCredential.user.uid);
+      const userDocSnap = await getDoc(userDocRef);
       
       toast({
         title: "Login Successful",
         description: "Welcome back!",
       });
 
-      if (tokenResult.claims.isAdmin) {
+      if (userDocSnap.exists() && userDocSnap.data().role === 'admin') {
         router.push('/admin/dashboard');
       } else {
-        router.push('/profile');
+        router.push('/');
       }
 
     } catch (error: any) {

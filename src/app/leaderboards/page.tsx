@@ -1,12 +1,16 @@
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Crown, Drumstick, Swords, Trophy, AlertTriangle } from "lucide-react";
-import { db } from "@/lib/firebase";
+import { db } from "@/lib/firebase-admin";
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 async function getLeaderboardData() {
+  if (!db) {
+    return { success: false, error: "Could not connect to the database. Please ensure Firestore is enabled and service account is set." };
+  }
   try {
     const q = query(collection(db, "leaderboard"), orderBy("rank", "asc"));
     const querySnapshot = await getDocs(q);

@@ -536,15 +536,15 @@ const sidebarMenuButtonVariants = cva(
 
 const SidebarMenuButton = React.forwardRef<
   HTMLDivElement,
-  React.ComponentProps<"div"> & {
-    as?: React.ElementType
+  Omit<React.ComponentProps<"div">, "as"> & {
+    asChild?: boolean
     isActive?: boolean
     tooltip?: string | React.ComponentProps<typeof TooltipContent>
   } & VariantProps<typeof sidebarMenuButtonVariants>
 >(
   (
     {
-      as: Comp = "div",
+      asChild = false,
       isActive = false,
       variant = "default",
       size = "default",
@@ -554,7 +554,7 @@ const SidebarMenuButton = React.forwardRef<
     },
     ref
   ) => {
-    
+    const Comp = asChild ? Slot : "div"
     const { isMobile, state } = useSidebar()
 
     const button = (

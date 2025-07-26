@@ -55,8 +55,8 @@ function AdminNavContent({ children }: { children: React.ReactNode }) {
             <SidebarMenu>
                 {adminNavItems.map((item) => (
                   <SidebarMenuItem key={item.label}>
-                    <Link href={item.href} legacyBehavior passHref>
-                      <SidebarMenuButton as="a" isActive={pathname.startsWith(item.href)}>
+                    <Link href={item.href}>
+                      <SidebarMenuButton isActive={pathname.startsWith(item.href)}>
                         <item.icon />
                         <span>{item.label}</span>
                       </SidebarMenuButton>

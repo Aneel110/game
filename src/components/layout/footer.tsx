@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -45,7 +46,7 @@ export default function Footer() {
           <div className="flex flex-col gap-4">
             <Link href="/" className="flex items-center gap-2">
               <Logo className="h-8 w-8 text-primary" />
-              <span className="text-xl font-bold font-headline">PUBG Arena</span>
+              <span className="text-xl font-bold font-headline">E-Sports Nepal</span>
             </Link>
             <p className="text-muted-foreground text-sm max-w-xs">
               The ultimate hub for competitive players. Join tournaments, climb the leaderboards, and become a legend.
@@ -80,7 +81,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="mt-8 pt-8 border-t flex flex-col sm:flex-row justify-between items-center">
-          <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} PUBG Arena. All rights reserved.</p>
+          <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} E-Sports Nepal. All rights reserved.</p>
         </div>
       </div>
     </footer>

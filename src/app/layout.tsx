@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { cn } from '@/lib/utils';
@@ -7,8 +8,8 @@ import Footer from '@/components/layout/footer';
 import { AuthProvider } from '@/hooks/use-auth';
 
 export const metadata: Metadata = {
-  title: 'PUBG Arena: Elite Tournaments & Community Hub',
-  description: 'Your one-stop destination for PUBG tournaments, community, and stats.',
+  title: 'E-Sports Nepal: Elite Tournaments & Community Hub',
+  description: 'Your one-stop destination for E-Sports tournaments, community, and stats in Nepal.',
   icons: {
     icon: "/favicon.svg",
   }

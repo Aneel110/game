@@ -1,4 +1,4 @@
-# Firebase Studio
+# E-Sports Nepal
 
 This is a NextJS starter in Firebase Studio.
 

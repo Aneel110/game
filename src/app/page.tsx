@@ -141,7 +141,7 @@ export default function Home() {
         <div className="absolute inset-0 z-0">
           <Image
             src="https://placehold.co/1920x1080.png"
-            alt="PUBG Arena hero background"
+            alt="E-Sports Nepal hero background"
             data-ai-hint="battle royale landscape"
             layout="fill"
             objectFit="cover"
@@ -151,7 +151,7 @@ export default function Home() {
         </div>
         <div className="z-10 flex flex-col items-center p-4">
           <h1 className="text-5xl md:text-7xl font-headline font-bold mb-4 text-shadow-lg animate-fade-in-down">
-            Welcome to PUBG Arena
+            Welcome to E-Sports Nepal
           </h1>
           <p className="text-lg md:text-xl mb-8 max-w-2xl text-foreground/80">
             The ultimate hub for competitive players. Join tournaments, climb the leaderboards, and become a legend.

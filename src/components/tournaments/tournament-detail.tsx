@@ -119,12 +119,14 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
            <TournamentParticipants 
             icon={ShieldCheck}
             title="Approved Teams"
-            participants={approvedParticipants} 
+            participants={approvedParticipants}
+            showPlayers={false}
           />
           <TournamentParticipants 
             icon={ShieldAlert}
             title="Pending Approval"
             participants={pendingParticipants} 
+            showPlayers={false}
            />
         </div>
       </div>

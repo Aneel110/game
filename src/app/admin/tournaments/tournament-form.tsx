@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useFormState } from 'react-dom';
@@ -14,17 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { createTournament, updateTournament } from '@/lib/actions';
-
-const tournamentSchema = z.object({
-  name: z.string().min(3, 'Name must be at least 3 characters.'),
-  date: z.string().min(1, 'Date is required.'),
-  prize: z.coerce.number().min(0, 'Prize must be a positive number.'),
-  status: z.enum(['Upcoming', 'Ongoing', 'Finished']),
-  mode: z.string().min(1, 'Mode is required.'),
-  image: z.string().url('Image must be a valid URL.'),
-  dataAiHint: z.string().optional(),
-  description: z.string().min(10, 'Description must be at least 10 characters.'),
-});
+import { tournamentSchema } from '@/lib/schemas';
 
 type TournamentFormValues = z.infer<typeof tournamentSchema>;
 

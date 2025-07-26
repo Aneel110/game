@@ -1,5 +1,9 @@
+
 import TournamentDetail from "@/components/tournaments/tournament-detail";
 import { db } from "@/lib/firebase-admin";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertTriangle } from "lucide-react";
+import { Card } from "@/components/ui/card";
 
 type TournamentDetailPageProps = {
     params: {
@@ -8,34 +12,65 @@ type TournamentDetailPageProps = {
 }
 
 async function getTournamentData(id: string) {
-    const docRef = db.collection("tournaments").doc(id);
-    const docSnap = await docRef.get();
+    if (!db) {
+        return { error: "Server-side Firebase is not configured correctly." };
+    }
+    try {
+        const docRef = db.collection("tournaments").doc(id);
+        const docSnap = await docRef.get();
 
-    if (docSnap.exists) {
-        return { id: docSnap.id, ...docSnap.data() };
-    } else {
-        return null;
+        if (docSnap.exists) {
+            return { tournament: { id: docSnap.id, ...docSnap.data() } };
+        } else {
+            return { tournament: null };
+        }
+    } catch (error: any) {
+        return { error: error.message };
     }
 }
 
 async function getRegistrations(id: string) {
-    const registrationsSnapshot = await db.collection('tournaments').doc(id).collection('registrations').get();
-    // Convert Firestore Timestamps to serializable strings
-    const registrations = registrationsSnapshot.docs.map(doc => {
-        const data = doc.data();
-        return { 
-            id: doc.id, 
-            ...data,
-            registeredAt: data.registeredAt.toDate().toISOString(),
-        };
-    });
-    return registrations;
+     if (!db) {
+        return { error: "Server-side Firebase is not configured correctly." };
+    }
+    try {
+        const registrationsSnapshot = await db.collection('tournaments').doc(id).collection('registrations').get();
+        // Convert Firestore Timestamps to serializable strings
+        const registrations = registrationsSnapshot.docs.map(doc => {
+            const data = doc.data();
+            return { 
+                id: doc.id, 
+                ...data,
+                registeredAt: data.registeredAt.toDate().toISOString(),
+            };
+        });
+        return { registrations };
+    } catch (error: any) {
+        return { error: error.message };
+    }
 }
 
 
 export default async function TournamentDetailPage({ params }: TournamentDetailPageProps) {
-    const tournament = await getTournamentData(params.id);
-    const registrations = await getRegistrations(params.id);
+    const { tournament, error: tournamentError } = await getTournamentData(params.id);
+    const { registrations, error: registrationError } = await getRegistrations(params.id);
+
+    if (tournamentError || registrationError) {
+         return (
+            <div className="container mx-auto px-4 py-8">
+                 <Card className="p-8">
+                    <Alert variant="destructive">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertTitle>Could not load tournament data</AlertTitle>
+                        <AlertDescription>
+                            There was a problem connecting to the database. Please ensure your `FIREBASE_SERVICE_ACCOUNT_KEY` is set correctly in your environment variables.
+                            <pre className="mt-2 text-xs bg-muted p-2 rounded">{tournamentError || registrationError}</pre>
+                        </AlertDescription>
+                    </Alert>
+                 </Card>
+            </div>
+        )
+    }
 
     if (!tournament) {
         return (
@@ -46,5 +81,5 @@ export default async function TournamentDetailPage({ params }: TournamentDetailP
         )
     }
 
-    return <TournamentDetail tournament={tournament} registrations={registrations} />;
+    return <TournamentDetail tournament={tournament} registrations={registrations || []} />;
 }

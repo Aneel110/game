@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import {
   Carousel,
   CarouselContent,
@@ -10,10 +10,11 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel';
-import { ArrowRight, Trophy, Users, Newspaper, Signal } from 'lucide-react';
+import { ArrowRight, Trophy, Users, Newspaper, Signal, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import RecommendationEngine from '@/components/ai/recommendation-engine';
 import { db } from '@/lib/firebase-admin';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const tournaments = [
   {
@@ -73,22 +74,36 @@ const communityPosts = [
 
 async function getLiveStream() {
     if (!db) {
-        return null;
+        return { error: "Server-side Firebase is not configured correctly." };
     }
     try {
         const streamSnapshot = await db.collection('streams').where('status', '==', 'Live').limit(1).get();
         if (streamSnapshot.empty) {
-            return null;
+            return { stream: null };
         }
-        return streamSnapshot.docs[0].data();
-    } catch (error) {
+        return { stream: streamSnapshot.docs[0].data() };
+    } catch (error: any) {
         console.error("Error fetching live stream:", error);
-        return null;
+        return { error: error.message };
     }
 }
 
 async function LiveStreamSection() {
-    const liveStream = await getLiveStream();
+    const { stream: liveStream, error } = await getLiveStream();
+
+    if (error) {
+       return (
+        <section className="w-full bg-card py-8">
+            <div className="container mx-auto">
+                <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>Could not load live stream</AlertTitle>
+                    <AlertDescription>There was a problem connecting to the database. Please ensure your `FIREBASE_SERVICE_ACCOUNT_KEY` is set correctly in your environment variables.</AlertDescription>
+                </Alert>
+            </div>
+        </section>
+       )
+    }
 
     if (!liveStream) {
         return null; // Don't render the section if no one is live

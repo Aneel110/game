@@ -13,30 +13,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { createStream, updateStream } from '@/lib/actions';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
-
-// Helper to extract YouTube video ID from various URL formats
-const getYouTubeVideoId = (url: string): string | null => {
-    try {
-      const urlObj = new URL(url);
-      if (urlObj.hostname === 'youtu.be') {
-        return urlObj.pathname.slice(1);
-      }
-      if (urlObj.hostname.includes('youtube.com')) {
-        return urlObj.searchParams.get('v');
-      }
-      return null;
-    } catch (error) {
-      return null;
-    }
-};
-
-const streamSchema = z.object({
-  title: z.string().min(3, 'Title must be at least 3 characters.'),
-  youtubeUrl: z.string().refine(url => getYouTubeVideoId(url) !== null, {
-    message: "Must be a valid YouTube video URL (e.g., youtube.com/watch?v=... or youtu.be/...)",
-  }),
-  status: z.enum(['Live', 'Upcoming', 'Past']),
-});
+import { streamSchema } from '@/lib/schemas';
 
 type StreamFormValues = z.infer<typeof streamSchema>;
 

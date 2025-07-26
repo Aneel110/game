@@ -3,7 +3,7 @@
 
 import { db } from '@/lib/firebase-admin';
 import { revalidatePath } from 'next/cache';
-import { z } from 'zod';
+import { tournamentSchema, streamSchema } from '@/lib/schemas';
 
 interface Player {
   pubgName: string;
@@ -20,6 +20,9 @@ interface RegistrationData {
 }
 
 export async function registerForTournament(tournamentId: string, data: RegistrationData) {
+  if (!db) {
+    return { success: false, message: 'Database not initialized.' };
+  }
   if (!tournamentId) {
     return { success: false, message: 'Tournament ID is required.' };
   }
@@ -52,6 +55,9 @@ export async function registerForTournament(tournamentId: string, data: Registra
 }
 
 export async function getTournamentRegistrations(tournamentId: string) {
+    if (!db) {
+      return { success: false, data: [], message: 'Database not initialized.' };
+    }
     if (!tournamentId) {
         return { success: false, data: [], message: 'Tournament ID is required.' };
     }
@@ -67,6 +73,9 @@ export async function getTournamentRegistrations(tournamentId: string) {
 
 
 export async function updateRegistrationStatus(tournamentId: string, registrationId: string, status: 'approved' | 'declined') {
+    if (!db) {
+      return { success: false, message: 'Database not initialized.' };
+    }
     if (!tournamentId || !registrationId || !status) {
         return { success: false, message: 'Missing required parameters.' };
     }
@@ -83,6 +92,9 @@ export async function updateRegistrationStatus(tournamentId: string, registratio
 }
 
 export async function updateUserRole(userId: string, role: 'admin' | 'user') {
+    if (!db) {
+      return { success: false, message: 'Database not initialized.' };
+    }
     if (!userId || !role) {
         return { success: false, message: 'Missing required parameters.' };
     }
@@ -97,18 +109,10 @@ export async function updateUserRole(userId: string, role: 'admin' | 'user') {
     }
 }
 
-const tournamentSchema = z.object({
-  name: z.string().min(3, 'Name must be at least 3 characters.'),
-  date: z.string().min(1, 'Date is required.'),
-  prize: z.coerce.number().min(0, 'Prize must be a positive number.'),
-  status: z.enum(['Upcoming', 'Ongoing', 'Finished']),
-  mode: z.string().min(1, 'Mode is required.'),
-  image: z.string().url('Image must be a valid URL.'),
-  dataAiHint: z.string().optional(),
-  description: z.string().min(10, 'Description must be at least 10 characters.'),
-});
-
 export async function createTournament(formData: FormData) {
+    if (!db) {
+      return { success: false, message: 'Database not initialized.' };
+    }
     const rawData = Object.fromEntries(formData.entries());
     const validatedFields = tournamentSchema.safeParse(rawData);
     
@@ -129,6 +133,9 @@ export async function createTournament(formData: FormData) {
 }
 
 export async function updateTournament(id: string, formData: FormData) {
+    if (!db) {
+      return { success: false, message: 'Database not initialized.' };
+    }
     const rawData = Object.fromEntries(formData.entries());
     const validatedFields = tournamentSchema.safeParse(rawData);
     
@@ -150,6 +157,9 @@ export async function updateTournament(id: string, formData: FormData) {
 }
 
 export async function deleteTournament(id: string) {
+    if (!db) {
+      return { success: false, message: 'Database not initialized.' };
+    }
     if (!id) {
         return { success: false, message: 'Tournament ID is required.' };
     }
@@ -165,39 +175,10 @@ export async function deleteTournament(id: string) {
     }
 }
 
-// Helper to extract YouTube video ID from various URL formats
-const getYouTubeVideoId = (url: string): string | null => {
-    try {
-      const urlObj = new URL(url);
-      if (urlObj.hostname === 'youtu.be') {
-        return urlObj.pathname.slice(1);
-      }
-      if (urlObj.hostname.includes('youtube.com')) {
-        return urlObj.searchParams.get('v');
-      }
-      return null;
-    } catch (error) {
-      return null;
-    }
-};
-
-const streamSchema = z.object({
-  title: z.string().min(3, 'Title must be at least 3 characters.'),
-  youtubeUrl: z.string().url('Must be a valid YouTube URL.').transform((url, ctx) => {
-    const videoId = getYouTubeVideoId(url);
-    if (!videoId) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Invalid YouTube URL provided.",
-      });
-      return z.NEVER;
-    }
-    return `https://www.youtube.com/embed/${videoId}`;
-  }),
-  status: z.enum(['Live', 'Upcoming', 'Past']),
-});
-
 export async function createStream(formData: FormData) {
+    if (!db) {
+      return { success: false, message: 'Database not initialized.' };
+    }
     const rawData = Object.fromEntries(formData.entries());
     const validatedFields = streamSchema.safeParse(rawData);
 
@@ -217,6 +198,9 @@ export async function createStream(formData: FormData) {
 }
 
 export async function updateStream(id: string, formData: FormData) {
+    if (!db) {
+      return { success: false, message: 'Database not initialized.' };
+    }
     const rawData = Object.fromEntries(formData.entries());
     const validatedFields = streamSchema.safeParse(rawData);
 
@@ -236,6 +220,9 @@ export async function updateStream(id: string, formData: FormData) {
 }
 
 export async function deleteStream(id: string) {
+    if (!db) {
+      return { success: false, message: 'Database not initialized.' };
+    }
     if (!id) {
         return { success: false, message: 'Stream ID is required.' };
     }

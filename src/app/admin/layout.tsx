@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import {
@@ -42,46 +43,51 @@ function AdminNavContent({ children }: { children: React.ReactNode }) {
         <SidebarProvider>
         <Sidebar>
             <SidebarHeader>
-            <div className="flex items-center gap-2">
-                <Logo className="w-6 h-6 text-primary" />
-                <h2 className="text-lg font-headline font-semibold">Admin Panel</h2>
-            </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Logo className="w-6 h-6 text-primary" />
+                  <h2 className="text-lg font-headline font-semibold">Admin Panel</h2>
+                </div>
+                 <SidebarTrigger className="hidden md:flex" />
+              </div>
             </SidebarHeader>
             <SidebarContent>
             <SidebarMenu>
                 {adminNavItems.map((item) => (
-                <SidebarMenuItem key={item.label}>
-                    <Link href={item.href}>
-                    <SidebarMenuButton isActive={pathname.startsWith(item.href)}>
+                  <SidebarMenuItem key={item.label}>
+                    <Link href={item.href} legacyBehavior passHref>
+                      <SidebarMenuButton as="a" isActive={pathname.startsWith(item.href)}>
                         <item.icon />
                         <span>{item.label}</span>
-                    </SidebarMenuButton>
+                      </SidebarMenuButton>
                     </Link>
-                </SidebarMenuItem>
+                  </SidebarMenuItem>
                 ))}
             </SidebarMenu>
             </SidebarContent>
             <SidebarFooter>
-            <div className="flex items-center gap-2 p-2">
-                <Avatar className="h-8 w-8">
-                <AvatarImage src={user?.photoURL || "https://placehold.co/40x40"} />
-                <AvatarFallback>{user?.displayName?.charAt(0) || 'A'}</AvatarFallback>
-                </Avatar>
-                <div className="flex-grow">
-                <p className="text-sm font-semibold">{user?.displayName || "Admin User"}</p>
-                </div>
-                <Button variant="ghost" size="icon" asChild>
-                    <Link href="/">
-                        <LogOut className="h-4 w-4" />
-                    </Link>
-                </Button>
-            </div>
+              <div className="flex items-center gap-2 p-2">
+                  <Avatar className="h-8 w-8">
+                  <AvatarImage src={user?.photoURL || "https://placehold.co/40x40"} />
+                  <AvatarFallback>{user?.displayName?.charAt(0) || 'A'}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-grow">
+                  <p className="text-sm font-semibold">{user?.displayName || "Admin User"}</p>
+                  </div>
+                  <Button variant="ghost" size="icon" asChild>
+                      <Link href="/">
+                          <LogOut className="h-4 w-4" />
+                      </Link>
+                  </Button>
+              </div>
             </SidebarFooter>
         </Sidebar>
         <SidebarInset>
             <header className="flex items-center justify-between p-4 border-b">
-            <SidebarTrigger />
-            <h1 className="text-xl font-headline font-semibold">{currentPage}</h1>
+              <div className="flex items-center gap-2">
+                <SidebarTrigger className="md:hidden"/>
+                <h1 className="text-xl font-headline font-semibold">{currentPage}</h1>
+              </div>
             </header>
             <div className="p-4">{children}</div>
         </SidebarInset>

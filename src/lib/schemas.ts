@@ -12,39 +12,8 @@ export const tournamentSchema = z.object({
   description: z.string().min(10, 'Description must be at least 10 characters.'),
 });
 
-// Helper to extract YouTube video ID from various URL formats
-const getYouTubeVideoId = (url: string): string | null => {
-    try {
-      const urlObj = new URL(url);
-      if (urlObj.hostname === 'youtu.be') {
-        return urlObj.pathname.slice(1);
-      }
-      if (urlObj.hostname.includes('youtube.com')) {
-        return urlObj.searchParams.get('v');
-      }
-      return null;
-    } catch (error) {
-      return null;
-    }
-};
-
 export const streamSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters.'),
-  youtubeUrl: z.string().refine(url => getYouTubeVideoId(url) !== null, {
-    message: "Must be a valid YouTube video URL (e.g., youtube.com/watch?v=... or youtu.be/...)",
-  }).transform((url, ctx) => {
-    const videoId = getYouTubeVideoId(url);
-    if (!videoId) {
-      // This part of the code should ideally not be reached due to the .refine() check,
-      // but it's here for type safety and as a fallback.
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Invalid YouTube URL provided.",
-      });
-      return z.NEVER;
-    }
-    // We only store the embed URL.
-    return `https://www.youtube.com/embed/${videoId}`;
-  }),
+  youtubeUrl: z.string().url("Must be a valid YouTube URL."),
   status: z.enum(['Live', 'Upcoming', 'Past']),
 });

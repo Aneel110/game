@@ -19,6 +19,31 @@ interface RegistrationData {
   registeredByName: string;
 }
 
+// Helper to extract YouTube video ID from various URL formats
+const getYouTubeVideoId = (url: string): string | null => {
+    try {
+      const urlObj = new URL(url);
+      if (urlObj.hostname === 'youtu.be') {
+        return urlObj.pathname.slice(1);
+      }
+      if (urlObj.hostname.includes('youtube.com')) {
+        return urlObj.searchParams.get('v');
+      }
+      return null;
+    } catch (error) {
+      return null;
+    }
+};
+
+const transformToEmbedUrl = (url: string): string | null => {
+    const videoId = getYouTubeVideoId(url);
+    if (videoId) {
+        return `https://www.youtube.com/embed/${videoId}`;
+    }
+    return null;
+}
+
+
 export async function registerForTournament(tournamentId: string, data: RegistrationData) {
   if (!db) {
     return { success: false, message: 'Database not initialized.' };
@@ -186,8 +211,17 @@ export async function createStream(formData: FormData) {
         return { success: false, message: 'Invalid stream data.', errors: validatedFields.error.flatten().fieldErrors };
     }
 
+    const embedUrl = transformToEmbedUrl(validatedFields.data.youtubeUrl);
+    if (!embedUrl) {
+        return { success: false, message: 'Invalid YouTube URL provided. Please use a standard YouTube video link.' };
+    }
+
     try {
-        await db.collection('streams').add({ ...validatedFields.data, createdAt: new Date() });
+        await db.collection('streams').add({ 
+            ...validatedFields.data,
+            youtubeUrl: embedUrl,
+            createdAt: new Date() 
+        });
         revalidatePath('/streams');
         revalidatePath('/admin/streams');
         return { success: true, message: 'Stream created successfully.' };
@@ -207,9 +241,18 @@ export async function updateStream(id: string, formData: FormData) {
     if (!validatedFields.success) {
         return { success: false, message: 'Invalid stream data.', errors: validatedFields.error.flatten().fieldErrors };
     }
+    
+    const embedUrl = transformToEmbedUrl(validatedFields.data.youtubeUrl);
+    if (!embedUrl) {
+        return { success: false, message: 'Invalid YouTube URL provided. Please use a standard YouTube video link.' };
+    }
+
 
     try {
-        await db.collection('streams').doc(id).update(validatedFields.data);
+        await db.collection('streams').doc(id).update({
+            ...validatedFields.data,
+            youtubeUrl: embedUrl,
+        });
         revalidatePath('/streams');
         revalidatePath('/admin/streams');
         return { success: true, message: 'Stream updated successfully.' };

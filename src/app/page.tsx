@@ -12,7 +12,6 @@ import {
 } from '@/components/ui/carousel';
 import { ArrowRight, Trophy, Users, Newspaper, Signal, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
-import RecommendationEngine from '@/components/ai/recommendation-engine';
 import { db } from '@/lib/firebase-admin';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
@@ -202,17 +201,6 @@ export default function Home() {
           <CarouselPrevious className="hidden sm:flex" />
           <CarouselNext className="hidden sm:flex" />
         </Carousel>
-      </section>
-
-      {/* AI Recommendation Section */}
-      <section id="recommendations" className="w-full bg-background/50 py-16">
-        <div className="w-full max-w-7xl mx-auto px-4">
-            <h2 className="text-4xl font-headline font-bold text-center mb-10">Personalized For You</h2>
-            <p className="text-center text-muted-foreground mb-6 max-w-3xl mx-auto">
-              Our AI can help you find the most relevant news, strategies, and team recruitment posts. Just tell us a bit about your playstyle or what you're looking for.
-            </p>
-            <RecommendationEngine />
-        </div>
       </section>
 
       {/* Community Hub Section */}

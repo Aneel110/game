@@ -1,0 +1,116 @@
+[debug] [2025-07-26T03:39:31.337Z] ----------------------------------------------------------------------
+[debug] [2025-07-26T03:39:31.340Z] Command:       /nix/store/ws50yvm6vzlzf7jzz6n7xh4szddrack1-nodejs-20.19.1/bin/node /home/user/.global_modules/bin/firebase init hosting
+[debug] [2025-07-26T03:39:31.341Z] CLI Version:   14.11.1
+[debug] [2025-07-26T03:39:31.341Z] Platform:      linux
+[debug] [2025-07-26T03:39:31.341Z] Node Version:  v20.19.1
+[debug] [2025-07-26T03:39:31.341Z] Time:          Sat Jul 26 2025 03:39:31 GMT+0000 (Coordinated Universal Time)
+[debug] [2025-07-26T03:39:31.342Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-07-26T03:39:31.348Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-07-26T03:39:31.349Z] > authorizing via signed-in user (anilbhusal9@gmail.com)
+[info] 
+     ######## #### ########  ######## ########     ###     ######  ########
+     ##        ##  ##     ## ##       ##     ##  ##   ##  ##       ##
+     ######    ##  ########  ######   ########  #########  ######  ######
+     ##        ##  ##    ##  ##       ##     ## ##     ##       ## ##
+     ##       #### ##     ## ######## ########  ##     ##  ######  ########
+
+You're about to initialize a Firebase project in this directory:
+
+  /home/user/studio
+
+[info] 
+=== Project Setup
+[info] 
+[info] First, let's associate this project directory with a Firebase project.
+[info] You can create multiple project aliases by running firebase use --add, 
+[info] but for now we'll just set up a default project.
+[info] 
+[debug] [2025-07-26T03:39:40.853Z] No OAuth tokens found
+[debug] [2025-07-26T03:39:40.854Z] No OAuth tokens found
+[debug] [2025-07-26T03:39:40.856Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-07-26T03:39:40.856Z] > authorizing via signed-in user (anilbhusal9@gmail.com)
+[debug] [2025-07-26T03:39:40.867Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/availableProjects pageSize=100
+[debug] [2025-07-26T03:39:41.571Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/availableProjects 200
+[debug] [2025-07-26T03:39:41.571Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/availableProjects [omitted]
+[debug] [2025-07-26T03:40:05.921Z] No OAuth tokens found
+[debug] [2025-07-26T03:40:05.921Z] No OAuth tokens found
+[debug] [2025-07-26T03:40:05.922Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-07-26T03:40:05.922Z] > authorizing via signed-in user (anilbhusal9@gmail.com)
+[debug] [2025-07-26T03:40:05.922Z] >>> [apiv2][query] POST https://firebase.googleapis.com/v1beta1/projects/tribal-iridium-465514-e1:addFirebase [none]
+[debug] [2025-07-26T03:40:07.967Z] <<< [apiv2][status] POST https://firebase.googleapis.com/v1beta1/projects/tribal-iridium-465514-e1:addFirebase 200
+[debug] [2025-07-26T03:40:07.967Z] <<< [apiv2][body] POST https://firebase.googleapis.com/v1beta1/projects/tribal-iridium-465514-e1:addFirebase {"name":"operations/workflows/NDA2YmQ0MzEtNjEwMi00OTNlLWJkOTMtOGNlYWQyYmY2NWVl"}
+[debug] [2025-07-26T03:40:07.972Z] No OAuth tokens found
+[debug] [2025-07-26T03:40:07.972Z] No OAuth tokens found
+[debug] [2025-07-26T03:40:07.972Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-07-26T03:40:07.972Z] > authorizing via signed-in user (anilbhusal9@gmail.com)
+[debug] [2025-07-26T03:40:07.974Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/operations/workflows/NDA2YmQ0MzEtNjEwMi00OTNlLWJkOTMtOGNlYWQyYmY2NWVl [none]
+[debug] [2025-07-26T03:40:09.578Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/operations/workflows/NDA2YmQ0MzEtNjEwMi00OTNlLWJkOTMtOGNlYWQyYmY2NWVl 200
+[debug] [2025-07-26T03:40:09.579Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/operations/workflows/NDA2YmQ0MzEtNjEwMi00OTNlLWJkOTMtOGNlYWQyYmY2NWVl {"name":"operations/workflows/NDA2YmQ0MzEtNjEwMi00OTNlLWJkOTMtOGNlYWQyYmY2NWVl"}
+[debug] [2025-07-26T03:40:10.079Z] [Add Firebase Poller] Retrying task index 0
+[debug] [2025-07-26T03:40:10.080Z] No OAuth tokens found
+[debug] [2025-07-26T03:40:10.081Z] No OAuth tokens found
+[debug] [2025-07-26T03:40:10.081Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-07-26T03:40:10.081Z] > authorizing via signed-in user (anilbhusal9@gmail.com)
+[debug] [2025-07-26T03:40:10.081Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/operations/workflows/NDA2YmQ0MzEtNjEwMi00OTNlLWJkOTMtOGNlYWQyYmY2NWVl [none]
+[debug] [2025-07-26T03:40:10.541Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/operations/workflows/NDA2YmQ0MzEtNjEwMi00OTNlLWJkOTMtOGNlYWQyYmY2NWVl 200
+[debug] [2025-07-26T03:40:10.541Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/operations/workflows/NDA2YmQ0MzEtNjEwMi00OTNlLWJkOTMtOGNlYWQyYmY2NWVl {"name":"operations/workflows/NDA2YmQ0MzEtNjEwMi00OTNlLWJkOTMtOGNlYWQyYmY2NWVl"}
+[debug] [2025-07-26T03:40:11.543Z] [Add Firebase Poller] Retrying task index 0
+[debug] [2025-07-26T03:40:11.544Z] No OAuth tokens found
+[debug] [2025-07-26T03:40:11.544Z] No OAuth tokens found
+[debug] [2025-07-26T03:40:11.544Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-07-26T03:40:11.547Z] > authorizing via signed-in user (anilbhusal9@gmail.com)
+[debug] [2025-07-26T03:40:11.548Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/operations/workflows/NDA2YmQ0MzEtNjEwMi00OTNlLWJkOTMtOGNlYWQyYmY2NWVl [none]
+[debug] [2025-07-26T03:40:12.053Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/operations/workflows/NDA2YmQ0MzEtNjEwMi00OTNlLWJkOTMtOGNlYWQyYmY2NWVl 200
+[debug] [2025-07-26T03:40:12.053Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/operations/workflows/NDA2YmQ0MzEtNjEwMi00OTNlLWJkOTMtOGNlYWQyYmY2NWVl {"name":"operations/workflows/NDA2YmQ0MzEtNjEwMi00OTNlLWJkOTMtOGNlYWQyYmY2NWVl"}
+[debug] [2025-07-26T03:40:14.058Z] [Add Firebase Poller] Retrying task index 0
+[debug] [2025-07-26T03:40:14.059Z] No OAuth tokens found
+[debug] [2025-07-26T03:40:14.059Z] No OAuth tokens found
+[debug] [2025-07-26T03:40:14.059Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-07-26T03:40:14.059Z] > authorizing via signed-in user (anilbhusal9@gmail.com)
+[debug] [2025-07-26T03:40:14.064Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/operations/workflows/NDA2YmQ0MzEtNjEwMi00OTNlLWJkOTMtOGNlYWQyYmY2NWVl [none]
+[debug] [2025-07-26T03:40:14.576Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/operations/workflows/NDA2YmQ0MzEtNjEwMi00OTNlLWJkOTMtOGNlYWQyYmY2NWVl 200
+[debug] [2025-07-26T03:40:14.577Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/operations/workflows/NDA2YmQ0MzEtNjEwMi00OTNlLWJkOTMtOGNlYWQyYmY2NWVl {"name":"operations/workflows/NDA2YmQ0MzEtNjEwMi00OTNlLWJkOTMtOGNlYWQyYmY2NWVl"}
+[debug] [2025-07-26T03:40:18.581Z] [Add Firebase Poller] Retrying task index 0
+[debug] [2025-07-26T03:40:18.582Z] No OAuth tokens found
+[debug] [2025-07-26T03:40:18.582Z] No OAuth tokens found
+[debug] [2025-07-26T03:40:18.585Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-07-26T03:40:18.585Z] > authorizing via signed-in user (anilbhusal9@gmail.com)
+[debug] [2025-07-26T03:40:18.585Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/operations/workflows/NDA2YmQ0MzEtNjEwMi00OTNlLWJkOTMtOGNlYWQyYmY2NWVl [none]
+[debug] [2025-07-26T03:40:19.097Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/operations/workflows/NDA2YmQ0MzEtNjEwMi00OTNlLWJkOTMtOGNlYWQyYmY2NWVl 200
+[debug] [2025-07-26T03:40:19.097Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/operations/workflows/NDA2YmQ0MzEtNjEwMi00OTNlLWJkOTMtOGNlYWQyYmY2NWVl {"name":"operations/workflows/NDA2YmQ0MzEtNjEwMi00OTNlLWJkOTMtOGNlYWQyYmY2NWVl"}
+[debug] [2025-07-26T03:40:27.102Z] [Add Firebase Poller] Retrying task index 0
+[debug] [2025-07-26T03:40:27.103Z] No OAuth tokens found
+[debug] [2025-07-26T03:40:27.103Z] No OAuth tokens found
+[debug] [2025-07-26T03:40:27.104Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-07-26T03:40:27.104Z] > authorizing via signed-in user (anilbhusal9@gmail.com)
+[debug] [2025-07-26T03:40:27.104Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/operations/workflows/NDA2YmQ0MzEtNjEwMi00OTNlLWJkOTMtOGNlYWQyYmY2NWVl [none]
+[debug] [2025-07-26T03:40:27.670Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/operations/workflows/NDA2YmQ0MzEtNjEwMi00OTNlLWJkOTMtOGNlYWQyYmY2NWVl 200
+[debug] [2025-07-26T03:40:27.674Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/operations/workflows/NDA2YmQ0MzEtNjEwMi00OTNlLWJkOTMtOGNlYWQyYmY2NWVl {"name":"operations/workflows/NDA2YmQ0MzEtNjEwMi00OTNlLWJkOTMtOGNlYWQyYmY2NWVl","done":true,"response":{"@type":"type.googleapis.com/google.firebase.service.v1beta1.FirebaseProject","projectId":"tribal-iridium-465514-e1","projectNumber":"947091225321","displayName":"My First Project","name":"projects/tribal-iridium-465514-e1","resources":{"hostingSite":"tribal-iridium-465514-e1"}}}
+[info] 
+[info] 🎉🎉🎉 Your Firebase project is ready! 🎉🎉🎉
+[info] 
+[info] Project information:
+[info]    - Project ID: tribal-iridium-465514-e1
+[info]    - Project Name: My First Project
+[info] 
+[info] Firebase console is available at
+[info] https://console.firebase.google.com/project/tribal-iridium-465514-e1/overview
+[info] i  Using project tribal-iridium-465514-e1 (My First Project) 
+[info] 
+=== Hosting Setup
+[debug] [2025-07-26T03:40:27.691Z] No OAuth tokens found
+[debug] [2025-07-26T03:40:27.691Z] No OAuth tokens found
+[debug] [2025-07-26T03:40:27.691Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-07-26T03:40:27.691Z] > authorizing via signed-in user (anilbhusal9@gmail.com)
+[debug] [2025-07-26T03:40:27.692Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/tribal-iridium-465514-e1 [none]
+[debug] [2025-07-26T03:40:27.914Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/tribal-iridium-465514-e1 200
+[debug] [2025-07-26T03:40:27.915Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/tribal-iridium-465514-e1 {"projectId":"tribal-iridium-465514-e1","projectNumber":"947091225321","displayName":"My First Project","name":"projects/tribal-iridium-465514-e1","resources":{"hostingSite":"tribal-iridium-465514-e1"},"state":"ACTIVE","etag":"1_586a46a6-a69d-445a-8552-dcd64f4c0bba"}
+[info] 
+[info] i  Detected a .git folder at /home/user/studio 
+[info] i  Authorizing with GitHub to upload your service account to a GitHub repository's secrets store. 
+[info] 
+[info] Visit this URL on this device to log in:
+[info] https://github.com/login/oauth/authorize?client_id=89cf50f02ac6aaed3484&state=412760912&redirect_uri=http%3A%2F%2Flocalhost%3A9005&scope=read%3Auser%20repo%20public_repo
+[info] 
+[info] Waiting for authentication...

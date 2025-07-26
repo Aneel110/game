@@ -1,9 +1,10 @@
 
+
 'use server';
 
 import { db } from '@/lib/firebase-admin';
 import { revalidatePath } from 'next/cache';
-import { tournamentSchema, streamSchema } from '@/lib/schemas';
+import { tournamentSchema, streamSchema, leaderboardSchema } from '@/lib/schemas';
 
 interface Player {
   pubgName: string;
@@ -277,5 +278,46 @@ export async function deleteStream(id: string) {
     } catch (error) {
         console.error('Error deleting stream:', error);
         return { success: false, message: 'An unexpected error occurred.' };
+    }
+}
+
+
+export async function createLeaderboardEntry(formData: FormData) {
+    if (!db) return { success: false, message: 'Database not initialized.' };
+    const validatedFields = leaderboardSchema.safeParse(Object.fromEntries(formData));
+    if (!validatedFields.success) return { success: false, message: 'Invalid data.' };
+    try {
+        await db.collection('leaderboard').add(validatedFields.data);
+        revalidatePath('/leaderboards');
+        revalidatePath('/admin/leaderboard');
+        return { success: true, message: 'Leaderboard entry created.' };
+    } catch (error) {
+        return { success: false, message: 'Failed to create entry.' };
+    }
+}
+
+export async function updateLeaderboardEntry(id: string, formData: FormData) {
+    if (!db) return { success: false, message: 'Database not initialized.' };
+    const validatedFields = leaderboardSchema.safeParse(Object.fromEntries(formData));
+    if (!validatedFields.success) return { success: false, message: 'Invalid data.' };
+    try {
+        await db.collection('leaderboard').doc(id).update(validatedFields.data);
+        revalidatePath('/leaderboards');
+        revalidatePath('/admin/leaderboard');
+        return { success: true, message: 'Leaderboard entry updated.' };
+    } catch (error) {
+        return { success: false, message: 'Failed to update entry.' };
+    }
+}
+
+export async function deleteLeaderboardEntry(id: string) {
+    if (!db) return { success: false, message: 'Database not initialized.' };
+    try {
+        await db.collection('leaderboard').doc(id).delete();
+        revalidatePath('/leaderboards');
+        revalidatePath('/admin/leaderboard');
+        return { success: true, message: 'Leaderboard entry deleted.' };
+    } catch (error) {
+        return { success: false, message: 'Failed to delete entry.' };
     }
 }

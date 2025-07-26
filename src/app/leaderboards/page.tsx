@@ -3,7 +3,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Crown, Drumstick, Swords, Trophy, AlertTriangle } from "lucide-react";
 import { db } from "@/lib/firebase-admin";
-import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -12,10 +11,9 @@ async function getLeaderboardData() {
     return { success: false, error: "Could not connect to the database. Please ensure Firestore is enabled and service account is set." };
   }
   try {
-    const q = query(collection(db, "leaderboard"), orderBy("rank", "asc"));
-    const querySnapshot = await getDocs(q);
+    const leaderboardSnapshot = await db.collection("leaderboard").orderBy("rank", "asc").get();
     const data: any[] = [];
-    querySnapshot.forEach((doc) => {
+    leaderboardSnapshot.forEach((doc) => {
         data.push({ id: doc.id, ...doc.data() });
     });
     return { success: true, data };

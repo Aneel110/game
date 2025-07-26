@@ -5,14 +5,15 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight, Calendar, Trophy, AlertTriangle } from 'lucide-react';
 import { db } from "@/lib/firebase-admin";
-import { collection, getDocs, query, orderBy, Timestamp } from "firebase/firestore";
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Timestamp } from 'firebase-admin/firestore';
+
 
 type Tournament = {
   id: string;
   name: string;
   date: string | Timestamp;
-  prize: string;
+  prize: number;
   status: string;
   image: string;
   dataAiHint?: string;
@@ -23,12 +24,11 @@ async function getTournaments() {
     return { success: false, error: "Server-side Firebase is not configured correctly." };
   }
   try {
-    const q = query(collection(db, "tournaments"), orderBy("date", "desc"));
-    const querySnapshot = await getDocs(q);
+    const tournamentsSnapshot = await db.collection("tournaments").orderBy("date", "desc").get();
     const data: Tournament[] = [];
-    querySnapshot.forEach((doc) => {
+    tournamentsSnapshot.forEach((doc) => {
         const docData = doc.data();
-        data.push({ 
+        data.push({
           id: doc.id, 
           name: docData.name,
           // Convert Timestamp to a serializable format if it's a Timestamp object
@@ -97,7 +97,7 @@ export default async function TournamentsPage() {
                   </div>
                   <div className="flex items-center">
                     <Trophy className="w-4 h-4 mr-2 text-primary" />
-                    <span className="font-bold text-lg text-primary">${t.prize}</span>
+                    <span className="font-bold text-lg text-primary">${t.prize.toLocaleString()}</span>
                   </div>
                 </div>
               </CardContent>

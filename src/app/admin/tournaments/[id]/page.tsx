@@ -1,4 +1,5 @@
 
+
 import { db } from "@/lib/firebase-admin";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -27,12 +28,14 @@ const getStatusBadge = (status: string) => {
 }
 
 async function getTournamentData(id: string) {
+    if (!db) return null;
     const docRef = db.collection("tournaments").doc(id);
     const docSnap = await docRef.get();
     return docSnap.exists ? { id: docSnap.id, ...docSnap.data() } : null;
 }
 
 async function getSerializableRegistrations(tournamentId: string) {
+    if (!db) return [];
     const registrationsSnapshot = await db.collection('tournaments').doc(tournamentId).collection('registrations').get();
     const registrations = registrationsSnapshot.docs.map(doc => {
         const data = doc.data();

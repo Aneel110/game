@@ -83,7 +83,7 @@ async function getLiveStream() {
         return { stream: streamSnapshot.docs[0].data() };
     } catch (error: any) {
         console.error("Error fetching live stream:", error);
-        return { error: error.message };
+        return { error: "Failed to fetch live stream. Ensure Firestore is enabled and permissions are correct." };
     }
 }
 
@@ -97,7 +97,9 @@ async function LiveStreamSection() {
                 <Alert variant="destructive">
                     <AlertTriangle className="h-4 w-4" />
                     <AlertTitle>Could not load live stream</AlertTitle>
-                    <AlertDescription>There was a problem connecting to the database. Please ensure your `FIREBASE_SERVICE_ACCOUNT_KEY` is set correctly in your environment variables.</AlertDescription>
+                    <AlertDescription>
+                        {error} Please ensure your `FIREBASE_SERVICE_ACCOUNT_KEY` is set correctly in your environment variables.
+                    </AlertDescription>
                 </Alert>
             </div>
         </section>

@@ -1,4 +1,5 @@
 
+
 import TournamentDetail from "@/components/tournaments/tournament-detail";
 import { db } from "@/lib/firebase-admin";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -25,7 +26,7 @@ async function getTournamentData(id: string) {
             return { tournament: null };
         }
     } catch (error: any) {
-        return { error: error.message };
+        return { error: "Failed to fetch tournament data. Ensure Firestore is enabled and permissions are correct." };
     }
 }
 
@@ -46,7 +47,7 @@ async function getRegistrations(id: string) {
         });
         return { registrations };
     } catch (error: any) {
-        return { error: error.message };
+        return { error: "Failed to fetch registrations. Ensure Firestore is enabled and permissions are correct." };
     }
 }
 
@@ -54,8 +55,9 @@ async function getRegistrations(id: string) {
 export default async function TournamentDetailPage({ params }: TournamentDetailPageProps) {
     const { tournament, error: tournamentError } = await getTournamentData(params.id);
     const { registrations, error: registrationError } = await getRegistrations(params.id);
+    const error = tournamentError || registrationError;
 
-    if (tournamentError || registrationError) {
+    if (error) {
          return (
             <div className="container mx-auto px-4 py-8">
                  <Card className="p-8">
@@ -63,8 +65,7 @@ export default async function TournamentDetailPage({ params }: TournamentDetailP
                         <AlertTriangle className="h-4 w-4" />
                         <AlertTitle>Could not load tournament data</AlertTitle>
                         <AlertDescription>
-                            There was a problem connecting to the database. Please ensure your `FIREBASE_SERVICE_ACCOUNT_KEY` is set correctly in your environment variables.
-                            <pre className="mt-2 text-xs bg-muted p-2 rounded">{tournamentError || registrationError}</pre>
+                            {error} Please ensure your `FIREBASE_SERVICE_ACCOUNT_KEY` is set correctly in your environment variables.
                         </AlertDescription>
                     </Alert>
                  </Card>

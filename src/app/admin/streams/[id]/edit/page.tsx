@@ -1,4 +1,5 @@
 
+
 import StreamForm from '../../stream-form';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { db } from '@/lib/firebase-admin';
@@ -11,6 +12,7 @@ type EditStreamPageProps = {
 }
 
 async function getStreamData(id: string) {
+    if (!db) return null;
     const docRef = db.collection("streams").doc(id);
     const docSnap = await docRef.get();
     
@@ -19,6 +21,7 @@ async function getStreamData(id: string) {
     }
 
     const data = docSnap.data();
+    if (!data) return null;
 
     // The form expects a regular youtube.com/watch?v=... URL
     const videoId = data.youtubeUrl.split('/').pop();

@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -59,7 +60,7 @@ export default async function AdminTournamentsPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {tournaments.map((t: any) => (
+                        {tournaments && tournaments.map((t: any) => (
                             <TableRow key={t.id}>
                                 <TableCell className="font-medium">{t.name}</TableCell>
                                 <TableCell>{t.date}</TableCell>
@@ -80,7 +81,7 @@ export default async function AdminTournamentsPage() {
                                 </TableCell>
                             </TableRow>
                         ))}
-                         {tournaments.length === 0 && (
+                         {(!tournaments || tournaments.length === 0) && (
                             <TableRow>
                                 <TableCell colSpan={5} className="h-24 text-center">
                                     No tournaments found.

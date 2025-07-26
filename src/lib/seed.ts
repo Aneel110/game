@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { db } from './firebase-admin';
@@ -65,6 +66,9 @@ const streamData = [
 ];
 
 export async function seedDatabase() {
+  if (!db) {
+    return { success: false, message: 'Database not initialized.' };
+  }
   const batch = db.batch();
 
   // Seed Tournaments

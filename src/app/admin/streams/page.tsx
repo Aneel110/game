@@ -1,4 +1,5 @@
 
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -65,7 +66,7 @@ export default async function AdminStreamsPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {streams.map((s: any) => (
+                        {streams && streams.map((s: any) => (
                             <TableRow key={s.id}>
                                 <TableCell className="font-medium">{s.title}</TableCell>
                                 <TableCell>{getStatusBadge(s.status)}</TableCell>
@@ -84,7 +85,7 @@ export default async function AdminStreamsPage() {
                                 </TableCell>
                             </TableRow>
                         ))}
-                         {streams.length === 0 && (
+                         {(!streams || streams.length === 0) && (
                             <TableRow>
                                 <TableCell colSpan={4} className="h-24 text-center">
                                     No streams found.

@@ -1,3 +1,4 @@
+
 import TournamentForm from '../../tournament-form';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { db } from '@/lib/firebase-admin';
@@ -10,6 +11,7 @@ type EditTournamentPageProps = {
 }
 
 async function getTournamentData(id: string) {
+    if (!db) return null;
     const docRef = db.collection("tournaments").doc(id);
     const docSnap = await docRef.get();
     
@@ -18,6 +20,8 @@ async function getTournamentData(id: string) {
     }
 
     const data = docSnap.data();
+    if (!data) return null;
+
     return {
         id: docSnap.id,
         name: data.name || '',

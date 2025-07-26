@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { db } from "@/lib/firebase-admin";
@@ -54,7 +55,7 @@ export default async function AdminUsersPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {users.map((user: any) => (
+                        {users && users.map((user: any) => (
                             <TableRow key={user.id}>
                                 <TableCell className="font-medium">{user.displayName}</TableCell>
                                 <TableCell>{user.email}</TableCell>
@@ -64,6 +65,13 @@ export default async function AdminUsersPage() {
                                 </TableCell>
                             </TableRow>
                         ))}
+                         {(!users || users.length === 0) && (
+                            <TableRow>
+                                <TableCell colSpan={4} className="h-24 text-center">
+                                    No users found.
+                                </TableCell>
+                            </TableRow>
+                        )}
                     </TableBody>
                 </Table>
             </CardContent>

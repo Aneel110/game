@@ -143,9 +143,8 @@ export default function Home() {
             src="https://placehold.co/1920x1080.png"
             alt="E-Sports Nepal hero background"
             data-ai-hint="battle royale landscape"
-            layout="fill"
-            objectFit="cover"
-            className="opacity-40"
+            fill
+            className="opacity-40 object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background" />
         </div>

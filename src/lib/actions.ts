@@ -4,7 +4,7 @@
 
 import { db } from '@/lib/firebase-admin';
 import { revalidatePath } from 'next/cache';
-import { tournamentSchema, streamSchema, registrationSchema, leaderboardSchema, type RegistrationData } from '@/lib/schemas';
+import { tournamentSchema, streamSchema, registrationSchema, type RegistrationData } from '@/lib/schemas';
 
 
 // Helper to extract YouTube video ID from various URL formats
@@ -127,13 +127,24 @@ export async function createTournament(formData: FormData) {
     if (!db) {
       return { success: false, message: 'Database not initialized.' };
     }
-    const rawData = Object.fromEntries(formData.entries());
+    
+    const rawData = {
+        name: formData.get('name'),
+        date: formData.get('date'),
+        prize: formData.get('prize'),
+        mode: formData.get('mode'),
+        image: formData.get('image'),
+        dataAiHint: formData.get('dataAiHint'),
+        description: formData.get('description'),
+    };
+
     const validatedFields = tournamentSchema.safeParse({
         ...rawData,
         leaderboard: [], // Initialize with empty leaderboard
     });
     
     if (!validatedFields.success) {
+        console.error("Validation Errors:", validatedFields.error.flatten().fieldErrors);
         return { success: false, message: 'Invalid form data.', errors: validatedFields.error.flatten().fieldErrors };
     }
 
@@ -153,7 +164,15 @@ export async function updateTournament(id: string, formData: FormData) {
     if (!db) {
       return { success: false, message: 'Database not initialized.' };
     }
-    const rawData = Object.fromEntries(formData.entries());
+     const rawData = {
+        name: formData.get('name'),
+        date: formData.get('date'),
+        prize: formData.get('prize'),
+        mode: formData.get('mode'),
+        image: formData.get('image'),
+        dataAiHint: formData.get('dataAiHint'),
+        description: formData.get('description'),
+    };
     const validatedFields = tournamentSchema.safeParse(rawData);
     
     if (!validatedFields.success) {

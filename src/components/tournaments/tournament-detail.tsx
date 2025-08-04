@@ -122,7 +122,7 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
                    </div>
                 </TabsContent>
                  <TabsContent value="leaderboard">
-                    {typeof tournament.leaderboard !== 'undefined' ? (
+                    {Array.isArray(tournament.leaderboard) ? (
                         <Table>
                             <TableHeader>
                                 <TableRow>

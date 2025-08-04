@@ -10,15 +10,15 @@ interface ParticipantsTableProps {
 
 export default function ParticipantsTable({ participants, title, icon: Icon }: ParticipantsTableProps) {
     return (
-        <div>
+        <div className="[perspective:1000px]">
             <h3 className="text-xl font-headline font-semibold mb-3 flex items-center gap-2">
                 <Icon className="w-5 h-5" />
                 {title} ({participants.length})
             </h3>
-            <Card>
+            <Card className="transition-all duration-300 hover:shadow-2xl hover:shadow-primary/30 hover:-translate-y-1 hover:[transform:rotateX(5deg)]">
                 <Table>
                     <TableHeader>
-                        <TableRow>
+                        <TableRow className="border-b-primary/20">
                             <TableHead>Team Name</TableHead>
                             <TableHead>Team Tag</TableHead>
                         </TableRow>
@@ -26,7 +26,7 @@ export default function ParticipantsTable({ participants, title, icon: Icon }: P
                     <TableBody>
                         {participants.length > 0 ? (
                             participants.map(p => (
-                                <TableRow key={p.id}>
+                                <TableRow key={p.id} className="border-b-primary/10 hover:bg-primary/10 transition-colors duration-200">
                                     <TableCell className="font-medium">{p.teamName}</TableCell>
                                     <TableCell>{p.teamTag}</TableCell>
                                 </TableRow>

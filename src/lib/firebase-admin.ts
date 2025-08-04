@@ -30,27 +30,27 @@ function getServiceAccount() {
 }
 
 // This is a singleton pattern to ensure we only initialize the app once.
-function getDb(): admin.firestore.Firestore | null {
+function getAdminServices() {
   const serviceAccount = getServiceAccount();
 
   if (!serviceAccount) {
     console.warn("Firebase Admin SDK not initialized. FIREBASE_SERVICE_ACCOUNT_KEY is missing or invalid.");
-    return null;
+    return { db: null, auth: null };
   }
 
   if (admin.apps.length > 0) {
-    return admin.firestore();
+    return { db: admin.firestore(), auth: admin.auth() };
   }
 
   try {
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
     });
-    return admin.firestore();
+    return { db: admin.firestore(), auth: admin.auth() };
   } catch (e: any) {
     console.error("Firebase Admin SDK initialization failed:", e.message);
-    return null;
+    return { db: null, auth: null };
   }
 }
 
-export const db = getDb();
+export const { db, auth } = getAdminServices();

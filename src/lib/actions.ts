@@ -2,7 +2,7 @@
 
 'use server';
 
-import { db } from '@/lib/firebase-admin';
+import { auth, db } from '@/lib/firebase-admin';
 import { revalidatePath } from 'next/cache';
 import { tournamentSchema, streamSchema, registrationSchema, type RegistrationData, leaderboardEntrySchema, siteSettingsSchema } from '@/lib/schemas';
 import { FieldValue } from 'firebase-admin/firestore';
@@ -156,6 +156,24 @@ export async function updateUserRole(userId: string, role: 'admin' | 'user') {
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }
+
+export async function updateUserDisabledStatus(userId: string, disabled: boolean) {
+    if (!auth) {
+        return { success: false, message: 'Admin SDK not initialized.' };
+    }
+     if (!userId) {
+        return { success: false, message: 'Missing user ID.' };
+    }
+    try {
+        await auth.updateUser(userId, { disabled });
+        revalidatePath('/admin/users');
+        return { success: true, message: `User account has been ${disabled ? 'disabled' : 'enabled'}.` };
+    } catch (error) {
+        console.error('Error updating user disabled status:', error);
+        return { success: false, message: 'An unexpected error occurred.' };
+    }
+}
+
 
 function processTournamentFormData(formData: FormData) {
     const rawData = Object.fromEntries(formData.entries());

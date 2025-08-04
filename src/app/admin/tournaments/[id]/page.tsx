@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import RegistrationActions from "./registration-actions";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { User, Mail } from "lucide-react";
+import { notFound } from 'next/navigation';
 
 type AdminTournamentDetailPageProps = {
     params: {
@@ -39,29 +40,31 @@ async function getSerializableRegistrations(tournamentId: string) {
     const registrationsSnapshot = await db.collection('tournaments').doc(tournamentId).collection('registrations').get();
     const registrations = registrationsSnapshot.docs.map(doc => {
         const data = doc.data();
+        if (!data) return null;
         return {
             id: doc.id,
             ...data,
-            registeredAt: data.registeredAt.toDate().toISOString(),
+            registeredAt: data.registeredAt?.toDate().toISOString() || new Date().toISOString(),
         };
-    });
+    }).filter(Boolean); // Filter out any null entries
     return registrations;
 }
 
 export default async function AdminTournamentDetailPage({ params }: AdminTournamentDetailPageProps) {
     const tournament = await getTournamentData(params.id);
-    const registrations = await getSerializableRegistrations(params.id);
-
+    
     if (!tournament) {
-        return <div>Tournament not found.</div>;
+        notFound();
     }
+    
+    const registrations = await getSerializableRegistrations(params.id);
     
     return (
         <Card>
             <CardHeader>
                 <CardTitle>Registrations for: {tournament.name}</CardTitle>
                 <CardDescription>
-                    Review and manage team registrations for this tournament.
+                    Review and manage team registrations for this tournament. Approving a team will automatically add them to the leaderboard.
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -112,7 +115,7 @@ export default async function AdminTournamentDetailPage({ params }: AdminTournam
                                 </TableCell>
                                 <TableCell>{getStatusBadge(reg.status)}</TableCell>
                                 <TableCell className="text-right">
-                                   {reg.status !== 'declined' && <RegistrationActions tournamentId={params.id} registrationId={reg.id} currentStatus={reg.status} />}
+                                   {reg.status !== 'declined' && <RegistrationActions tournamentId={params.id} registrationId={reg.id} currentStatus={reg.status} teamName={reg.teamName} />}
                                 </TableCell>
                             </TableRow>
                         ))}

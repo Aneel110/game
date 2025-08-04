@@ -13,16 +13,17 @@ interface RegistrationActionsProps {
     tournamentId: string;
     registrationId: string;
     currentStatus: RegistrationStatus;
+    teamName: string;
 }
 
-export default function RegistrationActions({ tournamentId, registrationId, currentStatus }: RegistrationActionsProps) {
+export default function RegistrationActions({ tournamentId, registrationId, currentStatus, teamName }: RegistrationActionsProps) {
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState<RegistrationStatus | null>(null);
 
     const handleUpdate = async (status: RegistrationStatus) => {
         setIsLoading(status);
         try {
-            const result = await updateRegistrationStatus(tournamentId, registrationId, status);
+            const result = await updateRegistrationStatus(tournamentId, registrationId, status, teamName);
             if(result.success) {
                 toast({ title: 'Success', description: result.message });
             } else {

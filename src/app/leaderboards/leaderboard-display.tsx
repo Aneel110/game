@@ -59,23 +59,25 @@ function LeaderboardTable({ leaderboardData }: { leaderboardData: LeaderboardEnt
               </TableRow>
             </TableHeader>
             <TableBody>
-              {leaderboardData.map((p: any, index) => (
+              {leaderboardData.map((p: any, index) => {
+                const rank = index + 1;
+                return (
                 <TableRow 
-                  key={p.rank} 
+                  key={p.teamName} 
                   className="border-b-primary/10 hover:bg-primary/10 transition-colors duration-300"
                   style={{ animation: `fadeInUp 0.5s ${index * 0.05}s ease-out both` }}
                 >
                   <TableCell className="text-center font-bold text-2xl">
-                    {p.rank === 1 ? (
+                    {rank === 1 ? (
                       <span className="text-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.8)] flex items-center justify-center">
-                        <Crown className="w-8 h-8 mr-1" /> {p.rank}
+                        <Crown className="w-8 h-8 mr-1" /> {rank}
                       </span>
-                    ) : p.rank === 2 ? (
-                      <span className="text-gray-300 drop-shadow-[0_0_5px_rgba(209,213,219,0.7)]">{p.rank}</span>
-                    ) : p.rank === 3 ? (
-                      <span className="text-orange-400 drop-shadow-[0_0_5px_rgba(251,146,60,0.7)]">{p.rank}</span>
+                    ) : rank === 2 ? (
+                      <span className="text-gray-300 drop-shadow-[0_0_5px_rgba(209,213,219,0.7)]">{rank}</span>
+                    ) : rank === 3 ? (
+                      <span className="text-orange-400 drop-shadow-[0_0_5px_rgba(251,146,60,0.7)]">{rank}</span>
                     ) : (
-                      <span className="text-muted-foreground">{p.rank}</span>
+                      <span className="text-muted-foreground">{rank}</span>
                     )}
                   </TableCell>
                   <TableCell>
@@ -101,7 +103,7 @@ function LeaderboardTable({ leaderboardData }: { leaderboardData: LeaderboardEnt
                   </TableCell>
                   <TableCell className="text-right font-bold text-primary text-lg">{p.points.toLocaleString()}</TableCell>
                 </TableRow>
-              ))}
+              )})}
             </TableBody>
           </Table>
         </Card>
@@ -120,8 +122,8 @@ export default function LeaderboardDisplay() {
             const data = await getFinishedTournamentsWithLeaderboards();
             setTournaments(data);
             if (data.length > 0) {
-                // Sort leaderboard by rank before setting
-                const sortedLeaderboard = data[0].leaderboard.sort((a: any, b: any) => a.rank - b.rank);
+                // Sort leaderboard by points before setting
+                const sortedLeaderboard = data[0].leaderboard.sort((a: any, b: any) => b.points - a.points);
                 setSelectedTournament({ ...data[0], leaderboard: sortedLeaderboard });
             }
         } catch (err) {
@@ -136,7 +138,7 @@ export default function LeaderboardDisplay() {
   const handleTournamentChange = (tournamentId: string) => {
     const tournament = tournaments.find(t => t.id === tournamentId);
     if (tournament) {
-        const sortedLeaderboard = tournament.leaderboard.sort((a, b) => a.rank - b.rank);
+        const sortedLeaderboard = tournament.leaderboard.sort((a, b) => b.points - a.points);
         setSelectedTournament({ ...tournament, leaderboard: sortedLeaderboard });
     }
   };

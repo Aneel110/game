@@ -45,7 +45,7 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
   const approvedParticipants = registrations.filter(r => r.status === 'approved');
   const pendingParticipants = registrations.filter(r => r.status === 'pending');
   const isAlreadyRegistered = user && registrations.some(r => r.id === user.uid);
-  const leaderboard = tournament.leaderboard?.sort((a: any, b: any) => a.rank - b.rank) || [];
+  const leaderboard = tournament.leaderboard?.sort((a: any, b: any) => b.points - a.points) || [];
   const rules = tournament.rules ? tournament.rules.split('\n') : [];
 
   const prizeDistribution = tournament.prizeDistribution || {};
@@ -134,10 +134,12 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {leaderboard.length > 0 ? leaderboard.map((p: any) => (
+                                {leaderboard.length > 0 ? leaderboard.map((p: any, index: number) => {
+                                    const rank = index + 1;
+                                    return (
                                     <TableRow key={p.teamName}>
                                         <TableCell className="font-bold text-lg text-center">
-                                            {p.rank === 1 ? <Crown className="w-6 h-6 text-yellow-400 inline-block" /> : (p.rank > 0 ? p.rank : '-')}
+                                            {rank === 1 ? <Crown className="w-6 h-6 text-yellow-400 inline-block" /> : rank}
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex items-center gap-3">
@@ -160,7 +162,7 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
                                         </TableCell>
                                         <TableCell className="text-right font-bold text-primary">{p.points}</TableCell>
                                     </TableRow>
-                                )) : (
+                                )}) : (
                                      <TableRow>
                                         <TableCell colSpan={5} className="h-24 text-center">
                                             No teams on the leaderboard yet. Approved teams will appear here.

@@ -31,7 +31,7 @@ async function getTournamentLeaderboard(tournamentId: string) {
     }
     
     const tournamentData = tournamentSnap.data();
-    const leaderboard = (tournamentData?.leaderboard || []).sort((a: any, b: any) => a.rank - b.rank);
+    const leaderboard = (tournamentData?.leaderboard || []).sort((a: any, b: any) => b.points - a.points);
 
     return { 
         tournament: { id: tournamentSnap.id, name: tournamentData?.name },
@@ -84,9 +84,9 @@ export default async function AdminTournamentLeaderboardPage({ params }: { param
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {entries && entries.map((entry) => (
+                        {entries && entries.map((entry, index) => (
                             <TableRow key={entry.id}>
-                                <TableCell className="font-medium">{entry.rank}</TableCell>
+                                <TableCell className="font-medium">{index + 1}</TableCell>
                                 <TableCell>{entry.teamName}</TableCell>
                                 <TableCell>{entry.points}</TableCell>
                                 <TableCell>{entry.matches}</TableCell>

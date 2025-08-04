@@ -35,14 +35,16 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
 
   useEffect(() => {
     // This is to avoid hydration mismatch
-    setFormattedDate(new Date(tournament.date).toLocaleString([], { dateStyle: 'long', timeStyle: 'short' }));
+    if (tournament.date) {
+        setFormattedDate(new Date(tournament.date).toLocaleString([], { dateStyle: 'long', timeStyle: 'short' }));
+    }
   }, [tournament.date]);
 
   const { status, color, registrationClosed, message } = getTournamentStatus(tournament.date);
   
   const approvedParticipants = registrations.filter(r => r.status === 'approved');
   const pendingParticipants = registrations.filter(r => r.status === 'pending');
-  const isAlreadyRegistered = user && registrations.some(r => r.registeredById === user.uid);
+  const isAlreadyRegistered = user && registrations.some(r => r.id === user.uid);
   const leaderboard = tournament.leaderboard?.sort((a: any, b: any) => a.rank - b.rank) || [];
   const rules = tournament.rules ? tournament.rules.split('\n') : [];
 
@@ -120,7 +122,7 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
                    </div>
                 </TabsContent>
                  <TabsContent value="leaderboard">
-                    {leaderboard.length > 0 ? (
+                    {tournament.leaderboard ? (
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -132,10 +134,10 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {leaderboard.map((p: any) => (
-                                    <TableRow key={p.rank}>
+                                {leaderboard.length > 0 ? leaderboard.map((p: any) => (
+                                    <TableRow key={p.teamName}>
                                         <TableCell className="font-bold text-lg text-center">
-                                            {p.rank === 1 ? <Crown className="w-6 h-6 text-yellow-400 inline-block" /> : p.rank}
+                                            {p.rank === 1 ? <Crown className="w-6 h-6 text-yellow-400 inline-block" /> : (p.rank > 0 ? p.rank : '-')}
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex items-center gap-3">
@@ -158,7 +160,13 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
                                         </TableCell>
                                         <TableCell className="text-right font-bold text-primary">{p.points}</TableCell>
                                     </TableRow>
-                                ))}
+                                )) : (
+                                     <TableRow>
+                                        <TableCell colSpan={5} className="h-24 text-center">
+                                            No teams on the leaderboard yet. Approved teams will appear here.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
                             </TableBody>
                         </Table>
                     ) : (

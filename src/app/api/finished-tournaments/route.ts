@@ -19,7 +19,9 @@ export async function GET() {
         .filter(t => {
             if (!t.date) return false;
             const tournamentDate = t.date instanceof Timestamp ? t.date.toDate() : new Date(t.date);
-            return tournamentDate < now && t.leaderboard && t.leaderboard.length > 0;
+            // A tournament is finished if its date is in the past.
+            // It should be shown even if the leaderboard is not populated yet.
+            return tournamentDate < now;
         })
         .sort((a, b) => {
             const dateA = a.date instanceof Timestamp ? a.date.toDate() : new Date(a.date);
@@ -27,7 +29,13 @@ export async function GET() {
             return dateB.getTime() - dateA.getTime();
         });
 
-    return NextResponse.json(finishedTournaments);
+    // Ensure leaderboard is always an array
+    const tournamentsWithLeaderboards = finishedTournaments.map(t => ({
+        ...t,
+        leaderboard: t.leaderboard || [],
+    }));
+
+    return NextResponse.json(tournamentsWithLeaderboards);
 
   } catch (error) {
     console.error("Error fetching finished tournaments:", error);

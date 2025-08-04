@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, Gamepad2, Users, Trophy, Settings, LogOut, ShieldAlert, Clapperboard, BarChartHorizontal } from "lucide-react";
+import { LayoutDashboard, Gamepad2, Users, Trophy, Settings, LogOut, ShieldAlert, Clapperboard } from "lucide-react";
 import Link from "next/link";
 import { Logo } from "@/components/icons/logo";
 import { useAuth } from "@/hooks/use-auth";
@@ -27,7 +27,6 @@ import { usePathname } from "next/navigation";
 const adminNavItems = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/tournaments", label: "Tournaments", icon: Gamepad2 },
-  { href: "/admin/leaderboard", label: "Leaderboard", icon: BarChartHorizontal },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/streams", label: "Streams", icon: Clapperboard },
   { href: "/admin/prizes", label: "Prizes", icon: Trophy },

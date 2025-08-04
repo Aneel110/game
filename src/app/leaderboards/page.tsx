@@ -1,4 +1,5 @@
 
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Crown, Drumstick, Swords, Trophy, AlertTriangle } from "lucide-react";
@@ -6,17 +7,28 @@ import { db } from "@/lib/firebase-admin";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-async function getLeaderboardData() {
+async function getLatestFinishedTournamentLeaderboard() {
   if (!db) {
     return { success: false, error: "Could not connect to the database. Please ensure Firestore is enabled and service account is set." };
   }
   try {
-    const leaderboardSnapshot = await db.collection("leaderboard").orderBy("rank", "asc").get();
-    const data: any[] = [];
-    leaderboardSnapshot.forEach((doc) => {
-        data.push({ id: doc.id, ...doc.data() });
-    });
-    return { success: true, data };
+    const tournamentsSnapshot = await db.collection("tournaments")
+        .where("status", "==", "Finished")
+        .orderBy("date", "desc")
+        .limit(1)
+        .get();
+
+    if (tournamentsSnapshot.empty) {
+        return { success: true, data: null, tournamentName: null };
+    }
+    
+    const latestTournament = tournamentsSnapshot.docs[0].data();
+    const leaderboardData = latestTournament.leaderboard || [];
+
+    // Sort leaderboard by rank
+    leaderboardData.sort((a: any, b: any) => a.rank - b.rank);
+
+    return { success: true, data: leaderboardData, tournamentName: latestTournament.name };
   } catch (error) {
     console.error("Error fetching leaderboard:", error);
     return { success: false, error: "Could not connect to the database. Please ensure Firestore is enabled in your Firebase project." };
@@ -24,7 +36,7 @@ async function getLeaderboardData() {
 }
 
 export default async function LeaderboardsPage() {
-  const { success, data: leaderboardData, error } = await getLeaderboardData();
+  const { success, data: leaderboardData, tournamentName, error } = await getLatestFinishedTournamentLeaderboard();
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -33,7 +45,9 @@ export default async function LeaderboardsPage() {
           <Trophy className="w-12 h-12 text-primary animate-pulse" />
           HALL OF FAME
         </h1>
-        <p className="text-muted-foreground mt-2 text-lg">See who's dominating the arena.</p>
+        <p className="text-muted-foreground mt-2 text-lg">
+            {tournamentName ? `Showing results for the latest tournament: ${tournamentName}` : "See who's dominating the arena."}
+        </p>
       </div>
 
        {!success && (
@@ -103,10 +117,10 @@ export default async function LeaderboardsPage() {
         </Card>
       )}
       
-      {success && leaderboardData?.length === 0 && (
+      {success && (!leaderboardData || leaderboardData.length === 0) && (
          <Card className="text-center p-8 bg-card/50">
             <CardTitle>No Leaderboard Data</CardTitle>
-            <p className="text-muted-foreground mt-2">It looks like the database is empty. Have you seeded the data from the admin dashboard?</p>
+            <p className="text-muted-foreground mt-2">No finished tournaments with leaderboards found.</p>
           </Card>
       )}
     </div>

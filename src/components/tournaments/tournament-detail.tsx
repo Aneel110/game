@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from "next/image";
@@ -5,10 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Gamepad2, Trophy, ShieldCheck, ShieldAlert } from "lucide-react";
+import { Calendar, Gamepad2, Trophy, ShieldCheck, ShieldAlert, BarChartHorizontal, Crown, Swords, Drumstick } from "lucide-react";
 import TournamentParticipants from "./tournament-participants";
 import TournamentRegistrationForm from "./registration-form";
 import { useAuth } from "@/hooks/use-auth";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
+import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -29,6 +32,8 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
   const approvedParticipants = registrations.filter(r => r.status === 'approved');
   const pendingParticipants = registrations.filter(r => r.status === 'pending');
   const isAlreadyRegistered = user && registrations.some(r => r.registeredById === user.uid);
+  const leaderboard = tournament.leaderboard?.sort((a: any, b: any) => a.rank - b.rank) || [];
+
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -57,12 +62,62 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
               <Tabs defaultValue="overview">
                 <TabsList className="mb-4">
                   <TabsTrigger value="overview">Overview</TabsTrigger>
+                  <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
                   <TabsTrigger value="rules">Rules</TabsTrigger>
                   <TabsTrigger value="prizes">Prizes</TabsTrigger>
                 </TabsList>
                 <TabsContent value="overview">
                   <p className="text-muted-foreground">{tournament.description || "Detailed description of the tournament, including format, schedule, and other relevant information will be displayed here."}</p>
                 </TabsContent>
+                 <TabsContent value="leaderboard">
+                    {leaderboard.length > 0 ? (
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="w-[80px] text-center">Rank</TableHead>
+                                    <TableHead>Player</TableHead>
+                                    <TableHead className="text-center">Matches</TableHead>
+                                    <TableHead className="text-center">Wins</TableHead>
+                                    <TableHead className="text-right">Points</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {leaderboard.map((p: any) => (
+                                    <TableRow key={p.rank}>
+                                        <TableCell className="font-bold text-lg text-center">
+                                            {p.rank === 1 ? <Crown className="w-6 h-6 text-yellow-400 inline-block" /> : p.rank}
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="flex items-center gap-3">
+                                                <Avatar className="h-10 w-10 border-2 border-primary/50">
+                                                    <AvatarImage src={`https://placehold.co/40x40.png?text=${p.player.charAt(0)}`} />
+                                                    <AvatarFallback>{p.player.charAt(0)}</AvatarFallback>
+                                                </Avatar>
+                                                <span className="font-medium">{p.player}</span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="text-center">
+                                            <div className="flex items-center justify-center gap-2">
+                                                <Swords className="w-4 h-4 text-muted-foreground" /> {p.matches}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="text-center">
+                                            <div className="flex items-center justify-center gap-2">
+                                                <Drumstick className="w-4 h-4 text-amber-500" /> {p.chickenDinners}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="text-right font-bold text-primary">{p.points}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    ) : (
+                        <div className="text-center text-muted-foreground py-8">
+                            <BarChartHorizontal className="w-12 h-12 mx-auto mb-2" />
+                            <p>The leaderboard for this tournament is not yet available.</p>
+                        </div>
+                    )}
+                 </TabsContent>
                 <TabsContent value="rules">
                   <ul className="list-disc list-inside text-muted-foreground space-y-2">
                     <li>Be respectful to all players and staff.</li>

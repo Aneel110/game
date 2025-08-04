@@ -7,11 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, Gamepad2, Trophy, ShieldCheck, ShieldAlert, BarChartHorizontal, Crown, Swords, Drumstick } from "lucide-react";
-import TournamentParticipants from "./tournament-participants";
 import TournamentRegistrationForm from "./registration-form";
 import { useAuth } from "@/hooks/use-auth";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
+import ParticipantsTable from "./participants-table";
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -55,19 +55,36 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
         </div>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-8">
-        <div className="md:col-span-2">
+      <div className="grid lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2">
           <Card>
             <CardContent className="p-6">
               <Tabs defaultValue="overview">
-                <TabsList className="mb-4">
+                <TabsList className="mb-4 grid w-full grid-cols-4">
                   <TabsTrigger value="overview">Overview</TabsTrigger>
                   <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
                   <TabsTrigger value="rules">Rules</TabsTrigger>
                   <TabsTrigger value="prizes">Prizes</TabsTrigger>
                 </TabsList>
                 <TabsContent value="overview">
-                  <p className="text-muted-foreground">{tournament.description || "Detailed description of the tournament, including format, schedule, and other relevant information will be displayed here."}</p>
+                   <div className="space-y-6">
+                      <p className="text-muted-foreground">{tournament.description || "Detailed description of the tournament, including format, schedule, and other relevant information will be displayed here."}</p>
+                      
+                      <Separator />
+
+                      <div className="space-y-4">
+                         <ParticipantsTable 
+                            icon={ShieldCheck}
+                            title="Approved Teams"
+                            participants={approvedParticipants}
+                          />
+                           <ParticipantsTable 
+                            icon={ShieldAlert}
+                            title="Pending Approval"
+                            participants={pendingParticipants}
+                          />
+                      </div>
+                   </div>
                 </TabsContent>
                  <TabsContent value="leaderboard">
                     {leaderboard.length > 0 ? (
@@ -171,20 +188,10 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
               </div>
             </CardContent>
           </Card>
-           <TournamentParticipants 
-            icon={ShieldCheck}
-            title="Approved Teams"
-            participants={approvedParticipants}
-            showPlayers={false}
-          />
-          <TournamentParticipants 
-            icon={ShieldAlert}
-            title="Pending Approval"
-            participants={pendingParticipants} 
-            showPlayers={false}
-           />
         </div>
       </div>
     </div>
   );
 }
+
+    

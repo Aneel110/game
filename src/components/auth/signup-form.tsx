@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast";
-import { createUserWithEmailAndPassword, sendEmailVerification, updateProfile } from "firebase/auth";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import { doc, setDoc } from "firebase/firestore";
@@ -28,9 +28,6 @@ export function SignupForm() {
             // Update user profile
             await updateProfile(user, { displayName: username });
 
-            // Send verification email
-            await sendEmailVerification(user);
-
             // Create user document in Firestore
             await setDoc(doc(db, "users", user.uid), {
                 uid: user.uid,
@@ -42,11 +39,11 @@ export function SignupForm() {
 
             toast({
                 title: "Account Created",
-                description: "A verification email has been sent. Please check your inbox to complete the signup.",
+                description: "You have successfully signed up.",
             });
 
-            // Redirect user to the login page to wait for verification
-            router.push('/login');
+            // Redirect user to the homepage
+            router.push('/');
 
         } catch (error: any) {
             toast({

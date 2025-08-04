@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast";
-import { signInWithEmailAndPassword, signOut } from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import { doc, getDoc } from "firebase/firestore";
@@ -23,20 +23,6 @@ export function LoginForm() {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       
-      // Reload the user to get the latest emailVerified state
-      await userCredential.user.reload();
-      const freshUser = auth.currentUser;
-
-      if (freshUser && !freshUser.emailVerified) {
-        await signOut(auth); // Sign out the user immediately
-        toast({
-            title: "Verification Required",
-            description: "Please check your email and verify your account before logging in.",
-            variant: "destructive",
-        });
-        return;
-      }
-
       const userDocRef = doc(db, 'users', userCredential.user.uid);
       const userDocSnap = await getDoc(userDocRef);
       

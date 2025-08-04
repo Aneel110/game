@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { db } from "@/lib/firebase-admin";
-import { Eye, Badge, PlusCircle, Edit, Trash2, AlertTriangle, BarChartHorizontal } from "lucide-react";
+import { Eye, Badge, PlusCircle, Edit, Trash2, AlertTriangle, BarChart } from "lucide-react";
 import Link from "next/link";
 import DeleteTournamentButton from "./delete-tournament-button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -85,7 +85,7 @@ export default async function AdminTournamentsPage() {
                                     </Button>
                                      <Button asChild variant="ghost" size="icon">
                                         <Link href={`/admin/tournaments/${t.id}/leaderboard`}>
-                                            <BarChartHorizontal className="h-4 w-4" />
+                                            <BarChart className="h-4 w-4" />
                                         </Link>
                                     </Button>
                                     <Button asChild variant="ghost" size="icon">
@@ -110,3 +110,5 @@ export default async function AdminTournamentsPage() {
         </Card>
     );
 }
+
+    

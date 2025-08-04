@@ -53,3 +53,5 @@ export const registrationSchema = z.object({
 
 export type RegistrationFormValues = z.infer<typeof registrationSchema>;
 export type RegistrationData = RegistrationFormValues;
+
+    

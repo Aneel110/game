@@ -294,6 +294,7 @@ export async function createOrUpdateLeaderboardEntry(tournamentId: string, data:
     
     const validatedFields = leaderboardEntrySchema.safeParse(data);
     if (!validatedFields.success) {
+        console.error('Leaderboard validation error:', validatedFields.error.flatten().fieldErrors);
         return { success: false, message: 'Invalid form data.', errors: validatedFields.error.flatten().fieldErrors };
     }
 
@@ -311,7 +312,14 @@ export async function createOrUpdateLeaderboardEntry(tournamentId: string, data:
             if (entryIndex > -1) {
                 leaderboard[entryIndex] = newEntry;
             } else {
-                 return { success: false, message: 'Original entry not found for update.' };
+                 // If the player name was also changed, we need to find the old entry by original name
+                 // and remove it, then add the new one. This logic assumes player names are unique identifiers.
+                 const oldEntryIndex = leaderboard.findIndex((e: any) => e.player === decodedPlayerName);
+                 if (oldEntryIndex > -1) {
+                    leaderboard[oldEntryIndex] = newEntry;
+                 } else {
+                    return { success: false, message: 'Original entry not found for update.' };
+                 }
             }
             await tournamentRef.update({ leaderboard });
         } else { // This is a create
@@ -357,3 +365,5 @@ export async function deleteLeaderboardEntry(tournamentId: string, playerName: s
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }
+
+    

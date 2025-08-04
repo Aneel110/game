@@ -8,10 +8,10 @@ export default async function LeaderboardsPage() {
       <div className="text-center mb-12">
         <h1 className="text-5xl md:text-6xl font-headline font-bold flex items-center justify-center gap-4 text-shadow-lg animate-fade-in-down">
           <Trophy className="w-12 h-12 text-primary animate-pulse" />
-          HALL OF FAME
+          Free Pubg Tournament
         </h1>
         <p className="text-muted-foreground mt-2 text-lg">
-           Browse the leaderboards from past tournaments.
+           Browse the leaderboards from our free PUBG tournaments.
         </p>
       </div>
 

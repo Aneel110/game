@@ -27,6 +27,7 @@ export const tournamentSchema = z.object({
   image: z.string().url('Image must be a valid URL.'),
   dataAiHint: z.string().optional(),
   description: z.string().min(10, 'Description must be at least 10 characters.'),
+  rules: z.string().optional(),
   leaderboard: z.array(leaderboardSchema).optional(),
 });
 

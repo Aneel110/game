@@ -31,6 +31,7 @@ async function getTournamentData(id: string) {
         image: data.image || '',
         dataAiHint: data.dataAiHint || '',
         description: data.description || '',
+        rules: data.rules || '',
     };
 }
 

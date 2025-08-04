@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Gamepad2, Trophy, ShieldCheck, ShieldAlert, BarChartHorizontal, Crown, Swords, Drumstick, Clock, Target } from "lucide-react";
+import { Calendar, Gamepad2, Trophy, ShieldCheck, ShieldAlert, BarChartHorizontal, Crown, Swords, Drumstick, Clock, Target, Gavel } from "lucide-react";
 import TournamentRegistrationForm from "./registration-form";
 import { useAuth } from "@/hooks/use-auth";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
@@ -43,6 +43,7 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
   const pendingParticipants = registrations.filter(r => r.status === 'pending');
   const isAlreadyRegistered = user && registrations.some(r => r.registeredById === user.uid);
   const leaderboard = tournament.leaderboard?.sort((a: any, b: any) => a.rank - b.rank) || [];
+  const rules = tournament.rules ? tournament.rules.split('\n') : [];
 
   const prizeDistribution = tournament.prizeDistribution || {};
   const totalPrize = Object.values(prizeDistribution).reduce((sum: any, val: any) => sum + (Number(val) || 0), 0);
@@ -167,13 +168,18 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
                     )}
                  </TabsContent>
                 <TabsContent value="rules">
-                  <ul className="list-disc list-inside text-muted-foreground space-y-2">
-                    <li>Be respectful to all players and staff.</li>
-                    <li>No cheating, scripting, or exploiting bugs.</li>
-                    <li>Admins have the final say in all disputes.</li>
-                    <li>Check-in is required 30 minutes before the tournament starts.</li>
-                    <li>Teams must have between 4 and 6 players.</li>
-                  </ul>
+                    {rules.length > 0 ? (
+                        <ul className="list-disc list-inside text-muted-foreground space-y-2">
+                           {rules.map((rule: string, index: number) => (
+                               <li key={index}>{rule}</li>
+                           ))}
+                        </ul>
+                    ) : (
+                         <div className="text-center text-muted-foreground py-8">
+                            <Gavel className="w-12 h-12 mx-auto mb-2" />
+                            <p>Tournament rules are not yet available.</p>
+                        </div>
+                    )}
                 </TabsContent>
                 <TabsContent value="prizes">
                    <div className="space-y-4">

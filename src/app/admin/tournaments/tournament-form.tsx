@@ -43,7 +43,8 @@ export default function TournamentForm({ tournamentId, defaultValues }: Tourname
         mode: 'Squads',
         image: 'https://placehold.co/600x400.png',
         dataAiHint: '',
-        description: ''
+        description: '',
+        rules: 'Be respectful to all players and staff.\nNo cheating, scripting, or exploiting bugs.\nAdmins have the final say in all disputes.\nCheck-in is required 30 minutes before the tournament starts.\nTeams must have between 4 and 6 players.',
     }
   });
 
@@ -158,6 +159,18 @@ export default function TournamentForm({ tournamentId, defaultValues }: Tourname
             <FormItem>
               <Label>Description</Label>
               <FormControl><Textarea rows={5} {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="rules"
+          render={({ field }) => (
+            <FormItem>
+              <Label>Rules</Label>
+              <FormControl><Textarea rows={8} placeholder="Enter one rule per line." {...field} /></FormControl>
               <FormMessage />
             </FormItem>
           )}

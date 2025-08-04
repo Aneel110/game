@@ -2,9 +2,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
+import { useForm, useFieldArray, type SubmitHandler } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -19,7 +17,6 @@ import {
 import {
   Form,
   FormControl,
-  FormField,
   FormItem,
   FormLabel,
   FormMessage,
@@ -31,19 +28,17 @@ import { useAuth } from '@/hooks/use-auth';
 import { registerForTournament } from '@/lib/actions';
 import Link from 'next/link';
 
-const playerSchema = z.object({
-  pubgName: z.string().min(1, 'Player name is required.'),
-  pubgId: z.string().min(1, 'Player ID is required.'),
-  discordUsername: z.string().optional(),
-});
+interface Player {
+    pubgName: string;
+    pubgId: string;
+    discordUsername?: string;
+}
 
-const registrationSchema = z.object({
-  teamName: z.string().min(1, "Team name is required."),
-  teamTag: z.string().min(1, "Team tag is required."),
-  players: z.array(playerSchema).min(4, 'You must register at least 4 players.').max(6, 'You can register a maximum of 6 players.'),
-});
-
-type RegistrationFormValues = z.infer<typeof registrationSchema>;
+interface RegistrationFormValues {
+  teamName: string;
+  teamTag: string;
+  players: Player[];
+}
 
 interface TournamentRegistrationFormProps {
   tournamentId: string;
@@ -58,7 +53,6 @@ export default function TournamentRegistrationForm({ tournamentId, isLoggedIn, i
   const { user } = useAuth();
 
   const form = useForm<RegistrationFormValues>({
-    resolver: zodResolver(registrationSchema),
     defaultValues: {
       teamName: '',
       teamTag: '',
@@ -76,7 +70,7 @@ export default function TournamentRegistrationForm({ tournamentId, isLoggedIn, i
     name: 'players',
   });
 
-  async function onSubmit(data: RegistrationFormValues) {
+  const onSubmit: SubmitHandler<RegistrationFormValues> = async (data) => {
     if (!user) {
       toast({
         title: 'Authentication Error',
@@ -85,6 +79,12 @@ export default function TournamentRegistrationForm({ tournamentId, isLoggedIn, i
       });
       return;
     }
+
+    if (data.players.length < 4 || data.players.length > 6) {
+        form.setError("players", { message: "You need between 4 and 6 players." });
+        return;
+    }
+
     setIsLoading(true);
     try {
       const result = await registerForTournament(tournamentId, {
@@ -103,7 +103,7 @@ export default function TournamentRegistrationForm({ tournamentId, isLoggedIn, i
       } else {
         toast({
           title: 'Registration Failed',
-          description: result.message,
+          description: result.message || 'An unknown error occurred.',
           variant: 'destructive',
         });
       }
@@ -151,32 +151,16 @@ export default function TournamentRegistrationForm({ tournamentId, isLoggedIn, i
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                    control={form.control}
-                    name="teamName"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Team Name</FormLabel>
-                        <FormControl>
-                            <Input placeholder="e.g., Vicious Vipers" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                    <FormField
-                    control={form.control}
-                    name="teamTag"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Team Tag</FormLabel>
-                        <FormControl>
-                            <Input placeholder="e.g., VPR" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
+                     <div>
+                        <Label htmlFor="teamName">Team Name</Label>
+                        <Input id="teamName" placeholder="e.g., Vicious Vipers" {...form.register("teamName", { required: "Team name is required." })} />
+                        {form.formState.errors.teamName && <p className="text-sm text-destructive mt-1">{form.formState.errors.teamName.message}</p>}
+                     </div>
+                     <div>
+                        <Label htmlFor="teamTag">Team Tag</Label>
+                        <Input id="teamTag" placeholder="e.g., VPR" {...form.register("teamTag", { required: "Team tag is required." })} />
+                        {form.formState.errors.teamTag && <p className="text-sm text-destructive mt-1">{form.formState.errors.teamTag.message}</p>}
+                     </div>
                 </div>
 
                 <div>
@@ -185,42 +169,15 @@ export default function TournamentRegistrationForm({ tournamentId, isLoggedIn, i
                     {fields.map((field, index) => (
                         <div key={field.id} className="flex items-start gap-2">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-2 flex-grow">
-                            <FormField
-                            control={form.control}
-                            name={`players.${index}.pubgName`}
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormControl>
-                                    <Input placeholder={`Player ${index + 1} Name`} {...field} />
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                            />
-                            <FormField
-                            control={form.control}
-                            name={`players.${index}.pubgId`}
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormControl>
-                                    <Input placeholder={`Player ${index + 1} ID`} {...field} />
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                            />
-                            <FormField
-                            control={form.control}
-                            name={`players.${index}.discordUsername`}
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormControl>
-                                    <Input placeholder="Discord (Optional)" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                            />
+                             <div>
+                                <Input placeholder={`Player ${index + 1} Name`} {...form.register(`players.${index}.pubgName`, { required: "Name is required."})} />
+                                {form.formState.errors.players?.[index]?.pubgName && <p className="text-sm text-destructive mt-1">{form.formState.errors.players[index]?.pubgName?.message}</p>}
+                             </div>
+                             <div>
+                                <Input placeholder={`Player ${index + 1} ID`} {...form.register(`players.${index}.pubgId`, { required: "ID is required."})} />
+                                {form.formState.errors.players?.[index]?.pubgId && <p className="text-sm text-destructive mt-1">{form.formState.errors.players[index]?.pubgId?.message}</p>}
+                             </div>
+                            <Input placeholder="Discord (Optional)" {...form.register(`players.${index}.discordUsername`)} />
                         </div>
                         <Button
                             type="button"
@@ -234,7 +191,7 @@ export default function TournamentRegistrationForm({ tournamentId, isLoggedIn, i
                         </Button>
                         </div>
                     ))}
-                     <FormMessage>{form.formState.errors.players?.message}</FormMessage>
+                     {form.formState.errors.players && <p className="text-sm text-destructive mt-1">{form.formState.errors.players.message}</p>}
                     </div>
                      <Button
                         type="button"

@@ -4,21 +4,8 @@
 
 import { db } from '@/lib/firebase-admin';
 import { revalidatePath } from 'next/cache';
-import { tournamentSchema, streamSchema } from '@/lib/schemas';
+import { tournamentSchema, streamSchema, registrationSchema, leaderboardSchema, type RegistrationData } from '@/lib/schemas';
 
-interface Player {
-  pubgName: string;
-  pubgId: string;
-  discordUsername?: string;
-}
-
-interface RegistrationData {
-  teamName: string;
-  teamTag: string;
-  players: Player[];
-  registeredById: string;
-  registeredByName: string;
-}
 
 // Helper to extract YouTube video ID from various URL formats
 const getYouTubeVideoId = (url: string): string | null => {
@@ -49,15 +36,16 @@ export async function registerForTournament(tournamentId: string, data: Registra
   if (!db) {
     return { success: false, message: 'Database not initialized.' };
   }
-  if (!tournamentId) {
-    return { success: false, message: 'Tournament ID is required.' };
-  }
-  if (!data.registeredById) {
-      return { success: false, message: 'User is not logged in.' };
+  
+  const validatedFields = registrationSchema.safeParse(data);
+  if (!validatedFields.success) {
+      return { success: false, message: 'Invalid form data.', errors: validatedFields.error.flatten().fieldErrors };
   }
 
+  const { registeredById } = validatedFields.data;
+
   try {
-    const registrationRef = db.collection('tournaments').doc(tournamentId).collection('registrations').doc(data.registeredById);
+    const registrationRef = db.collection('tournaments').doc(tournamentId).collection('registrations').doc(registeredById);
 
     const doc = await registrationRef.get();
 
@@ -66,7 +54,7 @@ export async function registerForTournament(tournamentId: string, data: Registra
     }
 
     await registrationRef.set({
-      ...data,
+      ...validatedFields.data,
       status: 'pending',
       registeredAt: new Date(),
     });
@@ -280,6 +268,63 @@ export async function deleteStream(id: string) {
         return { success: true, message: 'Stream deleted successfully.' };
     } catch (error) {
         console.error('Error deleting stream:', error);
+        return { success: false, message: 'An unexpected error occurred.' };
+    }
+}
+
+export async function createLeaderboardEntry(formData: FormData) {
+    if (!db) {
+        return { success: false, message: 'Database not initialized.' };
+    }
+    const rawData = Object.fromEntries(formData.entries());
+    const validatedFields = leaderboardSchema.safeParse(rawData);
+
+    if (!validatedFields.success) {
+        return { success: false, message: 'Invalid form data.', errors: validatedFields.error.flatten().fieldErrors };
+    }
+
+    try {
+        await db.collection('leaderboard').add(validatedFields.data);
+        revalidatePath('/admin/leaderboard');
+        return { success: true, message: 'Leaderboard entry created.' };
+    } catch (error) {
+        console.error('Error creating leaderboard entry:', error);
+        return { success: false, message: 'An unexpected error occurred.' };
+    }
+}
+
+export async function updateLeaderboardEntry(id: string, formData: FormData) {
+    if (!db) {
+        return { success: false, message: 'Database not initialized.' };
+    }
+    const rawData = Object.fromEntries(formData.entries());
+    const validatedFields = leaderboardSchema.safeParse(rawData);
+
+    if (!validatedFields.success) {
+        return { success: false, message: 'Invalid form data.', errors: validatedFields.error.flatten().fieldErrors };
+    }
+
+    try {
+        await db.collection('leaderboard').doc(id).update(validatedFields.data);
+        revalidatePath('/admin/leaderboard');
+        revalidatePath(`/admin/leaderboard/${id}/edit`);
+        return { success: true, message: 'Leaderboard entry updated.' };
+    } catch (error) {
+        console.error('Error updating leaderboard entry:', error);
+        return { success: false, message: 'An unexpected error occurred.' };
+    }
+}
+
+export async function deleteLeaderboardEntry(id: string) {
+    if (!db) {
+        return { success: false, message: 'Database not initialized.' };
+    }
+    try {
+        await db.collection('leaderboard').doc(id).delete();
+        revalidatePath('/admin/leaderboard');
+        return { success: true, message: 'Leaderboard entry deleted.' };
+    } catch (error) {
+        console.error('Error deleting leaderboard entry:', error);
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }

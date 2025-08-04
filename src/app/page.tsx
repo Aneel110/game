@@ -153,7 +153,7 @@ export default function Home() {
             Welcome to E-Sports Nepal
           </h1>
           <p className="text-lg md:text-xl mb-8 max-w-2xl text-foreground/80">
-            The ultimate hub for competitive players. Join tournaments, climb the leaderboards, and become a legend.
+            It is Free Pubg Tournament
           </p>
           <div className="flex gap-4">
             <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold">

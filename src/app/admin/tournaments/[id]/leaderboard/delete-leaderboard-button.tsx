@@ -18,14 +18,14 @@ import { Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { deleteLeaderboardEntry } from '@/lib/actions';
 
-export default function DeleteLeaderboardButton({ tournamentId, entryPlayerName }: { tournamentId: string, entryPlayerName: string }) {
+export default function DeleteLeaderboardButton({ tournamentId, entryTeamName }: { tournamentId: string, entryTeamName: string }) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   const handleDelete = async () => {
     setIsLoading(true);
     try {
-      const result = await deleteLeaderboardEntry(tournamentId, entryPlayerName);
+      const result = await deleteLeaderboardEntry(tournamentId, entryTeamName);
       if (result.success) {
         toast({ title: 'Success', description: result.message });
       } else {
@@ -49,7 +49,7 @@ export default function DeleteLeaderboardButton({ tournamentId, entryPlayerName 
         <AlertDialogHeader>
           <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
           <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete the leaderboard entry for {entryPlayerName}.
+            This action cannot be undone. This will permanently delete the leaderboard entry for {entryTeamName}.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

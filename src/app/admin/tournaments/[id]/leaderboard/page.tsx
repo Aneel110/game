@@ -10,9 +10,9 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { notFound } from "next/navigation";
 
 type LeaderboardEntry = {
-    id: string; // This will be the player's name for simplicity if we don't have unique IDs per entry
+    id: string; // This will be the team's name for simplicity if we don't have unique IDs per entry
     rank: number;
-    player: string;
+    teamName: string;
     points: number;
     matches: number;
     kills: number;
@@ -35,7 +35,7 @@ async function getTournamentLeaderboard(tournamentId: string) {
 
     return { 
         tournament: { id: tournamentSnap.id, name: tournamentData?.name },
-        entries: leaderboard.map((entry: any, index: number) => ({ ...entry, id: entry.player || index.toString() })) as LeaderboardEntry[] // Use player name as temp id
+        entries: leaderboard.map((entry: any, index: number) => ({ ...entry, id: entry.teamName || index.toString() })) as LeaderboardEntry[] // Use team name as temp id
     };
 }
 
@@ -75,7 +75,7 @@ export default async function AdminTournamentLeaderboardPage({ params }: { param
                     <TableHeader>
                         <TableRow>
                             <TableHead>Rank</TableHead>
-                            <TableHead>Player</TableHead>
+                            <TableHead>Team Name</TableHead>
                             <TableHead>Points</TableHead>
                             <TableHead>Matches</TableHead>
                             <TableHead>Kills</TableHead>
@@ -87,7 +87,7 @@ export default async function AdminTournamentLeaderboardPage({ params }: { param
                         {entries && entries.map((entry) => (
                             <TableRow key={entry.id}>
                                 <TableCell className="font-medium">{entry.rank}</TableCell>
-                                <TableCell>{entry.player}</TableCell>
+                                <TableCell>{entry.teamName}</TableCell>
                                 <TableCell>{entry.points}</TableCell>
                                 <TableCell>{entry.matches}</TableCell>
                                 <TableCell>{entry.kills}</TableCell>
@@ -98,7 +98,7 @@ export default async function AdminTournamentLeaderboardPage({ params }: { param
                                             <Edit className="h-4 w-4" />
                                         </Link>
                                     </Button>
-                                    <DeleteLeaderboardButton tournamentId={params.id} entryPlayerName={entry.player} />
+                                    <DeleteLeaderboardButton tournamentId={params.id} entryTeamName={entry.teamName} />
                                 </TableCell>
                             </TableRow>
                         ))}

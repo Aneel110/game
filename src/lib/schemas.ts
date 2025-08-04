@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 export const leaderboardEntrySchema = z.object({
     rank: z.coerce.number().int().min(1, 'Rank must be at least 1.'),
-    player: z.string().min(1, 'Player name is required.'),
+    teamName: z.string().min(1, 'Team name is required.'),
     points: z.coerce.number().int().min(0, 'Points must be a positive number.'),
     matches: z.coerce.number().int().min(0, 'Matches must be a positive number.'),
     kills: z.coerce.number().int().min(0, 'Kills must be a positive number.'),

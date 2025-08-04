@@ -287,7 +287,7 @@ export async function deleteStream(id: string) {
     }
 }
 
-export async function createOrUpdateLeaderboardEntry(tournamentId: string, data: any, originalPlayerName?: string) {
+export async function createOrUpdateLeaderboardEntry(tournamentId: string, data: any, originalTeamName?: string) {
     if (!db) {
       return { success: false, message: 'Database not initialized.' };
     }
@@ -302,19 +302,19 @@ export async function createOrUpdateLeaderboardEntry(tournamentId: string, data:
         const tournamentRef = db.collection('tournaments').doc(tournamentId);
         const newEntry = validatedFields.data;
         
-        if (originalPlayerName) { // This is an update
-            const decodedPlayerName = decodeURIComponent(originalPlayerName);
+        if (originalTeamName) { // This is an update
+            const decodedTeamName = decodeURIComponent(originalTeamName);
             const tournamentSnap = await tournamentRef.get();
             const tournamentData = tournamentSnap.data();
             const leaderboard = tournamentData?.leaderboard || [];
             
-            const entryIndex = leaderboard.findIndex((e: any) => e.player === decodedPlayerName);
+            const entryIndex = leaderboard.findIndex((e: any) => e.teamName === decodedTeamName);
             if (entryIndex > -1) {
                 leaderboard[entryIndex] = newEntry;
             } else {
-                 // If the player name was also changed, we need to find the old entry by original name
-                 // and remove it, then add the new one. This logic assumes player names are unique identifiers.
-                 const oldEntryIndex = leaderboard.findIndex((e: any) => e.player === decodedPlayerName);
+                 // If the team name was also changed, we need to find the old entry by original name
+                 // and remove it, then add the new one. This logic assumes team names are unique identifiers.
+                 const oldEntryIndex = leaderboard.findIndex((e: any) => e.teamName === decodedTeamName);
                  if (oldEntryIndex > -1) {
                     leaderboard[oldEntryIndex] = newEntry;
                  } else {
@@ -330,14 +330,14 @@ export async function createOrUpdateLeaderboardEntry(tournamentId: string, data:
 
         revalidatePath(`/admin/tournaments/${tournamentId}/leaderboard`);
         revalidatePath(`/tournaments/${tournamentId}`);
-        return { success: true, message: `Leaderboard entry ${originalPlayerName ? 'updated' : 'created'} successfully.` };
+        return { success: true, message: `Leaderboard entry ${originalTeamName ? 'updated' : 'created'} successfully.` };
     } catch (error) {
         console.error('Error updating leaderboard:', error);
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }
 
-export async function deleteLeaderboardEntry(tournamentId: string, playerName: string) {
+export async function deleteLeaderboardEntry(tournamentId: string, teamName: string) {
     if (!db) {
       return { success: false, message: 'Database not initialized.' };
     }
@@ -347,7 +347,7 @@ export async function deleteLeaderboardEntry(tournamentId: string, playerName: s
         const tournamentData = tournamentSnap.data();
         let leaderboard = tournamentData?.leaderboard || [];
         
-        const entryToDelete = leaderboard.find((e: any) => e.player === playerName);
+        const entryToDelete = leaderboard.find((e: any) => e.teamName === teamName);
 
         if(!entryToDelete) {
              return { success: false, message: 'Entry not found.' };
@@ -365,5 +365,3 @@ export async function deleteLeaderboardEntry(tournamentId: string, playerName: s
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }
-
-    

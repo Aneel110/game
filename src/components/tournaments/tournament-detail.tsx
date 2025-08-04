@@ -34,6 +34,7 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
   const [formattedDate, setFormattedDate] = useState('');
 
   useEffect(() => {
+    // This is to avoid hydration mismatch
     setFormattedDate(new Date(tournament.date).toLocaleString([], { dateStyle: 'long', timeStyle: 'short' }));
   }, [tournament.date]);
 
@@ -124,7 +125,7 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
                             <TableHeader>
                                 <TableRow>
                                     <TableHead className="w-[80px] text-center">Rank</TableHead>
-                                    <TableHead>Player</TableHead>
+                                    <TableHead>Team</TableHead>
                                     <TableHead className="text-center">Kills</TableHead>
                                     <TableHead className="text-center">Wins</TableHead>
                                     <TableHead className="text-right">Points</TableHead>
@@ -139,10 +140,10 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
                                         <TableCell>
                                             <div className="flex items-center gap-3">
                                                 <Avatar className="h-10 w-10 border-2 border-primary/50">
-                                                    <AvatarImage src={`https://placehold.co/40x40.png?text=${p.player.charAt(0)}`} />
-                                                    <AvatarFallback>{p.player.charAt(0)}</AvatarFallback>
+                                                    <AvatarImage src={`https://placehold.co/40x40.png?text=${p.teamName.charAt(0)}`} />
+                                                    <AvatarFallback>{p.teamName.charAt(0)}</AvatarFallback>
                                                 </Avatar>
-                                                <span className="font-medium">{p.player}</span>
+                                                <span className="font-medium">{p.teamName}</span>
                                             </div>
                                         </TableCell>
                                         <TableCell className="text-center">

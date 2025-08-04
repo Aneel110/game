@@ -18,11 +18,11 @@ type LeaderboardFormValues = z.infer<typeof leaderboardEntrySchema>;
 
 interface LeaderboardFormProps {
   tournamentId: string;
-  entryPlayerName?: string; // The original player name, used as an ID
+  entryTeamName?: string; // The original team name, used as an ID
   defaultValues?: Partial<LeaderboardFormValues>;
 }
 
-export default function LeaderboardForm({ tournamentId, entryPlayerName, defaultValues }: LeaderboardFormProps) {
+export default function LeaderboardForm({ tournamentId, entryTeamName, defaultValues }: LeaderboardFormProps) {
   const { toast } = useToast();
   const router = useRouter();
   
@@ -30,7 +30,7 @@ export default function LeaderboardForm({ tournamentId, entryPlayerName, default
     resolver: zodResolver(leaderboardEntrySchema),
     defaultValues: defaultValues || {
         rank: 1,
-        player: '',
+        teamName: '',
         points: 0,
         matches: 0,
         kills: 0,
@@ -39,7 +39,7 @@ export default function LeaderboardForm({ tournamentId, entryPlayerName, default
   });
 
   async function onSubmit(data: LeaderboardFormValues) {
-    const result = await createOrUpdateLeaderboardEntry(tournamentId, data, entryPlayerName);
+    const result = await createOrUpdateLeaderboardEntry(tournamentId, data, entryTeamName);
 
     if(result.success) {
         toast({ title: 'Success', description: result.message });
@@ -56,12 +56,12 @@ export default function LeaderboardForm({ tournamentId, entryPlayerName, default
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                     control={form.control}
-                    name="player"
+                    name="teamName"
                     render={({ field }) => (
                         <FormItem>
-                            <Label>Player Name</Label>
+                            <Label>Team Name</Label>
                             <FormControl>
-                                <Input placeholder="e.g., ShadowStriker" {...field} />
+                                <Input placeholder="e.g., Vicious Vipers" {...field} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -140,12 +140,10 @@ export default function LeaderboardForm({ tournamentId, entryPlayerName, default
             <div className="flex justify-end gap-4">
                 <Button variant="outline" type="button" onClick={() => router.back()}>Cancel</Button>
                 <Button type="submit" disabled={form.formState.isSubmitting}>
-                    {form.formState.isSubmitting ? 'Saving...' : (entryPlayerName ? 'Update Entry' : 'Create Entry')}
+                    {form.formState.isSubmitting ? 'Saving...' : (entryTeamName ? 'Update Entry' : 'Create Entry')}
                 </Button>
             </div>
         </form>
     </Form>
   );
 }
-
-    

@@ -74,7 +74,7 @@ export default async function LeaderboardsPage() {
             <TableHeader>
               <TableRow className="border-b-primary/20">
                 <TableHead className="text-center w-[100px]">Rank</TableHead>
-                <TableHead>Player</TableHead>
+                <TableHead>Team</TableHead>
                 <TableHead className="text-center">Matches</TableHead>
                 <TableHead className="text-center">Kills</TableHead>
                 <TableHead className="text-center">Chicken Dinners</TableHead>
@@ -104,10 +104,10 @@ export default async function LeaderboardsPage() {
                   <TableCell>
                     <div className="flex items-center gap-4">
                       <Avatar className="h-12 w-12 border-2 border-primary/50">
-                        <AvatarImage src={`https://placehold.co/40x40.png?text=${p.player.charAt(0)}`} />
-                        <AvatarFallback>{p.player.charAt(0)}</AvatarFallback>
+                        <AvatarImage src={`https://placehold.co/40x40.png?text=${p.teamName.charAt(0)}`} />
+                        <AvatarFallback>{p.teamName.charAt(0)}</AvatarFallback>
                       </Avatar>
-                      <span className="font-medium text-lg">{p.player}</span>
+                      <span className="font-medium text-lg">{p.teamName}</span>
                     </div>
                   </TableCell>
                   <TableCell className="text-center font-mono text-lg flex items-center justify-center gap-2">

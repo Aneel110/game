@@ -10,11 +10,19 @@ export const leaderboardSchema = z.object({
     chickenDinners: z.coerce.number().int().min(0, 'Chicken Dinners must be a positive number.'),
 });
 
+const prizeDistributionSchema = z.object({
+  first: z.coerce.number().min(0, 'Prize must be a positive number.').default(0),
+  second: z.coerce.number().min(0, 'Prize must be a positive number.').default(0),
+  third: z.coerce.number().min(0, 'Prize must be a positive number.').default(0),
+  fourth: z.coerce.number().min(0, 'Prize must be a positive number.').default(0),
+  fifth: z.coerce.number().min(0, 'Prize must be a positive number.').default(0),
+  topKills: z.coerce.number().min(0, 'Prize must be a positive number.').default(0),
+});
 
 export const tournamentSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters.'),
   date: z.string().min(1, 'Date is required.'),
-  prize: z.coerce.number().min(0, 'Prize must be a positive number.'),
+  prizeDistribution: prizeDistributionSchema.default({}),
   mode: z.string().min(1, 'Mode is required.'),
   image: z.string().url('Image must be a valid URL.'),
   dataAiHint: z.string().optional(),

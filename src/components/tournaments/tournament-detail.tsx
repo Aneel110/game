@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Gamepad2, Trophy, ShieldCheck, ShieldAlert, BarChartHorizontal, Crown, Swords, Drumstick, Clock } from "lucide-react";
+import { Calendar, Gamepad2, Trophy, ShieldCheck, ShieldAlert, BarChartHorizontal, Crown, Swords, Drumstick, Clock, Target } from "lucide-react";
 import TournamentRegistrationForm from "./registration-form";
 import { useAuth } from "@/hooks/use-auth";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
@@ -44,6 +44,18 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
   const isAlreadyRegistered = user && registrations.some(r => r.registeredById === user.uid);
   const leaderboard = tournament.leaderboard?.sort((a: any, b: any) => a.rank - b.rank) || [];
 
+  const prizeDistribution = tournament.prizeDistribution || {};
+  const totalPrize = Object.values(prizeDistribution).reduce((sum: any, val: any) => sum + (Number(val) || 0), 0);
+
+  const prizeItems = [
+      { label: "1st Place", value: prizeDistribution.first },
+      { label: "2nd Place", value: prizeDistribution.second },
+      { label: "3rd Place", value: prizeDistribution.third },
+      { label: "4th Place", value: prizeDistribution.fourth },
+      { label: "5th Place", value: prizeDistribution.fifth },
+  ].filter(p => p.value > 0);
+
+  const topKillsPrize = prizeDistribution.topKills;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -164,12 +176,32 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
                   </ul>
                 </TabsContent>
                 <TabsContent value="prizes">
-                   <ul className="list-disc list-inside text-muted-foreground space-y-2">
-                    <li>1st Place: ${ (tournament.prize * 0.5).toLocaleString() }</li>
-                    <li>2nd Place: ${ (tournament.prize * 0.3).toLocaleString() }</li>
-                    <li>3rd Place: ${ (tournament.prize * 0.15).toLocaleString() }</li>
-                    <li>4th Place: ${ (tournament.prize * 0.05).toLocaleString() }</li>
-                  </ul>
+                   <div className="space-y-4">
+                        {prizeItems.length > 0 ? (
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                {prizeItems.map((item) => (
+                                    <Card key={item.label} className="p-4 text-center">
+                                        <p className="text-sm text-muted-foreground">{item.label}</p>
+                                        <p className="text-xl font-bold text-primary">Rs {item.value.toLocaleString()}</p>
+                                    </Card>
+                                ))}
+                            </div>
+                        ) : (
+                             <p className="text-muted-foreground text-center">Prize distribution is not yet announced.</p>
+                        )}
+                        {topKillsPrize > 0 && (
+                           <>
+                            <Separator />
+                            <Card className="p-4 flex items-center justify-between bg-card-darker">
+                                <div className="flex items-center gap-3">
+                                <Target className="w-6 h-6 text-destructive" />
+                                <p className="font-semibold text-lg">Top Kills</p>
+                                </div>
+                                <p className="text-xl font-bold text-destructive">Rs {topKillsPrize.toLocaleString()}</p>
+                            </Card>
+                           </>
+                        )}
+                   </div>
                 </TabsContent>
               </Tabs>
             </CardContent>
@@ -185,8 +217,8 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
               <div className="flex items-center">
                 <Trophy className="w-5 h-5 mr-3 text-primary" />
                 <div>
-                  <p className="text-sm text-muted-foreground">Prize Pool</p>
-                  <p className="font-bold text-lg">${parseInt(tournament.prize).toLocaleString()}</p>
+                  <p className="text-sm text-muted-foreground">Total Prize Pool</p>
+                  <p className="font-bold text-lg">Rs {totalPrize.toLocaleString()}</p>
                 </div>
               </div>
               <Separator />

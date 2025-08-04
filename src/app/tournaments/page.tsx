@@ -1,4 +1,5 @@
 
+
 import Image from 'next/image';
 import Link from 'next/link';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,7 +14,7 @@ type Tournament = {
   id: string;
   name: string;
   date: string;
-  prize: number;
+  prizeDistribution: { [key: string]: number };
   image: string;
   dataAiHint?: string;
   status: 'Upcoming' | 'Past';
@@ -37,7 +38,7 @@ async function getCategorizedTournaments() {
           id: doc.id, 
           name: docData.name,
           date: dateString,
-          prize: docData.prize,
+          prizeDistribution: docData.prizeDistribution || {},
           image: docData.image,
           dataAiHint: docData.dataAiHint,
         });
@@ -79,6 +80,8 @@ function TournamentCard({ tournament }: { tournament: Tournament }) {
         }
     };
 
+    const totalPrize = Object.values(tournament.prizeDistribution).reduce((sum, val) => sum + (Number(val) || 0), 0);
+
     return (
         <Card className="flex flex-col overflow-hidden hover:shadow-primary/20 hover:shadow-lg transition-all duration-300">
             <CardHeader className="p-0 relative">
@@ -94,7 +97,7 @@ function TournamentCard({ tournament }: { tournament: Tournament }) {
                     </div>
                     <div className="flex items-center">
                         <Trophy className="w-4 h-4 mr-2 text-primary" />
-                        <span className="font-bold text-lg text-primary">${tournament.prize.toLocaleString()}</span>
+                        <span className="font-bold text-lg text-primary">Rs {totalPrize.toLocaleString()}</span>
                     </div>
                 </div>
             </CardContent>

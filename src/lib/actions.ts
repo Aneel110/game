@@ -123,25 +123,29 @@ export async function updateUserRole(userId: string, role: 'admin' | 'user') {
     }
 }
 
+function processTournamentFormData(formData: FormData) {
+    const rawData = Object.fromEntries(formData.entries());
+    const prizeDistribution: { [key: string]: any } = {};
+    const otherData: { [key: string]: any } = {};
+
+    for (const [key, value] of Object.entries(rawData)) {
+        if (key.startsWith('prizeDistribution.')) {
+            const prizeKey = key.split('.')[1];
+            prizeDistribution[prizeKey] = value;
+        } else {
+            otherData[key] = value;
+        }
+    }
+    return { ...otherData, prizeDistribution };
+}
+
 export async function createTournament(formData: FormData) {
     if (!db) {
       return { success: false, message: 'Database not initialized.' };
     }
     
-    const rawData = {
-        name: formData.get('name'),
-        date: formData.get('date'),
-        prize: formData.get('prize'),
-        mode: formData.get('mode'),
-        image: formData.get('image'),
-        dataAiHint: formData.get('dataAiHint'),
-        description: formData.get('description'),
-    };
-
-    const validatedFields = tournamentSchema.safeParse({
-        ...rawData,
-        leaderboard: [], // Initialize with empty leaderboard
-    });
+    const processedData = processTournamentFormData(formData);
+    const validatedFields = tournamentSchema.safeParse(processedData);
     
     if (!validatedFields.success) {
         console.error("Validation Errors:", validatedFields.error.flatten().fieldErrors);
@@ -150,7 +154,7 @@ export async function createTournament(formData: FormData) {
 
     try {
         const { ...dataToSave } = validatedFields.data;
-        await db.collection('tournaments').add(dataToSave);
+        await db.collection('tournaments').add({ ...dataToSave, leaderboard: [] });
         revalidatePath('/tournaments');
         revalidatePath('/admin/tournaments');
         return { success: true, message: 'Tournament created successfully.' };
@@ -164,18 +168,11 @@ export async function updateTournament(id: string, formData: FormData) {
     if (!db) {
       return { success: false, message: 'Database not initialized.' };
     }
-     const rawData = {
-        name: formData.get('name'),
-        date: formData.get('date'),
-        prize: formData.get('prize'),
-        mode: formData.get('mode'),
-        image: formData.get('image'),
-        dataAiHint: formData.get('dataAiHint'),
-        description: formData.get('description'),
-    };
-    const validatedFields = tournamentSchema.safeParse(rawData);
+    const processedData = processTournamentFormData(formData);
+    const validatedFields = tournamentSchema.safeParse(processedData);
     
     if (!validatedFields.success) {
+        console.log("Validation Errors:", validatedFields.error.flatten().fieldErrors);
         return { success: false, message: 'Invalid form data.', errors: validatedFields.error.flatten().fieldErrors };
     }
 
@@ -287,63 +284,6 @@ export async function deleteStream(id: string) {
         return { success: true, message: 'Stream deleted successfully.' };
     } catch (error) {
         console.error('Error deleting stream:', error);
-        return { success: false, message: 'An unexpected error occurred.' };
-    }
-}
-
-export async function createLeaderboardEntry(formData: FormData) {
-    if (!db) {
-        return { success: false, message: 'Database not initialized.' };
-    }
-    const rawData = Object.fromEntries(formData.entries());
-    const validatedFields = leaderboardSchema.safeParse(rawData);
-
-    if (!validatedFields.success) {
-        return { success: false, message: 'Invalid form data.', errors: validatedFields.error.flatten().fieldErrors };
-    }
-
-    try {
-        await db.collection('leaderboard').add(validatedFields.data);
-        revalidatePath('/admin/leaderboard');
-        return { success: true, message: 'Leaderboard entry created.' };
-    } catch (error) {
-        console.error('Error creating leaderboard entry:', error);
-        return { success: false, message: 'An unexpected error occurred.' };
-    }
-}
-
-export async function updateLeaderboardEntry(id: string, formData: FormData) {
-    if (!db) {
-        return { success: false, message: 'Database not initialized.' };
-    }
-    const rawData = Object.fromEntries(formData.entries());
-    const validatedFields = leaderboardSchema.safeParse(rawData);
-
-    if (!validatedFields.success) {
-        return { success: false, message: 'Invalid form data.', errors: validatedFields.error.flatten().fieldErrors };
-    }
-
-    try {
-        await db.collection('leaderboard').doc(id).update(validatedFields.data);
-        revalidatePath('/admin/leaderboard');
-        revalidatePath(`/admin/leaderboard/${id}/edit`);
-        return { success: true, message: 'Leaderboard entry updated.' };
-    } catch (error) {
-        console.error('Error updating leaderboard entry:', error);
-        return { success: false, message: 'An unexpected error occurred.' };
-    }
-}
-
-export async function deleteLeaderboardEntry(id: string) {
-    if (!db) {
-        return { success: false, message: 'Database not initialized.' };
-    }
-    try {
-        await db.collection('leaderboard').doc(id).delete();
-        revalidatePath('/admin/leaderboard');
-        return { success: true, message: 'Leaderboard entry deleted.' };
-    } catch (error) {
-        console.error('Error deleting leaderboard entry:', error);
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }

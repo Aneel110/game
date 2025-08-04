@@ -4,7 +4,7 @@
 
 import { db } from '@/lib/firebase-admin';
 import { revalidatePath } from 'next/cache';
-import { tournamentSchema, streamSchema, registrationSchema, type RegistrationData } from '@/lib/schemas';
+import { tournamentSchema, streamSchema, registrationSchema, RegistrationData } from '@/lib/schemas';
 
 
 // Helper to extract YouTube video ID from various URL formats
@@ -86,7 +86,7 @@ export async function getTournamentRegistrations(tournamentId: string) {
 }
 
 
-export async function updateRegistrationStatus(tournamentId: string, registrationId: string, status: 'approved' | 'declined') {
+export async function updateRegistrationStatus(tournamentId: string, registrationId: string, status: 'approved' | 'declined' | 'pending') {
     if (!db) {
       return { success: false, message: 'Database not initialized.' };
     }

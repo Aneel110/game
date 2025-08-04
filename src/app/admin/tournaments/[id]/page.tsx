@@ -112,7 +112,7 @@ export default async function AdminTournamentDetailPage({ params }: AdminTournam
                                 </TableCell>
                                 <TableCell>{getStatusBadge(reg.status)}</TableCell>
                                 <TableCell className="text-right">
-                                   {reg.status === 'pending' && <RegistrationActions tournamentId={params.id} registrationId={reg.id} />}
+                                   {reg.status !== 'declined' && <RegistrationActions tournamentId={params.id} registrationId={reg.id} currentStatus={reg.status} />}
                                 </TableCell>
                             </TableRow>
                         ))}

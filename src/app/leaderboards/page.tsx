@@ -2,7 +2,7 @@
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Crown, Drumstick, Swords, Trophy, AlertTriangle } from "lucide-react";
+import { Crown, Drumstick, Swords, Trophy, AlertTriangle, BarChartHorizontal } from "lucide-react";
 import { db } from "@/lib/firebase-admin";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -12,17 +12,20 @@ async function getLatestFinishedTournamentLeaderboard() {
     return { success: false, error: "Could not connect to the database. Please ensure Firestore is enabled and service account is set." };
   }
   try {
+    // Fetch all finished tournaments and sort them in the application code to avoid needing a composite index.
     const tournamentsSnapshot = await db.collection("tournaments")
         .where("status", "==", "Finished")
-        .orderBy("date", "desc")
-        .limit(1)
         .get();
 
     if (tournamentsSnapshot.empty) {
         return { success: true, data: null, tournamentName: null };
     }
     
-    const latestTournament = tournamentsSnapshot.docs[0].data();
+    // Sort tournaments by date descending to find the latest one
+    const finishedTournaments = tournamentsSnapshot.docs.map(doc => doc.data());
+    finishedTournaments.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    const latestTournament = finishedTournaments[0];
     const leaderboardData = latestTournament.leaderboard || [];
 
     // Sort leaderboard by rank

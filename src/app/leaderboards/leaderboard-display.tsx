@@ -89,8 +89,7 @@ function LeaderboardTable({ leaderboardData }: { leaderboardData: LeaderboardEnt
                       <span className="font-medium text-lg">{p.teamName}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-center font-mono text-lg flex items-center justify-center gap-2">
-                    <Swords className="w-5 h-5 text-muted-foreground" />
+                  <TableCell className="text-center font-mono text-lg">
                     {p.matches}
                   </TableCell>
                   <TableCell className="text-center font-mono text-lg flex items-center justify-center gap-2">

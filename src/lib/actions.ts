@@ -1,5 +1,4 @@
 
-
 'use server';
 
 import { auth, db } from '@/lib/firebase-admin';
@@ -171,6 +170,33 @@ export async function updateUserDisabledStatus(userId: string, disabled: boolean
     } catch (error) {
         console.error('Error updating user disabled status:', error);
         return { success: false, message: 'An unexpected error occurred.' };
+    }
+}
+
+export async function deleteUser(userId: string) {
+    if (!auth || !db) {
+        return { success: false, message: 'Admin SDK not initialized.' };
+    }
+    if (!userId) {
+        return { success: false, message: 'Missing user ID.' };
+    }
+    try {
+        // Delete from Firebase Authentication
+        await auth.deleteUser(userId);
+
+        // Delete from Firestore
+        const userRef = db.collection('users').doc(userId);
+        await userRef.delete();
+
+        revalidatePath('/admin/users');
+        return { success: true, message: 'User has been permanently deleted.' };
+    } catch (error: any) {
+        console.error('Error deleting user:', error);
+        // Provide more specific error messages if possible
+        if (error.code === 'auth/user-not-found') {
+            return { success: false, message: 'User not found in Firebase Authentication.' };
+        }
+        return { success: false, message: 'An unexpected error occurred while deleting the user.' };
     }
 }
 

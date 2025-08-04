@@ -4,6 +4,17 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -13,9 +24,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, UserCheck, UserCog, UserX } from 'lucide-react';
+import { MoreHorizontal, UserCheck, UserCog, UserX, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { updateUserRole, updateUserDisabledStatus } from '@/lib/actions';
+import { updateUserRole, updateUserDisabledStatus, deleteUser } from '@/lib/actions';
 
 interface UserActionsProps {
     userId: string;
@@ -25,6 +36,7 @@ interface UserActionsProps {
 
 export default function UserActions({ userId, currentRole, isDisabled }: UserActionsProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const handleRoleChange = async (newRole: 'admin' | 'user') => {
@@ -61,36 +73,77 @@ export default function UserActions({ userId, currentRole, isDisabled }: UserAct
     }
   };
 
+  const handleDelete = async () => {
+    setIsLoading(true);
+    try {
+      const result = await deleteUser(userId);
+      if (result.success) {
+        toast({ title: 'Success', description: result.message });
+        setIsDeleteDialogOpen(false);
+      } else {
+        toast({ title: 'Error', description: result.message, variant: 'destructive' });
+      }
+    } catch (error) {
+       toast({ title: 'Error', description: 'An unexpected error occurred.', variant: 'destructive' });
+    } finally {
+       setIsLoading(false);
+    }
+  }
+
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-8 w-8 p-0" disabled={isLoading}>
-          <span className="sr-only">Open menu</span>
-          <MoreHorizontal className="h-4 w-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        
-        <DropdownMenuRadioGroup value={currentRole} onValueChange={handleRoleChange}>
-            <DropdownMenuLabel className="flex items-center gap-2 text-xs font-normal text-muted-foreground"><UserCog /> Change Role</DropdownMenuLabel>
-            <DropdownMenuRadioItem value="admin">Admin</DropdownMenuRadioItem>
-            <DropdownMenuRadioItem value="user">User</DropdownMenuRadioItem>
-        </DropdownMenuRadioGroup>
+    <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0" disabled={isLoading}>
+            <span className="sr-only">Open menu</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          
+          <DropdownMenuRadioGroup value={currentRole} onValueChange={handleRoleChange}>
+              <DropdownMenuLabel className="flex items-center gap-2 text-xs font-normal text-muted-foreground"><UserCog /> Change Role</DropdownMenuLabel>
+              <DropdownMenuRadioItem value="admin">Admin</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="user">User</DropdownMenuRadioItem>
+          </DropdownMenuRadioGroup>
 
-        <DropdownMenuSeparator />
+          <DropdownMenuSeparator />
 
-        <DropdownMenuItem onClick={() => handleStatusChange(!isDisabled)} disabled={isLoading}>
-            {isDisabled ? (
-                <div className='flex items-center gap-2 text-green-500'><UserCheck /> Enable Account</div>
-            ) : (
-                <div className='flex items-center gap-2 text-red-500'><UserX /> Disable Account</div>
-            )}
-        </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleStatusChange(!isDisabled)} disabled={isLoading}>
+              {isDisabled ? (
+                  <div className='flex items-center gap-2 text-green-500'><UserCheck /> Enable Account</div>
+              ) : (
+                  <div className='flex items-center gap-2 text-red-500'><UserX /> Disable Account</div>
+              )}
+          </DropdownMenuItem>
+          
+          <DropdownMenuSeparator />
 
-      </DropdownMenuContent>
-    </DropdownMenu>
+          <AlertDialogTrigger asChild>
+            <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                <Trash2 /> Delete User
+            </DropdownMenuItem>
+          </AlertDialogTrigger>
+
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This action cannot be undone. This will permanently delete the user's account and all associated data.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={handleDelete} disabled={isLoading} className="bg-destructive hover:bg-destructive/90">
+            {isLoading ? 'Deleting...' : 'Yes, delete user'}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

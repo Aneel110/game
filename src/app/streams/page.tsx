@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { db } from "@/lib/firebase-admin";
 import { Signal, Clapperboard, Calendar } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 async function getStreams() {
     const streamsSnapshot = await db.collection('streams').orderBy('createdAt', 'desc').get();
@@ -20,7 +21,7 @@ function StreamCard({ stream }: { stream: any }) {
     const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
 
     return (
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden transition-transform duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/20">
             <CardHeader className="p-0">
                  <Image src={thumbnailUrl} alt={stream.title} width={600} height={400} className="w-full aspect-video object-cover" />
             </CardHeader>
@@ -29,6 +30,11 @@ function StreamCard({ stream }: { stream: any }) {
             </CardContent>
         </Card>
     )
+}
+
+function getWatchUrl(embedUrl: string) {
+    const videoId = embedUrl.split('/').pop();
+    return `https://www.youtube.com/watch?v=${videoId}`;
 }
 
 export default async function StreamsPage() {
@@ -73,7 +79,11 @@ export default async function StreamsPage() {
                 </h2>
                 {upcoming.length > 0 ? (
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {upcoming.map(stream => <StreamCard key={stream.id} stream={stream} />)}
+                        {upcoming.map(stream => (
+                            <Link key={stream.id} href={getWatchUrl(stream.youtubeUrl)} target="_blank">
+                                <StreamCard stream={stream} />
+                            </Link>
+                        ))}
                     </div>
                 ) : (
                     <p className="text-muted-foreground">No upcoming streams scheduled.</p>
@@ -87,7 +97,11 @@ export default async function StreamsPage() {
                 </h2>
                  {past.length > 0 ? (
                     <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {past.map(stream => <StreamCard key={stream.id} stream={stream} />)}
+                        {past.map(stream => (
+                             <Link key={stream.id} href={getWatchUrl(stream.youtubeUrl)} target="_blank">
+                                <StreamCard stream={stream} />
+                            </Link>
+                        ))}
                     </div>
                 ) : (
                      <p className="text-muted-foreground">No past broadcasts available.</p>

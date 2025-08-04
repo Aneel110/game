@@ -1,6 +1,7 @@
 
 'use client';
 
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,6 +31,11 @@ function getTournamentStatus(tournamentDate: string): { status: 'Upcoming' | 'Pa
 
 export default function TournamentDetail({ tournament, registrations }: { tournament: any, registrations: any[] }) {
   const { user, loading } = useAuth();
+  const [formattedDate, setFormattedDate] = useState('');
+
+  useEffect(() => {
+    setFormattedDate(new Date(tournament.date).toLocaleString([], { dateStyle: 'long', timeStyle: 'short' }));
+  }, [tournament.date]);
 
   const { status, color, registrationClosed, message } = getTournamentStatus(tournament.date);
   
@@ -188,7 +194,7 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
                 <Calendar className="w-5 h-5 mr-3 text-primary" />
                 <div>
                   <p className="text-sm text-muted-foreground">Date</p>
-                  <p className="font-bold">{new Date(tournament.date).toLocaleString([], { dateStyle: 'long', timeStyle: 'short' })}</p>
+                  <p className="font-bold">{formattedDate || 'Loading...'}</p>
                 </div>
               </div>
               <Separator />

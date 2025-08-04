@@ -23,7 +23,11 @@ export function LoginForm() {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       
-      if (!userCredential.user.emailVerified) {
+      // Reload the user to get the latest emailVerified state
+      await userCredential.user.reload();
+      const freshUser = auth.currentUser;
+
+      if (freshUser && !freshUser.emailVerified) {
         await signOut(auth); // Sign out the user immediately
         toast({
             title: "Verification Required",

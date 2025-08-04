@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Crown, Drumstick, Swords, AlertTriangle, Target } from "lucide-react";
+import { Crown, AlertTriangle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -92,12 +92,10 @@ function LeaderboardTable({ leaderboardData }: { leaderboardData: LeaderboardEnt
                   <TableCell className="text-center font-mono text-lg">
                     {p.matches}
                   </TableCell>
-                  <TableCell className="text-center font-mono text-lg flex items-center justify-center gap-2">
-                    <Target className="w-5 h-5 text-red-500" />
+                  <TableCell className="text-center font-mono text-lg">
                     {p.kills}
                   </TableCell>
-                  <TableCell className="text-center font-mono text-lg flex items-center justify-center gap-2">
-                     <Drumstick className="w-5 h-5 text-amber-500" />
+                  <TableCell className="text-center font-mono text-lg">
                     {p.chickenDinners}
                   </TableCell>
                   <TableCell className="text-right font-bold text-primary text-lg">{p.points.toLocaleString()}</TableCell>

@@ -34,7 +34,6 @@ export default function TournamentForm({ tournamentId, defaultValues }: Tourname
         name: '',
         date: '',
         prize: 0,
-        status: 'Upcoming',
         mode: 'Squads',
         image: 'https://placehold.co/600x400.png',
         dataAiHint: '',
@@ -63,31 +62,17 @@ export default function TournamentForm({ tournamentId, defaultValues }: Tourname
           {form.formState.errors.name && <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>}
         </div>
         <div className="space-y-2">
-          <Label htmlFor="date">Date</Label>
-          <Input id="date" name="date" type="date" defaultValue={defaultValues?.date} />
+          <Label htmlFor="date">Date & Time</Label>
+          <Input id="date" name="date" type="datetime-local" defaultValue={defaultValues?.date} />
            {form.formState.errors.date && <p className="text-sm text-destructive">{form.formState.errors.date.message}</p>}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
           <Label htmlFor="prize">Prize Pool ($)</Label>
           <Input id="prize" name="prize" type="number" defaultValue={defaultValues?.prize} />
            {form.formState.errors.prize && <p className="text-sm text-destructive">{form.formState.errors.prize.message}</p>}
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="status">Status</Label>
-          <Select name="status" defaultValue={defaultValues?.status}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Upcoming">Upcoming</SelectItem>
-              <SelectItem value="Ongoing">Ongoing</SelectItem>
-              <SelectItem value="Finished">Finished</SelectItem>
-            </SelectContent>
-          </Select>
-           {form.formState.errors.status && <p className="text-sm text-destructive">{form.formState.errors.status.message}</p>}
         </div>
         <div className="space-y-2">
           <Label htmlFor="mode">Game Mode</Label>

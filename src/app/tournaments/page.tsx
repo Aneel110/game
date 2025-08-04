@@ -4,65 +4,113 @@ import Link from 'next/link';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, Calendar, Trophy, AlertTriangle } from 'lucide-react';
+import { ArrowRight, Calendar, Trophy, AlertTriangle, Shield, History } from 'lucide-react';
 import { db } from "@/lib/firebase-admin";
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Timestamp } from 'firebase-admin/firestore';
 
-
 type Tournament = {
   id: string;
   name: string;
-  date: string | Timestamp;
+  date: string;
   prize: number;
-  status: string;
   image: string;
   dataAiHint?: string;
+  status: 'Upcoming' | 'Past';
 };
 
-async function getTournaments() {
+async function getCategorizedTournaments() {
   if (!db) {
     return { success: false, error: "Server-side Firebase is not configured correctly." };
   }
   try {
-    const tournamentsSnapshot = await db.collection("tournaments").orderBy("date", "desc").get();
-    const data: Tournament[] = [];
+    const tournamentsSnapshot = await db.collection("tournaments").get();
+    const allTournaments: Omit<Tournament, 'status'>[] = [];
     tournamentsSnapshot.forEach((doc) => {
         const docData = doc.data();
-        data.push({
+        // Ensure date is a string
+        const dateString = docData.date instanceof Timestamp 
+            ? docData.date.toDate().toISOString() 
+            : String(docData.date);
+
+        allTournaments.push({
           id: doc.id, 
           name: docData.name,
-          // Convert Timestamp to a serializable format if it's a Timestamp object
-          date: docData.date instanceof Timestamp ? docData.date.toDate().toISOString().split('T')[0] : docData.date,
+          date: dateString,
           prize: docData.prize,
-          status: docData.status,
           image: docData.image,
           dataAiHint: docData.dataAiHint,
         });
     });
-    return { success: true, data };
+
+    const now = new Date();
+    const upcoming: Tournament[] = [];
+    const past: Tournament[] = [];
+
+    allTournaments.forEach(t => {
+      const tournamentDate = new Date(t.date);
+      if (tournamentDate > now) {
+        upcoming.push({ ...t, status: 'Upcoming' });
+      } else {
+        past.push({ ...t, status: 'Past' });
+      }
+    });
+
+    // Sort upcoming tournaments by soonest first, and past tournaments by most recent first
+    upcoming.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    past.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    return { success: true, data: { upcoming, past } };
   } catch (error) {
     console.error("Error fetching tournaments:", error);
     return { success: false, error: "Could not connect to the database. Please ensure Firestore is enabled and permissions are correct." };
   }
 }
 
+function TournamentCard({ tournament }: { tournament: Tournament }) {
+    const getStatusBadge = () => {
+        switch (tournament.status) {
+            case 'Upcoming':
+                return <Badge className="absolute top-4 right-4 bg-blue-500 text-white">Upcoming</Badge>;
+            case 'Past':
+                return <Badge className="absolute top-4 right-4 bg-gray-500 text-white">Finished</Badge>;
+            default:
+                return null;
+        }
+    };
 
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'Upcoming':
-      return 'bg-blue-500';
-    case 'Ongoing':
-      return 'bg-green-500';
-    case 'Finished':
-      return 'bg-gray-500';
-    default:
-      return 'bg-secondary';
-  }
-};
+    return (
+        <Card className="flex flex-col overflow-hidden hover:shadow-primary/20 hover:shadow-lg transition-all duration-300">
+            <CardHeader className="p-0 relative">
+                <Image src={tournament.image} alt={tournament.name} width={600} height={400} className="w-full h-48 object-cover" data-ai-hint={tournament.dataAiHint} />
+                {getStatusBadge()}
+            </CardHeader>
+            <CardContent className="p-6 flex-grow">
+                <CardTitle className="font-headline text-2xl mb-2">{tournament.name}</CardTitle>
+                <div className="flex items-center text-muted-foreground text-sm mb-4">
+                    <div className="flex items-center mr-4">
+                        <Calendar className="w-4 h-4 mr-2" />
+                        <span>{new Date(tournament.date).toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex items-center">
+                        <Trophy className="w-4 h-4 mr-2 text-primary" />
+                        <span className="font-bold text-lg text-primary">${tournament.prize.toLocaleString()}</span>
+                    </div>
+                </div>
+            </CardContent>
+            <CardFooter className="p-6 pt-0">
+                <Button asChild className="w-full">
+                    <Link href={`/tournaments/${tournament.id}`}>
+                        View Details <ArrowRight className="ml-2 w-4 h-4" />
+                    </Link>
+                </Button>
+            </CardFooter>
+        </Card>
+    )
+}
 
 export default async function TournamentsPage() {
-  const { success, data: tournaments, error } = await getTournaments();
+  const { success, data, error } = await getCategorizedTournaments();
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -75,49 +123,50 @@ export default async function TournamentsPage() {
         <Alert variant="destructive" className="mb-8">
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Database Connection Error</AlertTitle>
-          <AlertDescription>
-            {error}
-          </AlertDescription>
+          <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
 
-      {tournaments && tournaments.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {tournaments.map((t: Tournament) => (
-            <Card key={t.id} className="flex flex-col overflow-hidden hover:shadow-primary/20 hover:shadow-lg transition-all duration-300">
-              <CardHeader className="p-0 relative">
-                <Image src={t.image} alt={t.name} width={600} height={400} className="w-full h-48 object-cover" data-ai-hint={t.dataAiHint} />
-                <Badge className={`absolute top-4 right-4 text-white ${getStatusColor(t.status)}`}>{t.status}</Badge>
-              </CardHeader>
-              <CardContent className="p-6 flex-grow">
-                <CardTitle className="font-headline text-2xl mb-2">{t.name}</CardTitle>
-                <div className="flex items-center text-muted-foreground text-sm mb-4">
-                  <div className="flex items-center mr-4">
-                    <Calendar className="w-4 h-4 mr-2" />
-                    <span>{typeof t.date === 'string' ? t.date : t.date.toDateString()}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Trophy className="w-4 h-4 mr-2 text-primary" />
-                    <span className="font-bold text-lg text-primary">${t.prize.toLocaleString()}</span>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter className="p-6 pt-0">
-                <Button asChild className="w-full">
-                  <Link href={`/tournaments/${t.id}`}>
-                    View Details <ArrowRight className="ml-2 w-4 h-4" />
-                  </Link>
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
+      {success && data && (
+        <div className="space-y-16">
+          <section>
+            <h2 className="text-3xl font-headline font-bold mb-6 flex items-center gap-3 text-primary">
+                <Shield /> Upcoming Tournaments
+            </h2>
+            {data.upcoming.length > 0 ? (
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {data.upcoming.map((t) => <TournamentCard key={t.id} tournament={t} />)}
+                 </div>
+            ) : (
+                 <Card className="text-center p-8">
+                    <CardTitle>No Upcoming Tournaments</CardTitle>
+                    <p className="text-muted-foreground mt-2">Check back soon for new challenges!</p>
+                </Card>
+            )}
+          </section>
+
+          <section>
+             <h2 className="text-3xl font-headline font-bold mb-6 flex items-center gap-3">
+                <History /> Past Tournaments
+            </h2>
+            {data.past.length > 0 ? (
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {data.past.map((t) => <TournamentCard key={t.id} tournament={t} />)}
+                 </div>
+            ) : (
+                <Card className="text-center p-8">
+                    <CardTitle>No Past Tournaments</CardTitle>
+                    <p className="text-muted-foreground mt-2">Historical tournament data will appear here.</p>
+                </Card>
+            )}
+          </section>
         </div>
       )}
 
-      {success && tournaments?.length === 0 && (
+      {success && !data && (
          <Card className="text-center p-8">
             <CardTitle>No Tournaments Found</CardTitle>
-            <p className="text-muted-foreground mt-2">Check back soon for new tournaments!</p>
+            <p className="text-muted-foreground mt-2">It seems there are no tournaments at all.</p>
           </Card>
       )}
     </div>

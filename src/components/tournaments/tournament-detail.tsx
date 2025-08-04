@@ -6,29 +6,33 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Gamepad2, Trophy, ShieldCheck, ShieldAlert, BarChartHorizontal, Crown, Swords, Drumstick } from "lucide-react";
+import { Calendar, Gamepad2, Trophy, ShieldCheck, ShieldAlert, BarChartHorizontal, Crown, Swords, Drumstick, Clock } from "lucide-react";
 import TournamentRegistrationForm from "./registration-form";
 import { useAuth } from "@/hooks/use-auth";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
 import ParticipantsTable from "./participants-table";
+import { Button } from "../ui/button";
 
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'Upcoming':
-      return 'bg-blue-500';
-    case 'Ongoing':
-      return 'bg-green-500';
-    case 'Finished':
-      return 'bg-gray-500';
-    default:
-      return 'bg-secondary';
+function getTournamentStatus(tournamentDate: string): { status: 'Upcoming' | 'Past', color: string, registrationClosed: boolean, message: string } {
+  const now = new Date();
+  const date = new Date(tournamentDate);
+  const registrationCutoff = new Date(date.getTime() - 6 * 60 * 60 * 1000); // 6 hours before
+
+  if (now > date) {
+      return { status: 'Past', color: 'bg-gray-500', registrationClosed: true, message: 'This tournament has finished.' };
   }
+  if (now > registrationCutoff) {
+      return { status: 'Upcoming', color: 'bg-blue-500', registrationClosed: true, message: 'Registration for this tournament has closed.' };
+  }
+  return { status: 'Upcoming', color: 'bg-blue-500', registrationClosed: false, message: '' };
 };
 
 export default function TournamentDetail({ tournament, registrations }: { tournament: any, registrations: any[] }) {
   const { user, loading } = useAuth();
 
+  const { status, color, registrationClosed, message } = getTournamentStatus(tournament.date);
+  
   const approvedParticipants = registrations.filter(r => r.status === 'approved');
   const pendingParticipants = registrations.filter(r => r.status === 'pending');
   const isAlreadyRegistered = user && registrations.some(r => r.registeredById === user.uid);
@@ -42,15 +46,24 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
         <div className="absolute bottom-0 left-0 p-8 flex justify-between items-end w-full">
             <div>
-                <Badge className={`text-white mb-2 ${getStatusColor(tournament.status)}`}>{tournament.status}</Badge>
+                <Badge className={`text-white mb-2 ${color}`}>{status === 'Past' ? 'Finished' : 'Upcoming'}</Badge>
                 <h1 className="text-5xl font-headline font-bold text-white shadow-lg">{tournament.name}</h1>
             </div>
-             {tournament.status === 'Upcoming' && !loading && (
-                <TournamentRegistrationForm 
-                  tournamentId={tournament.id}
-                  isLoggedIn={!!user}
-                  isAlreadyRegistered={isAlreadyRegistered}
-                />
+             {!loading && status === 'Upcoming' && (
+                <div>
+                  {registrationClosed ? (
+                     <Button size="lg" disabled>
+                        <Clock className="w-4 h-4 mr-2" />
+                        Registration Closed
+                      </Button>
+                  ) : (
+                    <TournamentRegistrationForm 
+                      tournamentId={tournament.id}
+                      isLoggedIn={!!user}
+                      isAlreadyRegistered={!!isAlreadyRegistered}
+                    />
+                  )}
+                </div>
             )}
         </div>
       </div>
@@ -175,7 +188,7 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
                 <Calendar className="w-5 h-5 mr-3 text-primary" />
                 <div>
                   <p className="text-sm text-muted-foreground">Date</p>
-                  <p className="font-bold">{tournament.date}</p>
+                  <p className="font-bold">{new Date(tournament.date).toLocaleString([], { dateStyle: 'long', timeStyle: 'short' })}</p>
                 </div>
               </div>
               <Separator />
@@ -193,5 +206,3 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
     </div>
   );
 }
-
-    

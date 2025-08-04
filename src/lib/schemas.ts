@@ -15,7 +15,6 @@ export const tournamentSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters.'),
   date: z.string().min(1, 'Date is required.'),
   prize: z.coerce.number().min(0, 'Prize must be a positive number.'),
-  status: z.enum(['Upcoming', 'Ongoing', 'Finished']),
   mode: z.string().min(1, 'Mode is required.'),
   image: z.string().url('Image must be a valid URL.'),
   dataAiHint: z.string().optional(),

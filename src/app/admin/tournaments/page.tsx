@@ -7,6 +7,16 @@ import { Eye, Badge, PlusCircle, Edit, Trash2, AlertTriangle } from "lucide-reac
 import Link from "next/link";
 import DeleteTournamentButton from "./delete-tournament-button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Timestamp } from 'firebase-admin/firestore';
+
+function getTournamentStatus(date: string | Timestamp) {
+    const now = new Date();
+    const tournamentDate = date instanceof Timestamp ? date.toDate() : new Date(date);
+    if (tournamentDate > now) {
+        return 'Upcoming';
+    }
+    return 'Finished';
+}
 
 async function getTournamentsWithRegistrationCounts() {
     if (!db) {
@@ -16,9 +26,10 @@ async function getTournamentsWithRegistrationCounts() {
     const tournaments = [];
 
     for (const doc of tournamentsSnapshot.docs) {
-        const tournament = { id: doc.id, ...doc.data() };
+        const tournamentData = doc.data();
+        const tournament = { id: doc.id, ...tournamentData };
         const registrationsSnapshot = await doc.ref.collection('registrations').where('status', '==', 'pending').get();
-        tournaments.push({ ...tournament, pendingCount: registrationsSnapshot.size });
+        tournaments.push({ ...tournament, pendingCount: registrationsSnapshot.size, status: getTournamentStatus(tournament.date) });
     }
 
     return { tournaments };
@@ -63,7 +74,7 @@ export default async function AdminTournamentsPage() {
                         {tournaments && tournaments.map((t: any) => (
                             <TableRow key={t.id}>
                                 <TableCell className="font-medium">{t.name}</TableCell>
-                                <TableCell>{t.date}</TableCell>
+                                <TableCell>{t.date instanceof Timestamp ? t.date.toDate().toLocaleString() : new Date(t.date).toLocaleString()}</TableCell>
                                 <TableCell>{t.status}</TableCell>
                                 <TableCell className="text-center font-bold text-primary">{t.pendingCount}</TableCell>
                                 <TableCell className="text-right flex gap-2 justify-end">

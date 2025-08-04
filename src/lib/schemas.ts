@@ -2,12 +2,12 @@
 import { z } from 'zod';
 
 export const leaderboardEntrySchema = z.object({
-    rank: z.coerce.number().int().min(1, 'Rank must be at least 1.'),
+    rank: z.coerce.number().int().min(0, 'Rank must be a positive number or zero.').default(0),
     teamName: z.string().min(1, 'Team name is required.'),
-    points: z.coerce.number().int().min(0, 'Points must be a positive number.'),
-    matches: z.coerce.number().int().min(0, 'Matches must be a positive number.'),
-    kills: z.coerce.number().int().min(0, 'Kills must be a positive number.'),
-    chickenDinners: z.coerce.number().int().min(0, 'Chicken Dinners must be a positive number.'),
+    points: z.coerce.number().int().min(0, 'Points must be a positive number.').default(0),
+    matches: z.coerce.number().int().min(0, 'Matches must be a positive number.').default(0),
+    kills: z.coerce.number().int().min(0, 'Kills must be a positive number.').default(0),
+    chickenDinners: z.coerce.number().int().min(0, 'Chicken Dinners must be a positive number.').default(0),
 });
 
 const prizeDistributionSchema = z.object({
@@ -51,7 +51,9 @@ export const registrationSchema = z.object({
   registeredByName: z.string().min(1),
 });
 
+export const siteSettingsSchema = z.object({
+    homePageBackground: z.string().url('Must be a valid URL.').optional(),
+});
+
 export type RegistrationFormValues = z.infer<typeof registrationSchema>;
 export type RegistrationData = RegistrationFormValues;
-
-    

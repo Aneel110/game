@@ -71,6 +71,23 @@ const communityPosts = [
   },
 ];
 
+async function getSiteSettings() {
+    if (!db) {
+        return { homePageBackground: 'https://placehold.co/1920x1080.png' };
+    }
+    try {
+        const settingsRef = db.collection('settings').doc('siteSettings');
+        const settingsSnap = await settingsRef.get();
+        if (settingsSnap.exists) {
+            return settingsSnap.data();
+        }
+        return { homePageBackground: 'https://placehold.co/1920x1080.png' };
+    } catch (e) {
+        console.error("Could not fetch site settings", e);
+        return { homePageBackground: 'https://placehold.co/1920x1080.png' };
+    }
+}
+
 async function getLiveStream() {
     if (!db) {
         return { error: "Server-side Firebase is not configured correctly." };
@@ -133,14 +150,16 @@ async function LiveStreamSection() {
     );
 }
 
-export default function Home() {
+export default async function Home() {
+  const settings = await getSiteSettings();
+
   return (
     <div className="flex flex-col items-center">
       {/* Hero Section */}
       <section className="w-full h-[calc(100vh-80px)] relative overflow-hidden flex items-center justify-center text-center text-white">
         <div className="absolute inset-0 z-0">
           <Image
-            src="https://placehold.co/1920x1080.png"
+            src={settings?.homePageBackground || 'https://placehold.co/1920x1080.png'}
             alt="E-Sports Nepal hero background"
             data-ai-hint="battle royale landscape"
             fill

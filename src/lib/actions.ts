@@ -4,7 +4,7 @@
 
 import { db } from '@/lib/firebase-admin';
 import { revalidatePath } from 'next/cache';
-import { tournamentSchema, streamSchema, registrationSchema, type RegistrationData, leaderboardEntrySchema } from '@/lib/schemas';
+import { tournamentSchema, streamSchema, registrationSchema, type RegistrationData, leaderboardEntrySchema, siteSettingsSchema } from '@/lib/schemas';
 import { FieldValue } from 'firebase-admin/firestore';
 
 // Helper to extract YouTube video ID from various URL formats
@@ -386,6 +386,28 @@ export async function deleteLeaderboardEntry(tournamentId: string, teamName: str
         return { success: true, message: 'Leaderboard entry deleted successfully.' };
     } catch (error) {
         console.error('Error deleting leaderboard entry:', error);
+        return { success: false, message: 'An unexpected error occurred.' };
+    }
+}
+
+export async function updateSiteSettings(formData: FormData) {
+    if (!db) {
+      return { success: false, message: 'Database not initialized.' };
+    }
+    const rawData = Object.fromEntries(formData.entries());
+    const validatedFields = siteSettingsSchema.safeParse(rawData);
+    
+    if (!validatedFields.success) {
+        return { success: false, message: 'Invalid form data.', errors: validatedFields.error.flatten().fieldErrors };
+    }
+
+    try {
+        await db.collection('settings').doc('siteSettings').set(validatedFields.data, { merge: true });
+        revalidatePath('/');
+        revalidatePath('/admin/settings');
+        return { success: true, message: 'Settings updated successfully.' };
+    } catch (error) {
+        console.error('Error updating settings:', error);
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }

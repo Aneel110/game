@@ -38,8 +38,8 @@ const playerSchema = z.object({
 });
 
 const registrationSchema = z.object({
-  teamName: z.string().min(3, 'Team name must be at least 3 characters.'),
-  teamTag: z.string().min(2, 'Team tag must be 2-4 characters.').max(4),
+  teamName: z.string().min(1, 'Team name is required.'),
+  teamTag: z.string().min(1, 'Team tag is required.'),
   players: z.array(playerSchema).min(4, 'You must register at least 4 players.').max(6, 'You can register a maximum of 6 players.'),
 });
 

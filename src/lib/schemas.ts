@@ -6,6 +6,7 @@ export const leaderboardEntrySchema = z.object({
     player: z.string().min(1, 'Player name is required.'),
     points: z.coerce.number().int().min(0, 'Points must be a positive number.'),
     matches: z.coerce.number().int().min(0, 'Matches must be a positive number.'),
+    kills: z.coerce.number().int().min(0, 'Kills must be a positive number.'),
     chickenDinners: z.coerce.number().int().min(0, 'Chicken Dinners must be a positive number.'),
 });
 

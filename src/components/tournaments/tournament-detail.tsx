@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Gamepad2, Trophy, ShieldCheck, ShieldAlert, BarChartHorizontal, Crown, Swords, Drumstick, Clock, Target, Gavel } from "lucide-react";
+import { Calendar, Gamepad2, Trophy, ShieldCheck, ShieldAlert, BarChartHorizontal, Crown, Swords, Drumstick, Clock, Target, Gavel, Skull } from "lucide-react";
 import TournamentRegistrationForm from "./registration-form";
 import { useAuth } from "@/hooks/use-auth";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
@@ -125,7 +125,7 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
                                 <TableRow>
                                     <TableHead className="w-[80px] text-center">Rank</TableHead>
                                     <TableHead>Player</TableHead>
-                                    <TableHead className="text-center">Matches</TableHead>
+                                    <TableHead className="text-center">Kills</TableHead>
                                     <TableHead className="text-center">Wins</TableHead>
                                     <TableHead className="text-right">Points</TableHead>
                                 </TableRow>
@@ -147,7 +147,7 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
                                         </TableCell>
                                         <TableCell className="text-center">
                                             <div className="flex items-center justify-center gap-2">
-                                                <Swords className="w-4 h-4 text-muted-foreground" /> {p.matches}
+                                                <Skull className="w-4 h-4 text-muted-foreground" /> {p.kills}
                                             </div>
                                         </TableCell>
                                         <TableCell className="text-center">

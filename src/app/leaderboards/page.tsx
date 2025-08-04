@@ -1,7 +1,7 @@
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Crown, Drumstick, Swords, Trophy, AlertTriangle, BarChartHorizontal } from "lucide-react";
+import { Crown, Drumstick, Swords, Trophy, AlertTriangle, Target } from "lucide-react";
 import { db } from "@/lib/firebase-admin";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -76,12 +76,13 @@ export default async function LeaderboardsPage() {
                 <TableHead className="text-center w-[100px]">Rank</TableHead>
                 <TableHead>Player</TableHead>
                 <TableHead className="text-center">Matches</TableHead>
+                <TableHead className="text-center">Kills</TableHead>
                 <TableHead className="text-center">Chicken Dinners</TableHead>
                 <TableHead className="text-right">Points</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {leaderboardData.map((p, index) => (
+              {leaderboardData.map((p: any, index) => (
                 <TableRow 
                   key={p.rank} 
                   className="border-b-primary/10 hover:bg-primary/10 transition-colors duration-300"
@@ -112,6 +113,10 @@ export default async function LeaderboardsPage() {
                   <TableCell className="text-center font-mono text-lg flex items-center justify-center gap-2">
                     <Swords className="w-5 h-5 text-muted-foreground" />
                     {p.matches}
+                  </TableCell>
+                  <TableCell className="text-center font-mono text-lg flex items-center justify-center gap-2">
+                    <Target className="w-5 h-5 text-red-500" />
+                    {p.kills}
                   </TableCell>
                   <TableCell className="text-center font-mono text-lg flex items-center justify-center gap-2">
                      <Drumstick className="w-5 h-5 text-amber-500" />

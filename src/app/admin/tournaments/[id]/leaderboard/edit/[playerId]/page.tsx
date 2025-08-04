@@ -39,7 +39,7 @@ export default async function EditLeaderboardEntryPage({ params }: EditLeaderboa
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Edit Leaderboard Entry: {entry.player}</CardTitle>
+        <CardTitle>Edit Leaderboard Entry: {decodeURIComponent(params.playerId)}</CardTitle>
       </CardHeader>
       <CardContent>
         <LeaderboardForm tournamentId={params.id} entryPlayerName={params.playerId} defaultValues={entry} />

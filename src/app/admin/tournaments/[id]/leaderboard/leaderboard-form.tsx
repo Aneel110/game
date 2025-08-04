@@ -33,6 +33,7 @@ export default function LeaderboardForm({ tournamentId, entryPlayerName, default
         player: '',
         points: 0,
         matches: 0,
+        kills: 0,
         chickenDinners: 0,
     }
   });
@@ -81,7 +82,7 @@ export default function LeaderboardForm({ tournamentId, entryPlayerName, default
                 />
             </div>
             
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <FormField
                     control={form.control}
                     name="points"
@@ -101,6 +102,19 @@ export default function LeaderboardForm({ tournamentId, entryPlayerName, default
                     render={({ field }) => (
                         <FormItem>
                         <Label>Matches Played</Label>
+                        <FormControl>
+                            <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || 0)} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                 <FormField
+                    control={form.control}
+                    name="kills"
+                    render={({ field }) => (
+                        <FormItem>
+                        <Label>Total Kills</Label>
                         <FormControl>
                             <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || 0)} />
                         </FormControl>

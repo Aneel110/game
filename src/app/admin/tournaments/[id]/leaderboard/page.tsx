@@ -15,6 +15,7 @@ type LeaderboardEntry = {
     player: string;
     points: number;
     matches: number;
+    kills: number;
     chickenDinners: number;
 }
 
@@ -77,6 +78,7 @@ export default async function AdminTournamentLeaderboardPage({ params }: { param
                             <TableHead>Player</TableHead>
                             <TableHead>Points</TableHead>
                             <TableHead>Matches</TableHead>
+                            <TableHead>Kills</TableHead>
                             <TableHead>Chicken Dinners</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
@@ -88,10 +90,11 @@ export default async function AdminTournamentLeaderboardPage({ params }: { param
                                 <TableCell>{entry.player}</TableCell>
                                 <TableCell>{entry.points}</TableCell>
                                 <TableCell>{entry.matches}</TableCell>
+                                <TableCell>{entry.kills}</TableCell>
                                 <TableCell>{entry.chickenDinners}</TableCell>
                                 <TableCell className="text-right flex gap-2 justify-end">
                                     <Button asChild variant="ghost" size="icon">
-                                        <Link href={`/admin/tournaments/${params.id}/leaderboard/edit/${entry.id}`}>
+                                        <Link href={`/admin/tournaments/${params.id}/leaderboard/edit/${encodeURIComponent(entry.id)}`}>
                                             <Edit className="h-4 w-4" />
                                         </Link>
                                     </Button>
@@ -101,7 +104,7 @@ export default async function AdminTournamentLeaderboardPage({ params }: { param
                         ))}
                          {(!entries || entries.length === 0) && (
                             <TableRow>
-                                <TableCell colSpan={6} className="h-24 text-center">
+                                <TableCell colSpan={7} className="h-24 text-center">
                                     No entries found.
                                 </TableCell>
                             </TableRow>

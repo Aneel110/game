@@ -10,23 +10,24 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { createLeaderboardEntry, updateLeaderboardEntry } from '@/lib/actions';
-import { leaderboardSchema } from '@/lib/schemas';
+import { createOrUpdateLeaderboardEntry } from '@/lib/actions';
+import { leaderboardEntrySchema } from '@/lib/schemas';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 
-type LeaderboardFormValues = z.infer<typeof leaderboardSchema>;
+type LeaderboardFormValues = z.infer<typeof leaderboardEntrySchema>;
 
 interface LeaderboardFormProps {
-  entryId?: string;
+  tournamentId: string;
+  entryPlayerName?: string; // The original player name, used as an ID
   defaultValues?: Partial<LeaderboardFormValues>;
 }
 
-export default function LeaderboardForm({ entryId, defaultValues }: LeaderboardFormProps) {
+export default function LeaderboardForm({ tournamentId, entryPlayerName, defaultValues }: LeaderboardFormProps) {
   const { toast } = useToast();
   const router = useRouter();
   
   const form = useForm<LeaderboardFormValues>({
-    resolver: zodResolver(leaderboardSchema),
+    resolver: zodResolver(leaderboardEntrySchema),
     defaultValues: defaultValues || {
         rank: 1,
         player: '',
@@ -36,19 +37,12 @@ export default function LeaderboardForm({ entryId, defaultValues }: LeaderboardF
     }
   });
 
-  const action = entryId ? updateLeaderboardEntry.bind(null, entryId) : createLeaderboardEntry;
-
   async function onSubmit(data: LeaderboardFormValues) {
-    const formData = new FormData();
-    Object.entries(data).forEach(([key, value]) => {
-      formData.append(key, String(value));
-    });
-
-    const result = await action(formData);
+    const result = await createOrUpdateLeaderboardEntry(tournamentId, data, entryPlayerName);
 
     if(result.success) {
         toast({ title: 'Success', description: result.message });
-        router.push('/admin/leaderboard');
+        router.push(`/admin/tournaments/${tournamentId}/leaderboard`);
         router.refresh(); // To see the changes
     } else {
         toast({ title: 'Error', description: result.message, variant: 'destructive' });
@@ -79,7 +73,7 @@ export default function LeaderboardForm({ entryId, defaultValues }: LeaderboardF
                         <FormItem>
                             <Label>Rank</Label>
                             <FormControl>
-                                <Input type="number" {...field} />
+                                <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || 0)} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -95,7 +89,7 @@ export default function LeaderboardForm({ entryId, defaultValues }: LeaderboardF
                         <FormItem>
                         <Label>Points</Label>
                         <FormControl>
-                            <Input type="number" {...field} />
+                           <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || 0)} />
                         </FormControl>
                         <FormMessage />
                         </FormItem>
@@ -108,7 +102,7 @@ export default function LeaderboardForm({ entryId, defaultValues }: LeaderboardF
                         <FormItem>
                         <Label>Matches Played</Label>
                         <FormControl>
-                            <Input type="number" {...field} />
+                            <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || 0)} />
                         </FormControl>
                         <FormMessage />
                         </FormItem>
@@ -121,7 +115,7 @@ export default function LeaderboardForm({ entryId, defaultValues }: LeaderboardF
                         <FormItem>
                         <Label>Chicken Dinners</Label>
                         <FormControl>
-                            <Input type="number" {...field} />
+                           <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || 0)} />
                         </FormControl>
                         <FormMessage />
                         </FormItem>
@@ -132,7 +126,7 @@ export default function LeaderboardForm({ entryId, defaultValues }: LeaderboardF
             <div className="flex justify-end gap-4">
                 <Button variant="outline" type="button" onClick={() => router.back()}>Cancel</Button>
                 <Button type="submit" disabled={form.formState.isSubmitting}>
-                    {form.formState.isSubmitting ? 'Saving...' : (entryId ? 'Update Entry' : 'Create Entry')}
+                    {form.formState.isSubmitting ? 'Saving...' : (entryPlayerName ? 'Update Entry' : 'Create Entry')}
                 </Button>
             </div>
         </form>

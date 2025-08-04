@@ -1,16 +1,16 @@
 
-
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { db } from "@/lib/firebase-admin";
 import { PlusCircle, Edit, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import DeleteLeaderboardButton from "./delete-leaderboard-button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { notFound } from "next/navigation";
 
 type LeaderboardEntry = {
-    id: string;
+    id: string; // This will be the player's name for simplicity if we don't have unique IDs per entry
     rank: number;
     player: string;
     points: number;
@@ -18,18 +18,28 @@ type LeaderboardEntry = {
     chickenDinners: number;
 }
 
-async function getLeaderboard() {
+async function getTournamentLeaderboard(tournamentId: string) {
     if (!db) {
         return { error: "Firebase Admin is not configured. Please set FIREBASE_SERVICE_ACCOUNT_KEY." }
     }
-    const snapshot = await db.collection('leaderboard').orderBy('rank', 'asc').get();
+    const tournamentRef = db.collection('tournaments').doc(tournamentId);
+    const tournamentSnap = await tournamentRef.get();
+
+    if (!tournamentSnap.exists) {
+        return { tournament: null };
+    }
+    
+    const tournamentData = tournamentSnap.data();
+    const leaderboard = (tournamentData?.leaderboard || []).sort((a: any, b: any) => a.rank - b.rank);
+
     return { 
-        entries: snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as LeaderboardEntry[]
+        tournament: { id: tournamentSnap.id, name: tournamentData?.name },
+        entries: leaderboard.map((entry: any, index: number) => ({ ...entry, id: entry.player || index.toString() })) as LeaderboardEntry[] // Use player name as temp id
     };
 }
 
-export default async function AdminLeaderboardPage() {
-    const { entries, error } = await getLeaderboard();
+export default async function AdminTournamentLeaderboardPage({ params }: { params: { id: string }}) {
+    const { tournament, entries, error } = await getTournamentLeaderboard(params.id);
 
     if (error) {
         return (
@@ -41,12 +51,19 @@ export default async function AdminLeaderboardPage() {
         )
     }
 
+    if (!tournament) {
+        notFound();
+    }
+
     return (
         <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Manage Leaderboard</CardTitle>
+                <div>
+                    <CardTitle>Manage Leaderboard</CardTitle>
+                    <CardDescription>For tournament: {tournament.name}</CardDescription>
+                </div>
                 <Button asChild>
-                    <Link href="/admin/leaderboard/add">
+                    <Link href={`/admin/tournaments/${params.id}/leaderboard/add`}>
                         <PlusCircle className="h-4 w-4 mr-2" />
                         Add Entry
                     </Link>
@@ -74,11 +91,11 @@ export default async function AdminLeaderboardPage() {
                                 <TableCell>{entry.chickenDinners}</TableCell>
                                 <TableCell className="text-right flex gap-2 justify-end">
                                     <Button asChild variant="ghost" size="icon">
-                                        <Link href={`/admin/leaderboard/${entry.id}/edit`}>
+                                        <Link href={`/admin/tournaments/${params.id}/leaderboard/edit/${entry.id}`}>
                                             <Edit className="h-4 w-4" />
                                         </Link>
                                     </Button>
-                                    <DeleteLeaderboardButton entryId={entry.id} />
+                                    <DeleteLeaderboardButton tournamentId={params.id} entryPlayerName={entry.player} />
                                 </TableCell>
                             </TableRow>
                         ))}

@@ -1,29 +1,34 @@
 
-
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Crown, Drumstick, Swords, Trophy, AlertTriangle, BarChartHorizontal } from "lucide-react";
 import { db } from "@/lib/firebase-admin";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Timestamp } from "firebase-admin/firestore";
 
 async function getLatestFinishedTournamentLeaderboard() {
   if (!db) {
     return { success: false, error: "Could not connect to the database. Please ensure Firestore is enabled and service account is set." };
   }
   try {
-    // Fetch all finished tournaments and sort them in the application code to avoid needing a composite index.
-    const tournamentsSnapshot = await db.collection("tournaments")
-        .where("status", "==", "Finished")
-        .get();
+    const now = new Date();
+    // Fetch all finished tournaments
+    const tournamentsSnapshot = await db.collection("tournaments").get();
 
     if (tournamentsSnapshot.empty) {
         return { success: true, data: null, tournamentName: null };
     }
     
-    // Sort tournaments by date descending to find the latest one
-    const finishedTournaments = tournamentsSnapshot.docs.map(doc => doc.data());
-    finishedTournaments.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    // Filter and sort tournaments in the application code
+    const finishedTournaments = tournamentsSnapshot.docs
+        .map(doc => doc.data())
+        .filter(t => new Date(t.date instanceof Timestamp ? t.date.toDate() : t.date) < now)
+        .sort((a, b) => new Date(b.date instanceof Timestamp ? b.date.toDate() : b.date).getTime() - new Date(a.date instanceof Timestamp ? a.date.toDate() : a.date).getTime());
+
+    if (finishedTournaments.length === 0) {
+        return { success: true, data: null, tournamentName: null };
+    }
 
     const latestTournament = finishedTournaments[0];
     const leaderboardData = latestTournament.leaderboard || [];

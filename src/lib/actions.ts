@@ -1,11 +1,10 @@
 
-
 'use server';
 
 import { db } from '@/lib/firebase-admin';
 import { revalidatePath } from 'next/cache';
-import { tournamentSchema, streamSchema, registrationSchema, RegistrationData } from '@/lib/schemas';
-
+import { tournamentSchema, streamSchema, registrationSchema, type RegistrationData, leaderboardEntrySchema } from '@/lib/schemas';
+import { FieldValue } from 'firebase-admin/firestore';
 
 // Helper to extract YouTube video ID from various URL formats
 const getYouTubeVideoId = (url: string): string | null => {
@@ -284,6 +283,77 @@ export async function deleteStream(id: string) {
         return { success: true, message: 'Stream deleted successfully.' };
     } catch (error) {
         console.error('Error deleting stream:', error);
+        return { success: false, message: 'An unexpected error occurred.' };
+    }
+}
+
+export async function createOrUpdateLeaderboardEntry(tournamentId: string, data: any, originalPlayerName?: string) {
+    if (!db) {
+      return { success: false, message: 'Database not initialized.' };
+    }
+    
+    const validatedFields = leaderboardEntrySchema.safeParse(data);
+    if (!validatedFields.success) {
+        return { success: false, message: 'Invalid form data.', errors: validatedFields.error.flatten().fieldErrors };
+    }
+
+    try {
+        const tournamentRef = db.collection('tournaments').doc(tournamentId);
+        const newEntry = validatedFields.data;
+        
+        if (originalPlayerName) { // This is an update
+            const decodedPlayerName = decodeURIComponent(originalPlayerName);
+            const tournamentSnap = await tournamentRef.get();
+            const tournamentData = tournamentSnap.data();
+            const leaderboard = tournamentData?.leaderboard || [];
+            
+            const entryIndex = leaderboard.findIndex((e: any) => e.player === decodedPlayerName);
+            if (entryIndex > -1) {
+                leaderboard[entryIndex] = newEntry;
+            } else {
+                 return { success: false, message: 'Original entry not found for update.' };
+            }
+            await tournamentRef.update({ leaderboard });
+        } else { // This is a create
+             await tournamentRef.update({
+                leaderboard: FieldValue.arrayUnion(newEntry)
+            });
+        }
+
+        revalidatePath(`/admin/tournaments/${tournamentId}/leaderboard`);
+        revalidatePath(`/tournaments/${tournamentId}`);
+        return { success: true, message: `Leaderboard entry ${originalPlayerName ? 'updated' : 'created'} successfully.` };
+    } catch (error) {
+        console.error('Error updating leaderboard:', error);
+        return { success: false, message: 'An unexpected error occurred.' };
+    }
+}
+
+export async function deleteLeaderboardEntry(tournamentId: string, playerName: string) {
+    if (!db) {
+      return { success: false, message: 'Database not initialized.' };
+    }
+    try {
+        const tournamentRef = db.collection('tournaments').doc(tournamentId);
+        const tournamentSnap = await tournamentRef.get();
+        const tournamentData = tournamentSnap.data();
+        let leaderboard = tournamentData?.leaderboard || [];
+        
+        const entryToDelete = leaderboard.find((e: any) => e.player === playerName);
+
+        if(!entryToDelete) {
+             return { success: false, message: 'Entry not found.' };
+        }
+
+        await tournamentRef.update({
+            leaderboard: FieldValue.arrayRemove(entryToDelete)
+        });
+
+        revalidatePath(`/admin/tournaments/${tournamentId}/leaderboard`);
+        revalidatePath(`/tournaments/${tournamentId}`);
+        return { success: true, message: 'Leaderboard entry deleted successfully.' };
+    } catch (error) {
+        console.error('Error deleting leaderboard entry:', error);
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }

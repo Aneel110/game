@@ -1,8 +1,7 @@
 
-
 import { z } from 'zod';
 
-export const leaderboardSchema = z.object({
+export const leaderboardEntrySchema = z.object({
     rank: z.coerce.number().int().min(1, 'Rank must be at least 1.'),
     player: z.string().min(1, 'Player name is required.'),
     points: z.coerce.number().int().min(0, 'Points must be a positive number.'),
@@ -28,7 +27,7 @@ export const tournamentSchema = z.object({
   dataAiHint: z.string().optional(),
   description: z.string().min(10, 'Description must be at least 10 characters.'),
   rules: z.string().optional(),
-  leaderboard: z.array(leaderboardSchema).optional(),
+  leaderboard: z.array(leaderboardEntrySchema).optional(),
 });
 
 export const streamSchema = z.object({

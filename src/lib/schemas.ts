@@ -51,8 +51,18 @@ export const registrationSchema = z.object({
   registeredByName: z.string().min(1),
 });
 
+const socialLinksSchema = z.object({
+    twitter: z.string().url().optional().or(z.literal('')),
+    discord: z.string().url().optional().or(z.literal('')),
+    youtube: z.string().url().optional().or(z.literal('')),
+    twitch: z.string().url().optional().or(z.literal('')),
+});
+
 export const siteSettingsSchema = z.object({
-    homePageBackground: z.string().url('Must be a valid URL.').optional(),
+    siteName: z.string().optional(),
+    siteSlogan: z.string().optional(),
+    homePageBackground: z.string().url('Must be a valid URL.').optional().or(z.literal('')),
+    socialLinks: socialLinksSchema.optional(),
 });
 
 export type RegistrationFormValues = z.infer<typeof registrationSchema>;

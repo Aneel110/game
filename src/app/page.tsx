@@ -73,7 +73,11 @@ const communityPosts = [
 
 async function getSiteSettings() {
     if (!db) {
-        return { homePageBackground: 'https://placehold.co/1920x1080.png' };
+        return { 
+            siteName: 'E-Sports Nepal',
+            siteSlogan: 'It is Free Pubg Tournament',
+            homePageBackground: 'https://placehold.co/1920x1080.png' 
+        };
     }
     try {
         const settingsRef = db.collection('settings').doc('siteSettings');
@@ -81,10 +85,18 @@ async function getSiteSettings() {
         if (settingsSnap.exists) {
             return settingsSnap.data();
         }
-        return { homePageBackground: 'https://placehold.co/1920x1080.png' };
+        return { 
+            siteName: 'E-Sports Nepal',
+            siteSlogan: 'It is Free Pubg Tournament',
+            homePageBackground: 'https://placehold.co/1920x1080.png' 
+        };
     } catch (e) {
         console.error("Could not fetch site settings", e);
-        return { homePageBackground: 'https://placehold.co/1920x1080.png' };
+        return { 
+            siteName: 'E-Sports Nepal',
+            siteSlogan: 'It is Free Pubg Tournament',
+            homePageBackground: 'https://placehold.co/1920x1080.png'
+        };
     }
 }
 
@@ -169,10 +181,10 @@ export default async function Home() {
         </div>
         <div className="z-10 flex flex-col items-center p-4">
           <h1 className="text-5xl md:text-7xl font-headline font-bold mb-4 text-shadow-lg animate-fade-in-down">
-            Welcome to E-Sports Nepal
+            {settings?.siteName || 'Welcome to E-Sports Nepal'}
           </h1>
           <p className="text-lg md:text-xl mb-8 max-w-2xl text-foreground/80">
-            It is Free Pubg Tournament
+            {settings?.siteSlogan || 'It is Free Pubg Tournament'}
           </p>
           <div className="flex gap-4">
             <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold">

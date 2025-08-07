@@ -9,8 +9,9 @@ import { Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Logo } from '../icons/logo';
 import { useAuth } from '@/hooks/use-auth';
-import { auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
+import { doc, getDoc } from 'firebase/firestore';
 
 const navLinks = [
   { href: '/tournaments', label: 'Tournaments' },
@@ -21,10 +22,23 @@ const navLinks = [
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const { user, isAdmin, loading } = useAuth();
+  const [siteName, setSiteName] = useState('E-Sports Nepal');
   
   const handleLogout = () => {
     auth.signOut();
   }
+
+  useEffect(() => {
+    async function fetchSiteSettings() {
+      if (db) {
+        const settingsDoc = await getDoc(doc(db, 'settings', 'siteSettings'));
+        if (settingsDoc.exists() && settingsDoc.data().siteName) {
+          setSiteName(settingsDoc.data().siteName);
+        }
+      }
+    }
+    fetchSiteSettings();
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -44,7 +58,7 @@ export default function Header() {
       <div className="container mx-auto flex h-20 items-center justify-between px-4 md:px-6">
         <Link href="/" className="flex items-center gap-2">
           <Logo className="h-8 w-8 text-primary" />
-          <span className="text-xl font-bold font-headline">E-Sports Nepal</span>
+          <span className="text-xl font-bold font-headline">{siteName}</span>
         </Link>
 
         <nav className="hidden md:flex items-center gap-6">
@@ -94,7 +108,7 @@ export default function Header() {
                 <div className="flex justify-between items-center border-b pb-4">
                   <Link href="/" className="flex items-center gap-2">
                     <Logo className="h-8 w-8 text-primary" />
-                    <span className="text-xl font-bold font-headline">E-Sports Nepal</span>
+                    <span className="text-xl font-bold font-headline">{siteName}</span>
                   </Link>
                 </div>
                 <nav className="flex flex-col gap-4 py-6">

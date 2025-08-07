@@ -434,14 +434,15 @@ export async function deleteLeaderboardEntry(tournamentId: string, teamName: str
     }
 }
 
-export async function updateSiteSettings(formData: FormData) {
+export async function updateSiteSettings(rawData: any) {
     if (!db) {
       return { success: false, message: 'Database not initialized.' };
     }
-    const rawData = Object.fromEntries(formData.entries());
+    
     const validatedFields = siteSettingsSchema.safeParse(rawData);
     
     if (!validatedFields.success) {
+        console.error(validatedFields.error.flatten().fieldErrors)
         return { success: false, message: 'Invalid form data.', errors: validatedFields.error.flatten().fieldErrors };
     }
 
@@ -449,6 +450,7 @@ export async function updateSiteSettings(formData: FormData) {
         await db.collection('settings').doc('siteSettings').set(validatedFields.data, { merge: true });
         revalidatePath('/');
         revalidatePath('/admin/settings');
+        revalidatePath('/layout'); // Revalidate layout to update header/footer
         return { success: true, message: 'Settings updated successfully.' };
     } catch (error) {
         console.error('Error updating settings:', error);

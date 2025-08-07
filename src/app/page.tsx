@@ -1,5 +1,4 @@
 
-
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -14,41 +13,7 @@ import { ArrowRight, Trophy, Users, Newspaper, Signal, AlertTriangle } from 'luc
 import Link from 'next/link';
 import { db } from '@/lib/firebase-admin';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-
-const tournaments = [
-  {
-    id: '1',
-    name: 'Arena Clash: Season 5',
-    date: '2024-08-15',
-    prizeDistribution: { first: 50000 },
-    image: 'https://placehold.co/600x400.png',
-    dataAiHint: 'esports battle',
-  },
-  {
-    id: '2',
-    name: 'Solo Survival Challenge',
-    date: '2024-08-20',
-    prizeDistribution: { first: 10000 },
-    image: 'https://placehold.co/600x400.png',
-    dataAiHint: 'lone soldier',
-  },
-  {
-    id: '3',
-    name: 'Duo Destruction Derby',
-    date: '2024-08-25',
-    prizeDistribution: { first: 25000 },
-    image: 'https://placehold.co/600x400.png',
-    dataAiHint: 'gaming partners',
-  },
-    {
-    id: '4',
-    name: 'Squad Goals Championship',
-    date: '2024-09-01',
-    prizeDistribution: { first: 100000 },
-    image: 'https://placehold.co/600x400.png',
-    dataAiHint: 'team victory',
-  },
-];
+import { Timestamp } from 'firebase-admin/firestore';
 
 const communityPosts = [
   {
@@ -109,11 +74,45 @@ async function getLiveStream() {
         if (streamSnapshot.empty) {
             return { stream: null };
         }
-        return { stream: streamSnapshot.docs[0].data() };
+        const streamDoc = streamSnapshot.docs[0];
+        return { stream: { id: streamDoc.id, ...streamDoc.data() } };
     } catch (error: any) {
         console.error("Error fetching live stream:", error);
         return { error: "Failed to fetch live stream. Ensure Firestore is enabled and permissions are correct." };
     }
+}
+
+async function getFeaturedTournaments() {
+  if (!db) {
+    return { tournaments: [], error: "Server-side Firebase is not configured correctly." };
+  }
+  try {
+    const now = new Date();
+    const snapshot = await db.collection('tournaments')
+        .where('date', '>', now.toISOString())
+        .orderBy('date', 'asc')
+        .limit(6)
+        .get();
+
+    if (snapshot.empty) {
+        return { tournaments: [] };
+    }
+    const tournaments = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+            id: doc.id,
+            name: data.name,
+            date: data.date instanceof Timestamp ? data.date.toDate().toISOString() : data.date,
+            prizeDistribution: data.prizeDistribution || {},
+            image: data.image,
+            dataAiHint: data.dataAiHint || ''
+        }
+    });
+    return { tournaments };
+  } catch (error: any) {
+     console.error("Error fetching featured tournaments:", error);
+     return { tournaments: [], error: "Failed to fetch tournaments." };
+  }
 }
 
 async function LiveStreamSection() {
@@ -164,6 +163,7 @@ async function LiveStreamSection() {
 
 export default async function Home() {
   const settings = await getSiteSettings();
+  const { tournaments, error: tournamentsError } = await getFeaturedTournaments();
 
   return (
     <div className="flex flex-col items-center">
@@ -203,36 +203,50 @@ export default async function Home() {
       {/* Featured Tournaments Section */}
       <section id="tournaments" className="w-full max-w-7xl py-16 px-4">
         <h2 className="text-4xl font-headline font-bold text-center mb-10">Featured Tournaments</h2>
-        <Carousel opts={{ align: 'start', loop: true }} className="w-full">
-          <CarouselContent>
-            {tournaments.map((tournament) => (
-              <CarouselItem key={tournament.id} className="md:basis-1/2 lg:basis-1/3">
-                <Card className="overflow-hidden transition-transform duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-primary/20">
-                  <CardHeader className="p-0">
-                    <Image
-                      src={tournament.image}
-                      alt={tournament.name}
-                      data-ai-hint={tournament.dataAiHint}
-                      width={600}
-                      height={400}
-                      className="w-full h-48 object-cover"
-                    />
-                  </CardHeader>
-                  <CardContent className="p-6">
-                    <h3 className="text-2xl font-headline font-bold mb-2">{tournament.name}</h3>
-                    <p className="text-muted-foreground mb-2">{new Date(tournament.date).toLocaleDateString()}</p>
-                    <p className="text-2xl font-bold text-primary mb-4">Rs {Object.values(tournament.prizeDistribution).reduce((a, b) => a + b, 0).toLocaleString()}</p>
-                    <Button asChild className="w-full">
-                      <Link href={`/tournaments/${tournament.id}`}>View Details</Link>
-                    </Button>
-                  </CardContent>
-                </Card>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselPrevious className="hidden sm:flex" />
-          <CarouselNext className="hidden sm:flex" />
-        </Carousel>
+        {tournamentsError && (
+            <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Could not load tournaments</AlertTitle>
+                <AlertDescription>{tournamentsError}</AlertDescription>
+            </Alert>
+        )}
+        {tournaments.length > 0 ? (
+            <Carousel opts={{ align: 'start', loop: tournaments.length > 2 }} className="w-full">
+              <CarouselContent>
+                {tournaments.map((tournament) => (
+                  <CarouselItem key={tournament.id} className="md:basis-1/2 lg:basis-1/3">
+                    <Card className="overflow-hidden transition-transform duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-primary/20">
+                      <CardHeader className="p-0">
+                        <Image
+                          src={tournament.image}
+                          alt={tournament.name}
+                          data-ai-hint={tournament.dataAiHint}
+                          width={600}
+                          height={400}
+                          className="w-full h-48 object-cover"
+                        />
+                      </CardHeader>
+                      <CardContent className="p-6">
+                        <h3 className="text-2xl font-headline font-bold mb-2">{tournament.name}</h3>
+                        <p className="text-muted-foreground mb-2">{new Date(tournament.date).toLocaleDateString()}</p>
+                        <p className="text-2xl font-bold text-primary">Rs {Object.values(tournament.prizeDistribution).reduce((a, b) => a + b, 0).toLocaleString()}</p>
+                        <Button asChild className="w-full">
+                          <Link href={`/tournaments/${tournament.id}`}>View Details</Link>
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="hidden sm:flex" />
+              <CarouselNext className="hidden sm:flex" />
+            </Carousel>
+        ) : !tournamentsError && (
+             <Card className="text-center p-8">
+                <CardTitle>No Upcoming Tournaments</CardTitle>
+                <p className="text-muted-foreground mt-2">Check back soon for new challenges!</p>
+            </Card>
+        )}
       </section>
 
       {/* Community Hub Section */}

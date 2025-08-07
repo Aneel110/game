@@ -9,32 +9,11 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel';
-import { ArrowRight, Trophy, Users, Newspaper, Signal, AlertTriangle } from 'lucide-react';
+import { ArrowRight, Trophy, Users, Newspaper, Signal, AlertTriangle, Youtube } from 'lucide-react';
 import Link from 'next/link';
 import { db } from '@/lib/firebase-admin';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Timestamp } from 'firebase-admin/firestore';
-
-const communityPosts = [
-  {
-    title: 'Patch 25.1 Notes',
-    category: 'News',
-    icon: Newspaper,
-    excerpt: 'The latest patch brings new weapon balances and a map update. See what\'s new!',
-  },
-  {
-    title: 'Top 5 Landing Spots',
-    category: 'Strategy',
-    icon: Trophy,
-    excerpt: 'A pro player breaks down the best places to drop for loot and survival.',
-  },
-  {
-    title: 'Team "Vipers" is Recruiting!',
-    category: 'Recruitment',
-    icon: Users,
-    excerpt: 'We are looking for a dedicated sniper and a fragger to complete our competitive roster.',
-  },
-];
 
 async function getSiteSettings() {
     if (!db) {
@@ -249,26 +228,19 @@ export default async function Home() {
         )}
       </section>
 
-      {/* Community Hub Section */}
-      <section id="community" className="w-full max-w-7xl py-16 px-4">
-        <h2 className="text-4xl font-headline font-bold text-center mb-10">Community Hub</h2>
-        <div className="grid md:grid-cols-3 gap-8">
-          {communityPosts.map((post, index) => (
-            <Card key={index} className="bg-card/80 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-colors">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-4">
-                  <post.icon className="h-8 w-8 text-primary" />
-                  <div className='flex flex-col'>
-                    <span className="text-sm font-normal text-muted-foreground">{post.category}</span>
-                    <span className='text-xl font-bold'>{post.title}</span>
-                  </div>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">{post.excerpt}</p>
-              </CardContent>
-            </Card>
-          ))}
+      {/* YouTube Section */}
+      <section id="youtube" className="w-full bg-card py-16">
+        <div className="container mx-auto text-center">
+            <h2 className="text-4xl font-headline font-bold text-center mb-4">Visit our YouTube Channel</h2>
+            <p className="text-muted-foreground mb-8">
+                Catch all the highlights, full matches, and exclusive content.
+            </p>
+            <Button asChild size="lg">
+                <Link href="https://www.youtube.com/@esportsnepall" target="_blank" rel="noopener noreferrer">
+                    <Youtube className="mr-2 h-5 w-5" />
+                    Watch on YouTube
+                </Link>
+            </Button>
         </div>
       </section>
 

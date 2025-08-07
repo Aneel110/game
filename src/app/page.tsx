@@ -9,7 +9,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel';
-import { ArrowRight, Trophy, Users, Newspaper, Signal, AlertTriangle, Youtube } from 'lucide-react';
+import { ArrowRight, Trophy, Users, Newspaper, Signal, AlertTriangle, Youtube, Gamepad2 } from 'lucide-react';
 import Link from 'next/link';
 import { db } from '@/lib/firebase-admin';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -140,6 +140,10 @@ async function LiveStreamSection() {
     );
 }
 
+const FacebookIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+)
+
 export default async function Home() {
   const settings = await getSiteSettings();
   const { tournaments, error: tournamentsError } = await getFeaturedTournaments();
@@ -239,6 +243,23 @@ export default async function Home() {
                 <Link href="https://www.youtube.com/@esportsnepall" target="_blank" rel="noopener noreferrer">
                     <Youtube className="mr-2 h-5 w-5" />
                     Watch on YouTube
+                </Link>
+            </Button>
+        </div>
+      </section>
+
+      {/* Social Section */}
+      <section id="social" className="w-full bg-background py-16">
+        <div className="container mx-auto text-center">
+            <Gamepad2 className="w-16 h-16 mx-auto mb-4 text-primary" />
+            <h2 className="text-4xl font-headline font-bold text-center mb-4">Join Our Community</h2>
+            <p className="text-muted-foreground mb-8">
+                Follow us on our social channels to stay updated with the latest news and events.
+            </p>
+            <Button asChild size="lg" variant="outline">
+                <Link href="https://www.facebook.com/profile.php?id=61550283428123&rdid=wBoxtMJNpF9vhRyK" target="_blank" rel="noopener noreferrer">
+                    <FacebookIcon className="mr-2 h-5 w-5" />
+                    Follow on Facebook
                 </Link>
             </Button>
         </div>

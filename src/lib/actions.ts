@@ -3,8 +3,9 @@
 
 import { auth, db } from '@/lib/firebase-admin';
 import { revalidatePath } from 'next/cache';
-import { tournamentSchema, streamSchema, registrationSchema, type RegistrationData, leaderboardEntrySchema, siteSettingsSchema } from '@/lib/schemas';
+import { tournamentSchema, streamSchema, registrationSchema, type RegistrationData, leaderboardEntrySchema, siteSettingsSchema, profileSchema } from '@/lib/schemas';
 import { FieldValue } from 'firebase-admin/firestore';
+import { User } from 'firebase/auth';
 
 // Helper to extract YouTube video ID from various URL formats
 const getYouTubeVideoId = (url: string): string | null => {
@@ -454,6 +455,34 @@ export async function updateSiteSettings(rawData: any) {
         return { success: true, message: 'Settings updated successfully.' };
     } catch (error) {
         console.error('Error updating settings:', error);
+        return { success: false, message: 'An unexpected error occurred.' };
+    }
+}
+
+export async function updateUserProfile(userId: string, data: { displayName: string; bio: string; }) {
+    if (!db || !auth) {
+        return { success: false, message: 'Database not initialized.' };
+    }
+
+    const validatedFields = profileSchema.safeParse(data);
+    if (!validatedFields.success) {
+        return { success: false, message: 'Invalid form data.', errors: validatedFields.error.flatten().fieldErrors };
+    }
+
+    const { displayName, bio } = validatedFields.data;
+
+    try {
+        // Update Firebase Auth profile
+        await auth.updateUser(userId, { displayName });
+        
+        // Update Firestore document
+        const userRef = db.collection('users').doc(userId);
+        await userRef.update({ displayName, bio });
+
+        revalidatePath('/profile');
+        return { success: true, message: 'Profile updated successfully.' };
+    } catch (error) {
+        console.error('Error updating profile:', error);
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }

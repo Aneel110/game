@@ -65,5 +65,12 @@ export const siteSettingsSchema = z.object({
     socialLinks: socialLinksSchema.optional(),
 });
 
+export const profileSchema = z.object({
+  displayName: z.string().min(3, 'Display name must be at least 3 characters long.'),
+  bio: z.string().max(160, 'Bio must be less than 160 characters.').optional(),
+});
+
+
 export type RegistrationFormValues = z.infer<typeof registrationSchema>;
 export type RegistrationData = RegistrationFormValues;
+export type ProfileFormValues = z.infer<typeof profileSchema>;

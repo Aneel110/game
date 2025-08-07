@@ -1,5 +1,5 @@
 
-import LeaderboardForm from '../../../leaderboard-form';
+import LeaderboardForm from '../../leaderboard-form';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { db } from '@/lib/firebase-admin';
 import { notFound } from 'next/navigation';

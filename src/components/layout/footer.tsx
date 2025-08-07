@@ -8,13 +8,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useEffect, useState } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-
-const defaultSocialLinks = [
-  { name: 'Twitter', href: '#' },
-  { name: 'Discord', href: '#' },
-  { name: 'YouTube', href: '#' },
-  { name: 'Twitch', href: '#' },
-];
+import { Skeleton } from '../ui/skeleton';
 
 const footerLinks = [
   { name: 'About', href: '#' },
@@ -46,18 +40,25 @@ export default function Footer() {
       siteName: 'E-Sports Nepal', 
       socialLinks: { twitter: '#', discord: '#', youtube: '#', twitch: '#' } 
   });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchSiteSettings() {
-      if (db) {
-        const settingsDoc = await getDoc(doc(db, 'settings', 'siteSettings'));
-        if (settingsDoc.exists()) {
-          const data = settingsDoc.data();
-          setSettings({
-            siteName: data.siteName || 'E-Sports Nepal',
-            socialLinks: data.socialLinks || { twitter: '#', discord: '#', youtube: '#', twitch: '#' }
-          });
+      try {
+        if (db) {
+          const settingsDoc = await getDoc(doc(db, 'settings', 'siteSettings'));
+          if (settingsDoc.exists()) {
+            const data = settingsDoc.data();
+            setSettings({
+              siteName: data.siteName || 'E-Sports Nepal',
+              socialLinks: data.socialLinks || { twitter: '#', discord: '#', youtube: '#', twitch: '#' }
+            });
+          }
         }
+      } catch (error) {
+        console.error("Failed to fetch site settings:", error);
+      } finally {
+        setLoading(false);
       }
     }
     fetchSiteSettings();
@@ -98,19 +99,26 @@ export default function Footer() {
             </div>
              <div>
               <h3 className="font-semibold mb-4">Community</h3>
-              {socialLinks.length > 0 ? (
-                <ul className="space-y-2">
-                    {socialLinks.map((link) => (
-                    <li key={link.name}>
-                        <Link href={link.href} className="text-sm text-muted-foreground hover:text-primary" target="_blank" rel="noopener noreferrer">
-                        {link.name}
-                        </Link>
-                    </li>
-                    ))}
-                </ul>
-                ) : (
-                    <p className="text-sm text-muted-foreground">No social links set.</p>
-                )}
+              {loading ? (
+                 <div className="space-y-2">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-4 w-20" />
+                 </div>
+              ) : (
+                socialLinks.length > 0 ? (
+                  <ul className="space-y-2">
+                      {socialLinks.map((link) => (
+                      <li key={link.name}>
+                          <Link href={link.href} className="text-sm text-muted-foreground hover:text-primary" target="_blank" rel="noopener noreferrer">
+                          {link.name}
+                          </Link>
+                      </li>
+                      ))}
+                  </ul>
+                  ) : (
+                      <p className="text-sm text-muted-foreground">No social links set.</p>
+                  )
+              )}
             </div>
             <AdminFooterLink />
           </div>

@@ -107,8 +107,8 @@ export default function Footer() {
               <h3 className="font-semibold mb-4">Community</h3>
               {loading ? (
                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-24" />
-                    <Skeleton className="h-4 w-20" />
+                    <div className="h-4 w-24" />
+                    <div className="h-4 w-20" />
                  </div>
               ) : (
                 socialLinks.length > 0 ? (

@@ -36,10 +36,10 @@ function AdminFooterLink() {
 }
 
 export default function Footer() {
-  const [settings, setSettings] = useState({ 
-      siteName: 'E-Sports Nepal', 
-      socialLinks: { twitter: '#', discord: '#', youtube: '#', twitch: '#' } 
-  });
+  const [settings, setSettings] = useState<{
+      siteName: string;
+      socialLinks: { twitter?: string; discord?: string; youtube?: string; twitch?: string };
+  } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -51,12 +51,15 @@ export default function Footer() {
             const data = settingsDoc.data();
             setSettings({
               siteName: data.siteName || 'E-Sports Nepal',
-              socialLinks: data.socialLinks || { twitter: '#', discord: '#', youtube: '#', twitch: '#' }
+              socialLinks: data.socialLinks || {}
             });
+          } else {
+             setSettings({ siteName: 'E-Sports Nepal', socialLinks: {} });
           }
         }
       } catch (error) {
         console.error("Failed to fetch site settings:", error);
+         setSettings({ siteName: 'E-Sports Nepal', socialLinks: {} });
       } finally {
         setLoading(false);
       }
@@ -64,12 +67,15 @@ export default function Footer() {
     fetchSiteSettings();
   }, []);
 
-  const socialLinks = [
-      { name: 'Twitter', href: settings.socialLinks.twitter || '#' },
-      { name: 'Discord', href: settings.socialLinks.discord || '#' },
-      { name: 'YouTube', href: settings.socialLinks.youtube || '#' },
-      { name: 'Twitch', href: settings.socialLinks.twitch || '#' },
-  ].filter(link => link.href && link.href !== '#');
+  const socialLinks = settings?.socialLinks ? [
+      { name: 'Twitter', href: settings.socialLinks.twitter },
+      { name: 'Discord', href: settings.socialLinks.discord },
+      { name: 'YouTube', href: settings.socialLinks.youtube },
+      { name: 'Twitch', href: settings.socialLinks.twitch },
+  ].filter((link): link is { name: string; href: string } => !!link.href && link.href !== '#') : [];
+
+
+  const siteName = settings?.siteName || 'E-Sports Nepal';
 
   return (
     <footer className="bg-card border-t mt-auto">
@@ -78,7 +84,7 @@ export default function Footer() {
           <div className="flex flex-col gap-4">
             <Link href="/" className="flex items-center gap-2">
               <Logo className="h-8 w-8 text-primary" />
-              <span className="text-xl font-bold font-headline">{settings.siteName}</span>
+              <span className="text-xl font-bold font-headline">{siteName}</span>
             </Link>
             <p className="text-muted-foreground text-sm max-w-xs">
               The ultimate hub for competitive players. Join tournaments, climb the leaderboards, and become a legend.
@@ -124,7 +130,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="mt-8 pt-8 border-t flex flex-col sm:flex-row justify-between items-center">
-          <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} {settings.siteName}. All rights reserved.</p>
+          <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} {siteName}. All rights reserved.</p>
         </div>
       </div>
     </footer>

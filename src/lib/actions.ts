@@ -140,7 +140,7 @@ export async function updateRegistrationStatus(tournamentId: string, registratio
     }
 }
 
-export async function updateUserRole(userId: string, role: 'admin' | 'user') {
+export async function updateUserRole(userId: string, role: 'admin' | 'user' | 'moderator') {
     if (!db) {
       return { success: false, message: 'Database not initialized.' };
     }

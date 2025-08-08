@@ -39,11 +39,9 @@ function AdminNavContent({ children }: { children: React.ReactNode }) {
     
     // Filter nav items based on user role
     const adminNavItems = allAdminNavItems.filter(item => {
-        const userRoles = [];
-        if (isAdmin) userRoles.push('admin');
-        if (isModerator) userRoles.push('moderator');
-        
-        return item.roles.some(requiredRole => userRoles.includes(requiredRole));
+        if (isAdmin) return item.roles.includes('admin');
+        if (isModerator) return item.roles.includes('moderator');
+        return false;
     });
     
     const currentPage = adminNavItems.find(item => pathname.startsWith(item.href))?.label || 'Dashboard';

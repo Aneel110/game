@@ -36,7 +36,7 @@ function AdminFooterLink() {
 }
 
 const defaultSettings = {
-    siteName: 'PUBG Arena',
+    siteName: 'E-Sports Nepal',
     socialLinks: { 
         twitter: '', 
         discord: 'https://discord.gg/AHxeFxZh', 
@@ -90,7 +90,7 @@ export default function Footer() {
   ].filter((link): link is { name: string; href: string } => !!link.href && link.href !== '#') : [];
 
 
-  const siteName = settings?.siteName || 'PUBG Arena';
+  const siteName = settings?.siteName || 'E-Sports Nepal';
 
   return (
     <footer className="bg-card border-t mt-auto">

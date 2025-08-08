@@ -8,7 +8,7 @@ async function getSiteSettings() {
     const settingsRef = db.collection('settings').doc('siteSettings');
     const settingsSnap = await settingsRef.get();
     const defaults = {
-        siteName: 'PUBG Arena',
+        siteName: 'E-Sports Nepal',
         siteSlogan: 'Your one-stop destination for E-Sports tournaments, community, and stats in Nepal.',
         homePageBackground: 'https://placehold.co/1920x1080.png',
         socialLinks: { 

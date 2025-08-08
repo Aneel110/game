@@ -22,7 +22,7 @@ const navLinks = [
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const { user, isAdmin, loading } = useAuth();
-  const [siteName, setSiteName] = useState('PUBG Arena');
+  const [siteName, setSiteName] = useState('E-Sports Nepal');
   
   const handleLogout = () => {
     auth.signOut();

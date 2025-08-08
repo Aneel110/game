@@ -30,6 +30,8 @@ import { useAuth } from '@/hooks/use-auth';
 import { registerForTournament } from '@/lib/actions';
 import { registrationSchema, type RegistrationFormValues } from '@/lib/schemas';
 import Link from 'next/link';
+import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
+import { Info } from 'lucide-react';
 
 interface TournamentRegistrationFormProps {
   tournamentId: string;
@@ -48,10 +50,7 @@ export default function TournamentRegistrationForm({ tournamentId, isLoggedIn, i
       teamName: '',
       teamTag: '',
       players: [
-        { pubgName: '', pubgId: '' }, 
-        { pubgName: '', pubgId: '' }, 
-        { pubgName: '', pubgId: '' }, 
-        { pubgName: '', pubgId: '' }
+        { pubgName: '', pubgId: '', discordUsername: '' }
       ],
       registeredById: user?.uid || '',
       registeredByName: user?.displayName || '',
@@ -125,7 +124,7 @@ export default function TournamentRegistrationForm({ tournamentId, isLoggedIn, i
             <DialogHeader>
                 <DialogTitle>Tournament Registration</DialogTitle>
                 <DialogDescription>
-                    Fill out your team details below. You need a minimum of 4 players and a maximum of 6.
+                    Register your team below. You need a minimum of 1 player and a maximum of 6.
                 </DialogDescription>
             </DialogHeader>
             <Form {...form}>
@@ -161,7 +160,13 @@ export default function TournamentRegistrationForm({ tournamentId, isLoggedIn, i
 
                     <div>
                         <FormLabel>Players</FormLabel>
-                        <div className="space-y-4 mt-2">
+                         <Alert className="mt-2">
+                           <Info className="h-4 w-4" />
+                           <AlertDescription>
+                            All fields are optional, but at least one player must have both their Name and Discord Username entered.
+                           </AlertDescription>
+                         </Alert>
+                        <div className="space-y-4 mt-4">
                         {fields.map((field, index) => (
                             <div key={field.id} className="flex items-start gap-2">
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2 flex-grow">
@@ -195,7 +200,7 @@ export default function TournamentRegistrationForm({ tournamentId, isLoggedIn, i
                                         render={({ field }) => (
                                             <FormItem>
                                                 <FormControl>
-                                                    <Input placeholder="Discord (Optional)" {...field} />
+                                                    <Input placeholder="Discord Username" {...field} />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -207,7 +212,7 @@ export default function TournamentRegistrationForm({ tournamentId, isLoggedIn, i
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => remove(index)}
-                                    disabled={fields.length <= 4}
+                                    disabled={fields.length <= 1}
                                     className="mt-1"
                                 >
                                     <Trash2 className="h-4 w-4 text-destructive" />
@@ -215,7 +220,9 @@ export default function TournamentRegistrationForm({ tournamentId, isLoggedIn, i
                             </div>
                         ))}
                         </div>
-                        <FormMessage>{form.formState.errors.players?.message}</FormMessage>
+                        {form.formState.errors.players && form.formState.errors.players.root && (
+                            <p className="text-sm font-medium text-destructive mt-2">{form.formState.errors.players.root.message}</p>
+                        )}
                          <Button
                             type="button"
                             variant="outline"

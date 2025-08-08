@@ -39,15 +39,20 @@ export const streamSchema = z.object({
 });
 
 const playerSchema = z.object({
-  pubgName: z.string().min(1, 'Name is required.'),
-  pubgId: z.string().min(1, 'ID is required.'),
+  pubgName: z.string().optional(),
+  pubgId: z.string().optional(),
   discordUsername: z.string().optional(),
 });
 
 export const registrationSchema = z.object({
   teamName: z.string().min(1, "Team name is required."),
   teamTag: z.string().min(1, "Team tag is required."),
-  players: z.array(playerSchema).min(4, 'You must register at least 4 players.').max(6, 'You can register a maximum of 6 players.'),
+  players: z.array(playerSchema)
+    .min(1, 'You must register at least 1 player.')
+    .max(6, 'You can register a maximum of 6 players.')
+    .refine(players => players.some(p => p.pubgName && p.discordUsername), {
+      message: 'At least one player must have both Player Name and Discord Username.',
+    }),
   registeredById: z.string().min(1),
   registeredByName: z.string().min(1),
 });

@@ -42,7 +42,7 @@ export default function UserActions({ userId, currentRole, isDisabled }: UserAct
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { toast } = useToast();
-  const { isAdmin } = useAuth();
+  const { user: currentUser, isAdmin } = useAuth();
 
   const handleRoleChange = async (newRole: string) => {
     if (newRole === currentRole || !isAdmin) return;
@@ -96,6 +96,9 @@ export default function UserActions({ userId, currentRole, isDisabled }: UserAct
     }
   }
 
+  // Prevent admins from performing actions on themselves
+  const isSelf = currentUser?.uid === userId;
+
   if (!isAdmin) {
     return (
         <TooltipProvider>
@@ -118,7 +121,7 @@ export default function UserActions({ userId, currentRole, isDisabled }: UserAct
     <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-8 w-8 p-0" disabled={isLoading}>
+          <Button variant="ghost" className="h-8 w-8 p-0" disabled={isLoading || isSelf}>
             <span className="sr-only">Open menu</span>
             <MoreHorizontal className="h-4 w-4" />
           </Button>

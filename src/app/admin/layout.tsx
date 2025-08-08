@@ -36,7 +36,12 @@ function AdminNavContent({ children }: { children: React.ReactNode }) {
     const { user, isAdmin, isModerator } = useAuth();
     const pathname = usePathname();
     
-    const adminNavItems = allAdminNavItems.filter(item => !item.adminOnly || isAdmin);
+    // Filter nav items based on user role
+    const adminNavItems = allAdminNavItems.filter(item => {
+        if (isAdmin) return true; // Admins see everything
+        return !item.adminOnly; // Moderators and others see non-admin-only items
+    });
+    
     const currentPage = adminNavItems.find(item => pathname.startsWith(item.href))?.label || 'Dashboard';
 
     return (

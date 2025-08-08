@@ -28,6 +28,7 @@ async function getTournamentsWithRegistrationCounts() {
     for (const doc of tournamentsSnapshot.docs) {
         const tournamentData = doc.data();
         const tournament = { id: doc.id, ...tournamentData };
+        // Correctly query the subcollection for pending registrations
         const registrationsSnapshot = await doc.ref.collection('registrations').where('status', '==', 'pending').get();
         tournaments.push({ ...tournament, pendingCount: registrationsSnapshot.size, status: getTournamentStatus(tournament.date) });
     }
@@ -110,5 +111,3 @@ export default async function AdminTournamentsPage() {
         </Card>
     );
 }
-
-    

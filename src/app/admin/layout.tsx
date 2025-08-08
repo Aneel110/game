@@ -23,18 +23,20 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { usePathname } from "next/navigation";
 
-const adminNavItems = [
-  { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/tournaments", label: "Tournaments", icon: Gamepad2 },
-  { href: "/admin/users", label: "Users", icon: Users },
-  { href: "/admin/streams", label: "Streams", icon: Clapperboard },
-  { href: "/admin/prizes", label: "Prizes", icon: Trophy },
-  { href: "/admin/settings", label: "Settings", icon: Settings },
+const allAdminNavItems = [
+  { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard, adminOnly: false },
+  { href: "/admin/tournaments", label: "Tournaments", icon: Gamepad2, adminOnly: false },
+  { href: "/admin/users", label: "Users", icon: Users, adminOnly: false },
+  { href: "/admin/streams", label: "Streams", icon: Clapperboard, adminOnly: true },
+  { href: "/admin/prizes", label: "Prizes", icon: Trophy, adminOnly: true },
+  { href: "/admin/settings", label: "Settings", icon: Settings, adminOnly: true },
 ];
 
 function AdminNavContent({ children }: { children: React.ReactNode }) {
-    const { user } = useAuth();
+    const { user, isAdmin } = useAuth();
     const pathname = usePathname();
+    
+    const adminNavItems = allAdminNavItems.filter(item => !item.adminOnly || isAdmin);
     const currentPage = adminNavItems.find(item => pathname.startsWith(item.href))?.label || 'Dashboard';
 
     return (
@@ -71,6 +73,7 @@ function AdminNavContent({ children }: { children: React.ReactNode }) {
                   </Avatar>
                   <div className="flex-grow">
                   <p className="text-sm font-semibold">{user?.displayName || "Admin User"}</p>
+                  <p className="text-xs text-muted-foreground">{isAdmin ? 'Admin' : 'Moderator'}</p>
                   </div>
                   <Button variant="ghost" size="icon" asChild>
                       <Link href="/">

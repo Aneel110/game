@@ -27,6 +27,8 @@ import {
 import { MoreHorizontal, UserCheck, UserCog, UserX, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { updateUserRole, updateUserDisabledStatus, deleteUser } from '@/lib/actions';
+import { useAuth } from '@/hooks/use-auth';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 type UserRole = 'admin' | 'moderator' | 'user';
 
@@ -40,9 +42,10 @@ export default function UserActions({ userId, currentRole, isDisabled }: UserAct
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { toast } = useToast();
+  const { isAdmin } = useAuth();
 
   const handleRoleChange = async (newRole: string) => {
-    if (newRole === currentRole) return;
+    if (newRole === currentRole || !isAdmin) return;
     setIsLoading(true);
     try {
       const result = await updateUserRole(userId, newRole as UserRole);
@@ -59,7 +62,7 @@ export default function UserActions({ userId, currentRole, isDisabled }: UserAct
   };
 
   const handleStatusChange = async (disabled: boolean) => {
-    if (disabled === isDisabled) return;
+    if (disabled === isDisabled || !isAdmin) return;
     setIsLoading(true);
     try {
         const result = await updateUserDisabledStatus(userId, disabled);
@@ -76,6 +79,7 @@ export default function UserActions({ userId, currentRole, isDisabled }: UserAct
   };
 
   const handleDelete = async () => {
+    if (!isAdmin) return;
     setIsLoading(true);
     try {
       const result = await deleteUser(userId);
@@ -92,6 +96,23 @@ export default function UserActions({ userId, currentRole, isDisabled }: UserAct
     }
   }
 
+  if (!isAdmin) {
+    return (
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger>
+                     <Button variant="ghost" className="h-8 w-8 p-0" disabled>
+                        <span className="sr-only">Open menu</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                    <p>Only admins can manage users.</p>
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
+    )
+  }
 
   return (
     <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>

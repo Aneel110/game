@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { auth, db } from '@/lib/firebase-admin';
@@ -215,7 +216,6 @@ function processTournamentFormData(formData: FormData) {
         }
     }
     
-    // Ensure registrationOpen is set, defaulting to false if not present in formData (which happens when unchecked)
     rawData.registrationOpen = formData.has('registrationOpen');
 
     return { ...rawData, prizeDistribution };
@@ -280,7 +280,6 @@ export async function deleteTournament(id: string) {
         return { success: false, message: 'Tournament ID is required.' };
     }
     try {
-        // Here you might want to also delete subcollections like registrations
         await db.collection('tournaments').doc(id).delete();
         revalidatePath('/tournaments');
         revalidatePath('/admin/tournaments');
@@ -439,11 +438,29 @@ export async function deleteLeaderboardEntry(tournamentId: string, teamName: str
     }
 }
 
-export async function updateSiteSettings(rawData: any) {
+function processSiteSettingsFormData(formData: FormData) {
+    const rawData: { [key: string]: any } = { socialLinks: {} };
+    const socialLinks: { [key: string]: string } = {};
+
+    for (const [key, value] of formData.entries()) {
+        if (key.startsWith('socialLinks.')) {
+            const socialKey = key.split('.')[1];
+            socialLinks[socialKey] = String(value);
+        } else {
+            rawData[key] = value;
+        }
+    }
+    rawData.socialLinks = socialLinks;
+    return rawData;
+}
+
+
+export async function updateSiteSettings(formData: FormData) {
     if (!db) {
       return { success: false, message: 'Database not initialized.' };
     }
     
+    const rawData = processSiteSettingsFormData(formData)
     const validatedFields = siteSettingsSchema.safeParse(rawData);
     
     if (!validatedFields.success) {
@@ -490,5 +507,3 @@ export async function updateUserProfile(userId: string, data: { displayName: str
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }
-
-    

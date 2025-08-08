@@ -7,15 +7,33 @@ async function getSiteSettings() {
     if (!db) return {};
     const settingsRef = db.collection('settings').doc('siteSettings');
     const settingsSnap = await settingsRef.get();
+    const defaults = {
+        siteName: 'E-Sports Nepal',
+        siteSlogan: 'Your one-stop destination for E-Sports tournaments, community, and stats in Nepal.',
+        homePageBackground: 'https://placehold.co/1920x1080.png',
+        socialLinks: { 
+            twitter: '', 
+            discord: 'https://discord.gg/AHxeFxZh', 
+            youtube: '', 
+            twitch: '', 
+            tiktok: 'https://www.tiktok.com/@esportnepall?lang=en' 
+        }
+    };
+
     if (!settingsSnap.exists) {
-        return {
-            siteName: 'E-Sports Nepal',
-            siteSlogan: 'Your one-stop destination for E-Sports tournaments, community, and stats in Nepal.',
-            homePageBackground: 'https://placehold.co/1920x1080.png',
-            socialLinks: { twitter: '#', discord: 'https://discord.gg/AHxeFxZh', youtube: '#', twitch: '#', tiktok: 'https://www.tiktok.com/@esportnepall?lang=en' }
-        };
+        return defaults;
     }
-    return settingsSnap.data();
+    
+    const data = settingsSnap.data();
+    // Merge defaults with existing data to ensure all fields are present
+    return {
+        ...defaults,
+        ...data,
+        socialLinks: {
+            ...defaults.socialLinks,
+            ...(data?.socialLinks || {})
+        }
+    };
 }
 
 export default async function AdminSettingsPage() {

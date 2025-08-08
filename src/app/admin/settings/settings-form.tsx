@@ -43,7 +43,20 @@ export default function SettingsForm({ defaultValues }: SettingsFormProps) {
   });
 
   async function onSubmit(data: SettingsFormValues) {
-    const result = await updateSiteSettings(data);
+    const formData = new FormData();
+    Object.entries(data).forEach(([key, value]) => {
+        if (key === 'socialLinks' && typeof value === 'object' && value !== null) {
+            Object.entries(value).forEach(([socialKey, socialValue]) => {
+                if(socialValue) {
+                   formData.append(`socialLinks.${socialKey}`, socialValue);
+                }
+            });
+        } else if (value) {
+            formData.append(key, value);
+        }
+    });
+
+    const result = await updateSiteSettings(formData);
 
     if(result.success) {
         toast({ title: 'Success', description: result.message });

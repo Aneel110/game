@@ -10,9 +10,6 @@ import { AuthProvider } from '@/hooks/use-auth';
 export const metadata: Metadata = {
   title: 'E-Sports Nepal: Elite Tournaments & Community Hub',
   description: 'Your one-stop destination for E-Sports tournaments, community, and stats in Nepal.',
-  icons: {
-    icon: "/logo.svg",
-  }
 };
 
 export default function RootLayout({

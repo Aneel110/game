@@ -10,27 +10,6 @@ import UserActions from "./user-actions";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-// Server-side role check
-async function checkAdminRole() {
-    const sessionCookie = headers().get("session");
-    if (!sessionCookie) {
-        redirect('/login');
-    }
-    try {
-        const decodedToken = await auth?.verifySessionCookie(sessionCookie, true);
-        if (!decodedToken) {
-             redirect('/login');
-        }
-        const userDoc = await db?.collection("users").doc(decodedToken.uid).get();
-        if (userDoc?.data()?.role !== 'admin') {
-            redirect('/admin/dashboard?error=access-denied');
-        }
-    } catch (error) {
-         redirect('/login');
-    }
-}
-
-
 async function getUsers() {
     if (!db || !auth) {
         return { error: "Firebase Admin is not configured. Please set FIREBASE_SERVICE_ACCOUNT_KEY." };
@@ -86,7 +65,6 @@ const getStatusBadge = (disabled: boolean) => {
 }
 
 export default async function AdminUsersPage() {
-    await checkAdminRole();
     const { users, error } = await getUsers();
 
     if (error) {

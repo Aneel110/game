@@ -71,9 +71,10 @@ async function getUpcomingTournaments() {
     return { tournaments: [], error: "Server-side Firebase is not configured correctly." };
   }
   try {
-    const now = new Date();
+    // Dates are stored as 'YYYY-MM-DDTHH:mm' strings. We can do a string comparison.
+    const now_string = new Date().toISOString().slice(0, 16).replace('T', ' ');
     const snapshot = await db.collection('tournaments')
-        .where('date', '>', now) // Use native Date object for comparison
+        .where('date', '>', now_string)
         .orderBy('date', 'asc')
         .limit(6)
         .get();

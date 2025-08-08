@@ -33,7 +33,7 @@ const allAdminNavItems = [
 ];
 
 function AdminNavContent({ children }: { children: React.ReactNode }) {
-    const { user, isAdmin } = useAuth();
+    const { user, isAdmin, isModerator } = useAuth();
     const pathname = usePathname();
     
     const adminNavItems = allAdminNavItems.filter(item => !item.adminOnly || isAdmin);
@@ -151,7 +151,7 @@ export default function AdminLayout({
       return <LoadingSkeleton />;
   }
 
-  if(!isAdmin && !isModerator) {
+  if (!isAdmin && !isModerator) {
       return <AccessDenied />
   }
 

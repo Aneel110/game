@@ -66,7 +66,7 @@ async function getLiveStream() {
     }
 }
 
-async function getFeaturedTournaments() {
+async function getUpcomingTournaments() {
   if (!db) {
     return { tournaments: [], error: "Server-side Firebase is not configured correctly." };
   }
@@ -94,7 +94,7 @@ async function getFeaturedTournaments() {
     });
     return { tournaments };
   } catch (error: any) {
-     console.error("Error fetching featured tournaments:", error);
+     console.error("Error fetching upcoming tournaments:", error);
      return { tournaments: [], error: "Failed to fetch tournaments." };
   }
 }
@@ -151,7 +151,7 @@ const FacebookIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 export default async function Home() {
   const settings = await getSiteSettings();
-  const { tournaments, error: tournamentsError } = await getFeaturedTournaments();
+  const { tournaments, error: tournamentsError } = await getUpcomingTournaments();
 
   return (
     <div className="flex flex-col items-center">

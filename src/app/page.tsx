@@ -151,7 +151,7 @@ export default async function Home() {
   return (
     <div className="flex flex-col items-center">
       {/* Hero Section */}
-      <section className="w-full h-[calc(100vh-80px)] relative overflow-hidden flex items-center justify-center text-center text-white">
+      <section className="w-full h-[80vh] md:h-[calc(100vh-80px)] relative overflow-hidden flex items-center justify-center text-center text-white">
         <div className="absolute inset-0 z-0">
           <Image
             src={settings?.homePageBackground || 'https://placehold.co/1920x1080.png'}
@@ -163,13 +163,13 @@ export default async function Home() {
           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background" />
         </div>
         <div className="z-10 flex flex-col items-center p-4">
-          <h1 className="text-5xl md:text-7xl font-headline font-bold mb-4 text-shadow-lg animate-fade-in-down">
+          <h1 className="text-4xl md:text-7xl font-headline font-bold mb-4 text-shadow-lg animate-fade-in-down">
             {settings?.siteName || 'Welcome to E-Sports Nepal'}
           </h1>
-          <p className="text-lg md:text-xl mb-8 max-w-2xl text-foreground/80">
+          <p className="text-md md:text-xl mb-8 max-w-2xl text-foreground/80">
             {settings?.siteSlogan || 'It is Free Pubg Tournament'}
           </p>
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-4">
             <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold">
               <Link href="/tournaments">Find Tournaments <ArrowRight className="ml-2 h-5 w-5" /></Link>
             </Button>
@@ -251,7 +251,7 @@ export default async function Home() {
       {/* Social Section */}
       <section id="social" className="w-full bg-background py-16">
         <div className="container mx-auto text-center">
-            <Gamepad2 className="w-16 h-16 mx-auto mb-4 text-primary" />
+            <Gamepad2 className="w-12 h-12 md:w-16 md:h-16 mx-auto mb-4 text-primary" />
             <h2 className="text-4xl font-headline font-bold text-center mb-4">Join Our Community</h2>
             <p className="text-muted-foreground mb-8">
                 Follow us on our social channels to stay updated with the latest news and events.

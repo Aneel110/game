@@ -216,7 +216,7 @@ function processTournamentFormData(formData: FormData) {
         }
     }
     
-    rawData.registrationOpen = formData.has('registrationOpen');
+    rawData.registrationOpen = formData.get('registrationOpen') === 'true';
 
     return { ...rawData, prizeDistribution };
 }
@@ -472,7 +472,7 @@ export async function updateSiteSettings(formData: FormData) {
         await db.collection('settings').doc('siteSettings').set(validatedFields.data, { merge: true });
         revalidatePath('/');
         revalidatePath('/admin/settings');
-        revalidatePath('/layout'); // Revalidate layout to update header/footer
+        revalidatePath('/layout', 'layout'); // Revalidate layout to update header/footer
         return { success: true, message: 'Settings updated successfully.' };
     } catch (error) {
         console.error('Error updating settings:', error);

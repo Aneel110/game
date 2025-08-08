@@ -81,7 +81,7 @@ export default function SettingsForm({ defaultValues }: SettingsFormProps) {
                             <FormItem>
                                 <Label>Site Name</Label>
                                 <FormControl>
-                                    <Input placeholder="E-Sports Nepal" {...field} />
+                                    <Input placeholder="PUBG Arena" {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>

@@ -18,7 +18,7 @@ import { Timestamp } from 'firebase-admin/firestore';
 async function getSiteSettings() {
     if (!db) {
         return { 
-            siteName: 'E-Sports Nepal',
+            siteName: 'PUBG Arena',
             siteSlogan: 'It is Free Pubg Tournament',
             homePageBackground: 'https://placehold.co/1920x1080.png' 
         };
@@ -27,17 +27,22 @@ async function getSiteSettings() {
         const settingsRef = db.collection('settings').doc('siteSettings');
         const settingsSnap = await settingsRef.get();
         if (settingsSnap.exists) {
-            return settingsSnap.data();
+            const data = settingsSnap.data()
+            return {
+                siteName: data?.siteName || 'PUBG Arena',
+                siteSlogan: data?.siteSlogan || 'It is Free Pubg Tournament',
+                homePageBackground: data?.homePageBackground || 'https://placehold.co/1920x1080.png'
+            }
         }
         return { 
-            siteName: 'E-Sports Nepal',
+            siteName: 'PUBG Arena',
             siteSlogan: 'It is Free Pubg Tournament',
             homePageBackground: 'https://placehold.co/1920x1080.png' 
         };
     } catch (e) {
         console.error("Could not fetch site settings", e);
         return { 
-            siteName: 'E-Sports Nepal',
+            siteName: 'PUBG Arena',
             siteSlogan: 'It is Free Pubg Tournament',
             homePageBackground: 'https://placehold.co/1920x1080.png'
         };
@@ -68,7 +73,7 @@ async function getFeaturedTournaments() {
   try {
     const now = new Date();
     const snapshot = await db.collection('tournaments')
-        .where('date', '>', now.toISOString())
+        .where('date', '>', now) // Use native Date object for comparison
         .orderBy('date', 'asc')
         .limit(6)
         .get();
@@ -155,7 +160,7 @@ export default async function Home() {
         <div className="absolute inset-0 z-0">
           <Image
             src={settings?.homePageBackground || 'https://placehold.co/1920x1080.png'}
-            alt="E-Sports Nepal hero background"
+            alt="PUBG Arena hero background"
             data-ai-hint="battle royale landscape"
             fill
             className="opacity-40 object-cover"
@@ -164,7 +169,7 @@ export default async function Home() {
         </div>
         <div className="z-10 flex flex-col items-center p-4">
           <h1 className="text-4xl md:text-7xl font-headline font-bold mb-4 text-shadow-lg animate-fade-in-down">
-            {settings?.siteName || 'Welcome to E-Sports Nepal'}
+            {settings?.siteName || 'Welcome to PUBG Arena'}
           </h1>
           <p className="text-md md:text-xl mb-8 max-w-2xl text-foreground/80">
             {settings?.siteSlogan || 'It is Free Pubg Tournament'}

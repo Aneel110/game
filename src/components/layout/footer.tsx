@@ -35,11 +35,22 @@ function AdminFooterLink() {
     )
 }
 
+const defaultSettings = {
+    siteName: 'PUBG Arena',
+    socialLinks: { 
+        twitter: '', 
+        discord: 'https://discord.gg/AHxeFxZh', 
+        youtube: 'https://www.youtube.com/@esportsnepall', 
+        twitch: '', 
+        tiktok: 'https://www.tiktok.com/@esportnepall?lang=en' 
+    }
+};
+
 export default function Footer() {
   const [settings, setSettings] = useState<{
       siteName: string;
       socialLinks: { twitter?: string; discord?: string; youtube?: string; twitch?: string; tiktok?: string; };
-  } | null>(null);
+  }>(defaultSettings);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -50,16 +61,19 @@ export default function Footer() {
           if (settingsDoc.exists()) {
             const data = settingsDoc.data();
             setSettings({
-              siteName: data.siteName || 'E-Sports Nepal',
-              socialLinks: data.socialLinks || {}
+              siteName: data.siteName || defaultSettings.siteName,
+              socialLinks: {
+                ...defaultSettings.socialLinks,
+                ...(data.socialLinks || {})
+              }
             });
           } else {
-             setSettings({ siteName: 'E-Sports Nepal', socialLinks: {} });
+             setSettings(defaultSettings);
           }
         }
       } catch (error) {
         console.error("Failed to fetch site settings:", error);
-         setSettings({ siteName: 'E-Sports Nepal', socialLinks: {} });
+         setSettings(defaultSettings);
       } finally {
         setLoading(false);
       }
@@ -68,15 +82,15 @@ export default function Footer() {
   }, []);
 
   const socialLinks = settings?.socialLinks ? [
-      { name: 'Twitter', href: settings.socialLinks.twitter },
-      { name: 'Discord', href: settings.socialLinks.discord },
       { name: 'YouTube', href: settings.socialLinks.youtube },
-      { name: 'Twitch', href: settings.socialLinks.twitch },
+      { name: 'Discord', href: settings.socialLinks.discord },
       { name: 'TikTok', href: settings.socialLinks.tiktok },
+      { name: 'Twitter', href: settings.socialLinks.twitter },
+      { name: 'Twitch', href: settings.socialLinks.twitch },
   ].filter((link): link is { name: string; href: string } => !!link.href && link.href !== '#') : [];
 
 
-  const siteName = settings?.siteName || 'E-Sports Nepal';
+  const siteName = settings?.siteName || 'PUBG Arena';
 
   return (
     <footer className="bg-card border-t mt-auto">

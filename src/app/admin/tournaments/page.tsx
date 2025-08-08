@@ -9,6 +9,8 @@ import DeleteTournamentButton from "./delete-tournament-button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Timestamp } from 'firebase-admin/firestore';
 
+export const dynamic = 'force-dynamic';
+
 function getTournamentStatus(date: string | Timestamp) {
     const now = new Date();
     const tournamentDate = date instanceof Timestamp ? date.toDate() : new Date(date);

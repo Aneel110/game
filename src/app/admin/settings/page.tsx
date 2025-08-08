@@ -14,7 +14,7 @@ async function getSiteSettings() {
         socialLinks: { 
             twitter: '', 
             discord: 'https://discord.gg/AHxeFxZh', 
-            youtube: '', 
+            youtube: 'https://www.youtube.com/@esportsnepall', 
             twitch: '', 
             tiktok: 'https://www.tiktok.com/@esportnepall?lang=en' 
         }

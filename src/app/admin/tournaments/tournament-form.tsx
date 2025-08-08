@@ -16,6 +16,7 @@ import { tournamentSchema } from '@/lib/schemas';
 import { Form, FormControl, FormField, FormItem, FormMessage, FormLabel } from '@/components/ui/form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
+import { useEffect } from 'react';
 
 type TournamentFormValues = z.infer<typeof tournamentSchema>;
 
@@ -49,6 +50,17 @@ export default function TournamentForm({ tournamentId, defaultValues }: Tourname
         registrationOpen: true,
     }
   });
+  
+  // This is a workaround to ensure the date from Firestore is formatted correctly for the datetime-local input
+  useEffect(() => {
+    if (defaultValues?.date) {
+      const date = new Date(defaultValues.date);
+      // Format to YYYY-MM-DDTHH:mm
+      const formattedDate = date.toISOString().slice(0, 16);
+      form.setValue('date', formattedDate);
+    }
+  }, [defaultValues, form]);
+
 
   const action = tournamentId ? updateTournament.bind(null, tournamentId) : createTournament;
 
@@ -60,6 +72,11 @@ export default function TournamentForm({ tournamentId, defaultValues }: Tourname
         Object.entries(value).forEach(([prizeKey, prizeValue]) => {
           formData.append(`prizeDistribution.${prizeKey}`, String(prizeValue));
         });
+      } else if (key === 'registrationOpen') {
+          // Only append if true, because unchecked switches don't appear in form data
+          if (value) {
+            formData.append(key, 'true');
+          }
       } else {
         formData.append(key, String(value));
       }
@@ -70,6 +87,7 @@ export default function TournamentForm({ tournamentId, defaultValues }: Tourname
     if(result.success) {
         toast({ title: 'Success', description: result.message });
         router.push('/admin/tournaments');
+        router.refresh();
     } else {
         toast({ title: 'Error', description: result.message, variant: 'destructive' });
     }
@@ -195,6 +213,9 @@ export default function TournamentForm({ tournamentId, defaultValues }: Tourname
                 <Switch
                   checked={field.value}
                   onCheckedChange={field.onChange}
+                  name={field.name}
+                  ref={field.ref}
+                  onBlur={field.onBlur}
                 />
               </FormControl>
             </FormItem>
@@ -211,3 +232,5 @@ export default function TournamentForm({ tournamentId, defaultValues }: Tourname
     </Form>
   );
 }
+
+    

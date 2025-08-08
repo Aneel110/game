@@ -210,20 +210,17 @@ function processTournamentFormData(formData: FormData) {
         if (key.startsWith('prizeDistribution.')) {
             const prizeKey = key.split('.')[1];
             prizeDistribution[prizeKey] = Number(value);
-        } else if (key === 'registrationOpen') {
-            rawData[key] = value === 'true';
         } else {
             rawData[key] = value;
         }
     }
     
-    // Ensure registrationOpen is set, defaulting to false if not present
-    if (rawData.registrationOpen === undefined) {
-        rawData.registrationOpen = false;
-    }
+    // Ensure registrationOpen is set, defaulting to false if not present in formData (which happens when unchecked)
+    rawData.registrationOpen = formData.has('registrationOpen');
 
     return { ...rawData, prizeDistribution };
 }
+
 
 export async function createTournament(formData: FormData) {
     if (!db) {
@@ -493,3 +490,5 @@ export async function updateUserProfile(userId: string, data: { displayName: str
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }
+
+    

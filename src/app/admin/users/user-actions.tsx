@@ -28,9 +28,11 @@ import { MoreHorizontal, UserCheck, UserCog, UserX, Trash2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast';
 import { updateUserRole, updateUserDisabledStatus, deleteUser } from '@/lib/actions';
 
+type UserRole = 'admin' | 'moderator' | 'user';
+
 interface UserActionsProps {
     userId: string;
-    currentRole: 'admin' | 'user';
+    currentRole: UserRole;
     isDisabled: boolean;
 }
 
@@ -39,11 +41,11 @@ export default function UserActions({ userId, currentRole, isDisabled }: UserAct
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { toast } = useToast();
 
-  const handleRoleChange = async (newRole: 'admin' | 'user') => {
+  const handleRoleChange = async (newRole: string) => {
     if (newRole === currentRole) return;
     setIsLoading(true);
     try {
-      const result = await updateUserRole(userId, newRole);
+      const result = await updateUserRole(userId, newRole as UserRole);
       if (result.success) {
         toast({ title: 'Success', description: result.message });
       } else {
@@ -107,6 +109,7 @@ export default function UserActions({ userId, currentRole, isDisabled }: UserAct
           <DropdownMenuRadioGroup value={currentRole} onValueChange={handleRoleChange}>
               <DropdownMenuLabel className="flex items-center gap-2 text-xs font-normal text-muted-foreground"><UserCog /> Change Role</DropdownMenuLabel>
               <DropdownMenuRadioItem value="admin">Admin</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="moderator">Moderator</DropdownMenuRadioItem>
               <DropdownMenuRadioItem value="user">User</DropdownMenuRadioItem>
           </DropdownMenuRadioGroup>
 

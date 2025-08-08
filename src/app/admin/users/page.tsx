@@ -39,6 +39,8 @@ const getRoleBadge = (role: string) => {
     switch (role) {
         case 'admin':
             return <Badge variant="destructive">Admin</Badge>;
+        case 'moderator':
+            return <Badge variant="outline" className="border-blue-500 text-blue-500">Moderator</Badge>;
         case 'user':
             return <Badge variant="secondary">User</Badge>;
         default:

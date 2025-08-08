@@ -9,18 +9,21 @@ import { doc, getDoc } from 'firebase/firestore';
 type AuthContextType = {
   user: User | null;
   isAdmin: boolean;
+  isModerator: boolean;
   loading: boolean;
 };
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   isAdmin: false,
+  isModerator: false,
   loading: true,
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isModerator, setIsModerator] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -39,14 +42,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const userDocSnap = await getDoc(userDocRef);
 
         if (userDocSnap.exists()) {
-          setIsAdmin(userDocSnap.data().role === 'admin');
+          const userData = userDocSnap.data();
+          setIsAdmin(userData.role === 'admin');
+          setIsModerator(userData.role === 'moderator');
         } else {
           setIsAdmin(false);
+          setIsModerator(false);
         }
 
       } else {
         setUser(null);
         setIsAdmin(false);
+        setIsModerator(false);
       }
       setLoading(false);
     });
@@ -55,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, isAdmin, loading }}>
+    <AuthContext.Provider value={{ user, isAdmin, isModerator, loading }}>
       {children}
     </AuthContext.Provider>
   );

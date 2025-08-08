@@ -2,23 +2,11 @@
 
 'use server';
 
-import { db } from '@/lib/firebase-admin';
+import { auth, db } from '@/lib/firebase-admin';
 import { revalidatePath } from 'next/cache';
-import { tournamentSchema, streamSchema } from '@/lib/schemas';
-
-interface Player {
-  pubgName: string;
-  pubgId: string;
-  discordUsername?: string;
-}
-
-interface RegistrationData {
-  teamName: string;
-  teamTag: string;
-  players: Player[];
-  registeredById: string;
-  registeredByName: string;
-}
+import { tournamentSchema, streamSchema, registrationSchema, type RegistrationData, leaderboardEntrySchema, siteSettingsSchema, profileSchema } from '@/lib/schemas';
+import { FieldValue } from 'firebase-admin/firestore';
+import { User } from 'firebase/auth';
 
 // Helper to extract YouTube video ID from various URL formats
 const getYouTubeVideoId = (url: string): string | null => {
@@ -49,15 +37,16 @@ export async function registerForTournament(tournamentId: string, data: Registra
   if (!db) {
     return { success: false, message: 'Database not initialized.' };
   }
-  if (!tournamentId) {
-    return { success: false, message: 'Tournament ID is required.' };
-  }
-  if (!data.registeredById) {
-      return { success: false, message: 'User is not logged in.' };
+  
+  const validatedFields = registrationSchema.safeParse(data);
+  if (!validatedFields.success) {
+      return { success: false, message: 'Invalid form data.', errors: validatedFields.error.flatten().fieldErrors };
   }
 
+  const { registeredById } = validatedFields.data;
+
   try {
-    const registrationRef = db.collection('tournaments').doc(tournamentId).collection('registrations').doc(data.registeredById);
+    const registrationRef = db.collection('tournaments').doc(tournamentId).collection('registrations').doc(registeredById);
 
     const doc = await registrationRef.get();
 
@@ -66,7 +55,7 @@ export async function registerForTournament(tournamentId: string, data: Registra
     }
 
     await registrationRef.set({
-      ...data,
+      ...validatedFields.data,
       status: 'pending',
       registeredAt: new Date(),
     });
@@ -98,7 +87,7 @@ export async function getTournamentRegistrations(tournamentId: string) {
 }
 
 
-export async function updateRegistrationStatus(tournamentId: string, registrationId: string, status: 'approved' | 'declined') {
+export async function updateRegistrationStatus(tournamentId: string, registrationId: string, status: 'approved' | 'declined' | 'pending', teamName: string) {
     if (!db) {
       return { success: false, message: 'Database not initialized.' };
     }
@@ -106,10 +95,44 @@ export async function updateRegistrationStatus(tournamentId: string, registratio
         return { success: false, message: 'Missing required parameters.' };
     }
     try {
-        const registrationRef = db.collection('tournaments').doc(tournamentId).collection('registrations').doc(registrationId);
-        await registrationRef.update({ status });
+        const tournamentRef = db.collection('tournaments').doc(tournamentId);
+        const registrationRef = tournamentRef.collection('registrations').doc(registrationId);
+
+        await db.runTransaction(async (transaction) => {
+            const tournamentDoc = await transaction.get(tournamentRef);
+            if (!tournamentDoc.exists) {
+                throw new Error("Tournament not found!");
+            }
+            const tournamentData = tournamentDoc.data();
+            let leaderboard = tournamentData?.leaderboard || [];
+            
+            // Update registration status
+            transaction.update(registrationRef, { status });
+
+            const leaderboardEntryExists = leaderboard.some((e: any) => e.teamName === teamName);
+
+            if (status === 'approved' && !leaderboardEntryExists) {
+                // Add to leaderboard if approved and not already there
+                const newEntry = {
+                    rank: 0,
+                    teamName: teamName,
+                    points: 0,
+                    matches: 0,
+                    kills: 0,
+                    chickenDinners: 0,
+                };
+                leaderboard.push(newEntry);
+                transaction.update(tournamentRef, { leaderboard });
+            } else if (status !== 'approved' && leaderboardEntryExists) {
+                // Remove from leaderboard if not approved and is there
+                const updatedLeaderboard = leaderboard.filter((e: any) => e.teamName !== teamName);
+                transaction.update(tournamentRef, { leaderboard: updatedLeaderboard });
+            }
+        });
+
         revalidatePath(`/admin/tournaments/${tournamentId}`);
         revalidatePath(`/tournaments/${tournamentId}`);
+        revalidatePath(`/admin/tournaments/${tournamentId}/leaderboard`);
         return { success: true, message: `Registration status updated to ${status}.` };
     } catch (error) {
         console.error('Error updating registration status:', error);
@@ -117,7 +140,7 @@ export async function updateRegistrationStatus(tournamentId: string, registratio
     }
 }
 
-export async function updateUserRole(userId: string, role: 'admin' | 'user') {
+export async function updateUserRole(userId: string, role: 'admin' | 'user' | 'moderator') {
     if (!db) {
       return { success: false, message: 'Database not initialized.' };
     }
@@ -135,20 +158,86 @@ export async function updateUserRole(userId: string, role: 'admin' | 'user') {
     }
 }
 
+export async function updateUserDisabledStatus(userId: string, disabled: boolean) {
+    if (!auth) {
+        return { success: false, message: 'Admin SDK not initialized.' };
+    }
+     if (!userId) {
+        return { success: false, message: 'Missing user ID.' };
+    }
+    try {
+        await auth.updateUser(userId, { disabled });
+        revalidatePath('/admin/users');
+        return { success: true, message: `User account has been ${disabled ? 'disabled' : 'enabled'}.` };
+    } catch (error) {
+        console.error('Error updating user disabled status:', error);
+        return { success: false, message: 'An unexpected error occurred.' };
+    }
+}
+
+export async function deleteUser(userId: string) {
+    if (!auth || !db) {
+        return { success: false, message: 'Admin SDK not initialized.' };
+    }
+    if (!userId) {
+        return { success: false, message: 'Missing user ID.' };
+    }
+    try {
+        // Delete from Firebase Authentication
+        await auth.deleteUser(userId);
+
+        // Delete from Firestore
+        const userRef = db.collection('users').doc(userId);
+        await userRef.delete();
+
+        revalidatePath('/admin/users');
+        return { success: true, message: 'User has been permanently deleted.' };
+    } catch (error: any) {
+        console.error('Error deleting user:', error);
+        // Provide more specific error messages if possible
+        if (error.code === 'auth/user-not-found') {
+            return { success: false, message: 'User not found in Firebase Authentication.' };
+        }
+        return { success: false, message: 'An unexpected error occurred while deleting the user.' };
+    }
+}
+
+
+function processTournamentFormData(formData: FormData) {
+    const rawData: { [key: string]: any } = {};
+    const prizeDistribution: { [key: string]: number } = {};
+
+    for (const [key, value] of formData.entries()) {
+        if (key.startsWith('prizeDistribution.')) {
+            const prizeKey = key.split('.')[1];
+            prizeDistribution[prizeKey] = Number(value);
+        } else {
+            rawData[key] = value;
+        }
+    }
+    
+    rawData.registrationOpen = formData.get('registrationOpen') === 'true';
+
+    return { ...rawData, prizeDistribution };
+}
+
+
 export async function createTournament(formData: FormData) {
     if (!db) {
       return { success: false, message: 'Database not initialized.' };
     }
-    const rawData = Object.fromEntries(formData.entries());
-    const validatedFields = tournamentSchema.safeParse(rawData);
+    
+    const processedData = processTournamentFormData(formData);
+    const validatedFields = tournamentSchema.safeParse(processedData);
     
     if (!validatedFields.success) {
+        console.error("Validation Errors:", validatedFields.error.flatten().fieldErrors);
         return { success: false, message: 'Invalid form data.', errors: validatedFields.error.flatten().fieldErrors };
     }
 
     try {
         const { ...dataToSave } = validatedFields.data;
-        await db.collection('tournaments').add(dataToSave);
+        await db.collection('tournaments').add({ ...dataToSave, leaderboard: [] });
         revalidatePath('/tournaments');
         revalidatePath('/admin/tournaments');
         return { success: true, message: 'Tournament created successfully.' };
@@ -162,10 +251,11 @@ export async function updateTournament(id: string, formData: FormData) {
     if (!db) {
       return { success: false, message: 'Database not initialized.' };
     }
-    const rawData = Object.fromEntries(formData.entries());
-    const validatedFields = tournamentSchema.safeParse(rawData);
+    const processedData = processTournamentFormData(formData);
+    const validatedFields = tournamentSchema.safeParse(processedData);
     
     if (!validatedFields.success) {
+        console.log("Validation Errors:", validatedFields.error.flatten().fieldErrors);
         return { success: false, message: 'Invalid form data.', errors: validatedFields.error.flatten().fieldErrors };
     }
 
@@ -277,6 +367,144 @@ export async function deleteStream(id: string) {
         return { success: true, message: 'Stream deleted successfully.' };
     } catch (error) {
         console.error('Error deleting stream:', error);
+        return { success: false, message: 'An unexpected error occurred.' };
+    }
+}
+
+export async function createOrUpdateLeaderboardEntry(tournamentId: string, data: any, originalTeamName?: string) {
+    if (!db) {
+      return { success: false, message: 'Database not initialized.' };
+    }
+    
+    const validatedFields = leaderboardEntrySchema.safeParse(data);
+    if (!validatedFields.success) {
+        console.error('Leaderboard validation error:', validatedFields.error.flatten().fieldErrors);
+        return { success: false, message: 'Invalid form data.', errors: validatedFields.error.flatten().fieldErrors };
+    }
+
+    try {
+        const tournamentRef = db.collection('tournaments').doc(tournamentId);
+        const newEntry = validatedFields.data;
+        
+        const tournamentSnap = await tournamentRef.get();
+        const tournamentData = tournamentSnap.data();
+        const leaderboard = tournamentData?.leaderboard || [];
+
+        const teamNameToUpdate = originalTeamName ? decodeURIComponent(originalTeamName) : newEntry.teamName;
+        const entryIndex = leaderboard.findIndex((e: any) => e.teamName === teamNameToUpdate);
+
+        if (entryIndex > -1) { // This is an update
+            leaderboard[entryIndex] = newEntry;
+        } else { // This is a create
+            leaderboard.push(newEntry);
+        }
+
+        await tournamentRef.update({ leaderboard });
+
+        revalidatePath(`/admin/tournaments/${tournamentId}/leaderboard`);
+        revalidatePath(`/tournaments/${tournamentId}`);
+        return { success: true, message: `Leaderboard entry ${entryIndex > -1 ? 'updated' : 'created'} successfully.` };
+    } catch (error) {
+        console.error('Error updating leaderboard:', error);
+        return { success: false, message: 'An unexpected error occurred.' };
+    }
+}
+
+export async function deleteLeaderboardEntry(tournamentId: string, teamName: string) {
+    if (!db) {
+      return { success: false, message: 'Database not initialized.' };
+    }
+    try {
+        const tournamentRef = db.collection('tournaments').doc(tournamentId);
+        const tournamentSnap = await tournamentRef.get();
+        const tournamentData = tournamentSnap.data();
+        let leaderboard = tournamentData?.leaderboard || [];
+        
+        const entryToDelete = leaderboard.find((e: any) => e.teamName === teamName);
+
+        if(!entryToDelete) {
+             return { success: false, message: 'Entry not found.' };
+        }
+
+        await tournamentRef.update({
+            leaderboard: FieldValue.arrayRemove(entryToDelete)
+        });
+
+        revalidatePath(`/admin/tournaments/${tournamentId}/leaderboard`);
+        revalidatePath(`/tournaments/${tournamentId}`);
+        return { success: true, message: 'Leaderboard entry deleted successfully.' };
+    } catch (error) {
+        console.error('Error deleting leaderboard entry:', error);
+        return { success: false, message: 'An unexpected error occurred.' };
+    }
+}
+
+function processSiteSettingsFormData(formData: FormData) {
+    const rawData: { [key: string]: any } = { socialLinks: {} };
+    const socialLinks: { [key: string]: string } = {};
+
+    for (const [key, value] of formData.entries()) {
+        if (key.startsWith('socialLinks.')) {
+            const socialKey = key.split('.')[1];
+            socialLinks[socialKey] = String(value);
+        } else {
+            rawData[key] = value;
+        }
+    }
+    rawData.socialLinks = socialLinks;
+    return rawData;
+}
+
+
+export async function updateSiteSettings(formData: FormData) {
+    if (!db) {
+      return { success: false, message: 'Database not initialized.' };
+    }
+    
+    const rawData = processSiteSettingsFormData(formData)
+    const validatedFields = siteSettingsSchema.safeParse(rawData);
+    
+    if (!validatedFields.success) {
+        console.error(validatedFields.error.flatten().fieldErrors)
+        return { success: false, message: 'Invalid form data.', errors: validatedFields.error.flatten().fieldErrors };
+    }
+
+    try {
+        await db.collection('settings').doc('siteSettings').set(validatedFields.data, { merge: true });
+        revalidatePath('/');
+        revalidatePath('/admin/settings');
+        revalidatePath('/layout', 'layout'); // Revalidate layout to update header/footer
+        return { success: true, message: 'Settings updated successfully.' };
+    } catch (error) {
+        console.error('Error updating settings:', error);
+        return { success: false, message: 'An unexpected error occurred.' };
+    }
+}
+
+export async function updateUserProfile(userId: string, data: { displayName: string; bio: string; }) {
+    if (!db || !auth) {
+        return { success: false, message: 'Database not initialized.' };
+    }
+
+    const validatedFields = profileSchema.safeParse(data);
+    if (!validatedFields.success) {
+        return { success: false, message: 'Invalid form data.', errors: validatedFields.error.flatten().fieldErrors };
+    }
+
+    const { displayName, bio } = validatedFields.data;
+
+    try {
+        // Update Firebase Auth profile
+        await auth.updateUser(userId, { displayName });
+        
+        // Update Firestore document
+        const userRef = db.collection('users').doc(userId);
+        await userRef.update({ displayName, bio });
+
+        revalidatePath('/profile');
+        return { success: true, message: 'Profile updated successfully.' };
+    } catch (error) {
+        console.error('Error updating profile:', error);
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }

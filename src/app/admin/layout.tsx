@@ -142,13 +142,13 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { isAdmin, loading } = useAuth();
+  const { isAdmin, isModerator, loading } = useAuth();
 
   if (loading) {
       return <LoadingSkeleton />;
   }
 
-  if(!isAdmin) {
+  if(!isAdmin && !isModerator) {
       return <AccessDenied />
   }
 

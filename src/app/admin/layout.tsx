@@ -39,8 +39,8 @@ function AdminNavContent({ children }: { children: React.ReactNode }) {
     
     // Filter nav items based on user role
     const adminNavItems = allAdminNavItems.filter(item => {
-        if (isAdmin) return true;
-        if (isModerator) return item.roles.includes('moderator');
+        if (isAdmin && item.roles.includes('admin')) return true;
+        if (isModerator && item.roles.includes('moderator')) return true;
         return false;
     });
     

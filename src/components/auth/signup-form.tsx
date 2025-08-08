@@ -59,13 +59,13 @@ export function SignupForm() {
             await signOut(auth);
 
             toast({
-                title: "Account Created",
-                description: "A verification email has been sent. Please check your inbox to activate your account.",
+                title: "Account Created! Please Verify Your Email",
+                description: "A verification link has been sent to your inbox. Please check your email and click the link to activate your account before logging in.",
                 duration: 10000,
             });
 
             // Redirect user to the login page
-            router.push('/login');
+            router.replace('/login');
 
         } catch (error: any) {
             toast({

@@ -14,94 +14,107 @@ import Link from 'next/link';
 import { db } from '@/lib/firebase-admin';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Timestamp } from 'firebase-admin/firestore';
+import { unstable_cache } from 'next/cache';
 
-async function getSiteSettings() {
-    if (!db) {
-        return { 
-            siteName: 'E-Sports Nepal',
-            siteSlogan: 'Your one-stop destination for E-Sports tournaments, community, and stats in Nepal.',
-            homePageBackground: 'https://placehold.co/1920x1080.png' 
-        };
-    }
-    try {
+const getCachedSiteSettings = unstable_cache(
+    async () => {
+        if (!db) return null;
         const settingsRef = db.collection('settings').doc('siteSettings');
         const settingsSnap = await settingsRef.get();
         if (settingsSnap.exists) {
-            const data = settingsSnap.data()
-            return {
-                siteName: data?.siteName || 'E-Sports Nepal',
-                siteSlogan: data?.siteSlogan || 'Your one-stop destination for E-Sports tournaments, community, and stats in Nepal.',
-                homePageBackground: data?.homePageBackground || 'https://placehold.co/1920x1080.png'
-            }
+            return settingsSnap.data();
         }
-        return { 
-            siteName: 'E-Sports Nepal',
-            siteSlogan: 'Your one-stop destination for E-Sports tournaments, community, and stats in Nepal.',
-            homePageBackground: 'https://placehold.co/1920x1080.png' 
-        };
+        return null;
+    },
+    ['site_settings'],
+    { revalidate: 60 }
+);
+
+async function getSiteSettings() {
+    const defaults = { 
+        siteName: 'E-Sports Nepal',
+        siteSlogan: 'Your one-stop destination for E-Sports tournaments, community, and stats in Nepal.',
+        homePageBackground: 'https://placehold.co/1920x1080.png' 
+    };
+
+    try {
+        const data = await getCachedSiteSettings();
+        if (data) {
+            return {
+                siteName: data.siteName || defaults.siteName,
+                siteSlogan: data.siteSlogan || defaults.siteSlogan,
+                homePageBackground: data.homePageBackground || defaults.homePageBackground
+            };
+        }
+        return defaults;
     } catch (e) {
         console.error("Could not fetch site settings", e);
-        return { 
-            siteName: 'E-Sports Nepal',
-            siteSlogan: 'Your one-stop destination for E-Sports tournaments, community, and stats in Nepal.',
-            homePageBackground: 'https://placehold.co/1920x1080.png'
-        };
+        return defaults;
     }
 }
 
-async function getLiveStream() {
-    if (!db) {
-        return { error: "Server-side Firebase is not configured correctly." };
-    }
-    try {
-        const streamSnapshot = await db.collection('streams').where('status', '==', 'Live').limit(1).get();
-        if (streamSnapshot.empty) {
-            return { stream: null };
+
+const getCachedLiveStream = unstable_cache(
+    async () => {
+        if (!db) {
+            return { error: "Server-side Firebase is not configured correctly." };
         }
-        const streamDoc = streamSnapshot.docs[0];
-        return { stream: { id: streamDoc.id, ...streamDoc.data() } };
-    } catch (error: any) {
-        console.error("Error fetching live stream:", error);
-        return { error: "Failed to fetch live stream. Ensure Firestore is enabled and permissions are correct." };
-    }
-}
-
-async function getUpcomingTournaments() {
-  if (!db) {
-    return { tournaments: [], error: "Server-side Firebase is not configured correctly." };
-  }
-  try {
-    // Dates are stored as 'YYYY-MM-DDTHH:mm' strings. We can do a string comparison.
-    const now_string = new Date().toISOString().slice(0, 16).replace('T', ' ');
-    const snapshot = await db.collection('tournaments')
-        .where('date', '>', now_string)
-        .orderBy('date', 'asc')
-        .limit(6)
-        .get();
-
-    if (snapshot.empty) {
-        return { tournaments: [] };
-    }
-    const tournaments = snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-            id: doc.id,
-            name: data.name,
-            date: data.date instanceof Timestamp ? data.date.toDate().toISOString() : data.date,
-            prizeDistribution: data.prizeDistribution || {},
-            image: data.image,
-            dataAiHint: data.dataAiHint || ''
+        try {
+            const streamSnapshot = await db.collection('streams').where('status', '==', 'Live').limit(1).get();
+            if (streamSnapshot.empty) {
+                return { stream: null };
+            }
+            const streamDoc = streamSnapshot.docs[0];
+            return { stream: { id: streamDoc.id, ...streamDoc.data() } };
+        } catch (error: any) {
+            console.error("Error fetching live stream:", error);
+            return { error: "Failed to fetch live stream. Ensure Firestore is enabled and permissions are correct." };
         }
-    });
-    return { tournaments };
-  } catch (error: any) {
-     console.error("Error fetching upcoming tournaments:", error);
-     return { tournaments: [], error: "Failed to fetch tournaments." };
-  }
-}
+    },
+    ['live_stream'],
+    { revalidate: 60 }
+)
+
+const getCachedUpcomingTournaments = unstable_cache(
+    async () => {
+         if (!db) {
+            return { tournaments: [], error: "Server-side Firebase is not configured correctly." };
+        }
+        try {
+            const now_string = new Date().toISOString().slice(0, 16).replace('T', ' ');
+            const snapshot = await db.collection('tournaments')
+                .where('date', '>', now_string)
+                .orderBy('date', 'asc')
+                .limit(6)
+                .get();
+
+            if (snapshot.empty) {
+                return { tournaments: [] };
+            }
+            const tournaments = snapshot.docs.map(doc => {
+                const data = doc.data();
+                return {
+                    id: doc.id,
+                    name: data.name,
+                    date: data.date instanceof Timestamp ? data.date.toDate().toISOString() : data.date,
+                    prizeDistribution: data.prizeDistribution || {},
+                    image: data.image,
+                    dataAiHint: data.dataAiHint || ''
+                }
+            });
+            return { tournaments };
+        } catch (error: any) {
+            console.error("Error fetching upcoming tournaments:", error);
+            return { tournaments: [], error: "Failed to fetch tournaments." };
+        }
+    },
+    ['upcoming_tournaments'],
+    { revalidate: 60 }
+);
+
 
 async function LiveStreamSection() {
-    const { stream: liveStream, error } = await getLiveStream();
+    const { stream: liveStream, error } = await getCachedLiveStream();
 
     if (error) {
        return (
@@ -152,7 +165,7 @@ const FacebookIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 export default async function Home() {
   const settings = await getSiteSettings();
-  const { tournaments, error: tournamentsError } = await getUpcomingTournaments();
+  const { tournaments, error: tournamentsError } = await getCachedUpcomingTournaments();
 
   return (
     <div className="flex flex-col items-center">

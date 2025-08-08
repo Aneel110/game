@@ -36,6 +36,42 @@ async function getFinishedTournamentsWithLeaderboards() {
   return response.json();
 }
 
+function LeaderboardSkeleton() {
+    return (
+      <Card className="overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="text-center w-[100px]">Rank</TableHead>
+              <TableHead>Team</TableHead>
+              <TableHead className="text-center">Matches</TableHead>
+              <TableHead className="text-center">Kills</TableHead>
+              <TableHead className="text-center">Chicken Dinners</TableHead>
+              <TableHead className="text-right">Points</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {Array.from({ length: 5 }).map((_, index) => (
+              <TableRow key={index}>
+                <TableCell className="text-center"><Skeleton className="h-6 w-6 rounded-full mx-auto" /></TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-4">
+                    <Skeleton className="h-12 w-12 rounded-full" />
+                    <Skeleton className="h-6 w-32" />
+                  </div>
+                </TableCell>
+                <TableCell className="text-center"><Skeleton className="h-6 w-8 mx-auto" /></TableCell>
+                <TableCell className="text-center"><Skeleton className="h-6 w-8 mx-auto" /></TableCell>
+                <TableCell className="text-center"><Skeleton className="h-6 w-8 mx-auto" /></TableCell>
+                <TableCell className="text-right"><Skeleton className="h-6 w-12 ml-auto" /></TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Card>
+    );
+  }
+
 function LeaderboardTable({ leaderboardData }: { leaderboardData: LeaderboardEntry[] }) {
      if (leaderboardData.length === 0) {
         return (
@@ -142,9 +178,9 @@ export default function LeaderboardDisplay() {
 
   if (loading) {
     return (
-        <div>
-            <Skeleton className="h-10 w-1/2 mx-auto mb-4" />
-            <Skeleton className="h-96 w-full" />
+        <div className="space-y-8">
+            <Skeleton className="h-12 w-1/2 mx-auto" />
+            <LeaderboardSkeleton />
         </div>
     )
   }

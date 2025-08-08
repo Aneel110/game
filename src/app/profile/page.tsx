@@ -30,6 +30,39 @@ type UserProfile = {
   achievements: { name: string; icon: string }[];
 };
 
+function ProfileSkeleton() {
+    return (
+        <Card>
+            <CardHeader className="flex flex-col md:flex-row items-start gap-6">
+                <Skeleton className="w-32 h-32 rounded-full" />
+                <div className="flex-grow space-y-2 mt-2">
+                    <Skeleton className="h-10 w-1/2" />
+                    <Skeleton className="h-6 w-3/4" />
+                </div>
+            </CardHeader>
+            <CardContent>
+                <Separator className="my-6" />
+                <div className="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <Skeleton className="h-8 w-1/3 mb-4" />
+                        <div className="grid grid-cols-2 gap-4">
+                            <Skeleton className="h-20 w-full" />
+                            <Skeleton className="h-20 w-full" />
+                        </div>
+                    </div>
+                    <div>
+                        <Skeleton className="h-8 w-1/3 mb-4" />
+                        <div className="flex flex-wrap gap-4">
+                            <Skeleton className="h-10 w-28" />
+                            <Skeleton className="h-10 w-32" />
+                        </div>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+    )
+}
+
 export default function ProfilePage() {
   const { user, loading: authLoading } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -83,18 +116,7 @@ export default function ProfilePage() {
   if (authLoading || loading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <Card>
-            <CardHeader className="flex flex-col md:flex-row items-start gap-6">
-                <Skeleton className="w-32 h-32 rounded-full" />
-                <div className="flex-grow space-y-2">
-                    <Skeleton className="h-10 w-1/2" />
-                    <Skeleton className="h-6 w-3/4" />
-                </div>
-            </CardHeader>
-            <CardContent>
-                <Skeleton className="h-48 w-full" />
-            </CardContent>
-        </Card>
+        <ProfileSkeleton />
       </div>
     );
   }

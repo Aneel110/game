@@ -84,9 +84,9 @@ export function LoginForm() {
       });
 
       if (userDocSnap.exists() && userDocSnap.data().role === 'admin') {
-        router.push('/admin/dashboard');
+        router.replace('/admin/dashboard');
       } else {
-        router.push('/');
+        router.replace('/');
       }
 
     } catch (error: any) {

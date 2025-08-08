@@ -1,10 +1,13 @@
 
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Gamepad2, Trophy, DollarSign, AlertTriangle } from "lucide-react";
 import SeedDatabaseButton from "./seed-button";
 import { db } from "@/lib/firebase-admin";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Timestamp } from "firebase-admin/firestore";
+
+export const dynamic = 'force-dynamic';
 
 async function getDashboardStats() {
     if (!db) {

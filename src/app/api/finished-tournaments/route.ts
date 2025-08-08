@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';
 
-export const revalidate = 60; // Revalidate every 60 seconds
+export const revalidate = 300; // Revalidate every 5 minutes
 
 export async function GET() {
   if (!db) {

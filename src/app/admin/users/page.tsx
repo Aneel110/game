@@ -7,8 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle, UserCheck, UserX } from "lucide-react";
 import UserActions from "./user-actions";
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
+
+export const dynamic = 'force-dynamic';
 
 async function getUsers() {
     if (!db || !auth) {

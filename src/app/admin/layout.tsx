@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, Gamepad2, Users, Trophy, Settings, LogOut, ShieldAlert, Clapperboard, BarChart } from "lucide-react";
+import { LayoutDashboard, Gamepad2, Users, Trophy, Settings, LogOut, ShieldAlert, Clapperboard } from "lucide-react";
 import Link from "next/link";
 import { Logo } from "@/components/icons/logo";
 import { useAuth } from "@/hooks/use-auth";
@@ -145,15 +145,17 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { isAdmin, isModerator, loading } = useAuth();
+  const { user, isAdmin, isModerator, loading } = useAuth();
 
   if (loading) {
       return <LoadingSkeleton />;
   }
 
-  if (!isAdmin && !isModerator) {
-      return <AccessDenied />
+  // Grant access if the user is either an admin or a moderator
+  if (isAdmin || isModerator) {
+    return <AdminNavContent>{children}</AdminNavContent>;
   }
-
-  return <AdminNavContent>{children}</AdminNavContent>;
+  
+  // If not admin or moderator, deny access
+  return <AccessDenied />;
 }

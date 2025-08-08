@@ -52,6 +52,7 @@ export function SignupForm() {
                 email: user.email,
                 role: 'user', // Default role
                 createdAt: new Date(),
+                bio: "",
             });
             
             // Sign out the user so they have to verify their email

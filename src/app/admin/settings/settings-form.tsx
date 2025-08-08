@@ -37,6 +37,7 @@ export default function SettingsForm({ defaultValues }: SettingsFormProps) {
             discord: '',
             youtube: '',
             twitch: '',
+            tiktok: '',
         }
     }
   });
@@ -121,6 +122,7 @@ export default function SettingsForm({ defaultValues }: SettingsFormProps) {
                      <FormField control={form.control} name="socialLinks.discord" render={({ field }) => (<FormItem><Label>Discord</Label><FormControl><Input placeholder="https://discord.gg/..." {...field} /></FormControl><FormMessage /></FormItem>)} />
                      <FormField control={form.control} name="socialLinks.youtube" render={({ field }) => (<FormItem><Label>YouTube</Label><FormControl><Input placeholder="https://youtube.com/..." {...field} /></FormControl><FormMessage /></FormItem>)} />
                      <FormField control={form.control} name="socialLinks.twitch" render={({ field }) => (<FormItem><Label>Twitch</Label><FormControl><Input placeholder="https://twitch.tv/..." {...field} /></FormControl><FormMessage /></FormItem>)} />
+                     <FormField control={form.control} name="socialLinks.tiktok" render={({ field }) => (<FormItem><Label>TikTok</Label><FormControl><Input placeholder="https://tiktok.com/..." {...field} /></FormControl><FormMessage /></FormItem>)} />
                 </CardContent>
             </Card>
             

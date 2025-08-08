@@ -12,7 +12,7 @@ async function getSiteSettings() {
             siteName: 'E-Sports Nepal',
             siteSlogan: 'Your one-stop destination for E-Sports tournaments, community, and stats in Nepal.',
             homePageBackground: 'https://placehold.co/1920x1080.png',
-            socialLinks: { twitter: '#', discord: '#', youtube: '#', twitch: '#' }
+            socialLinks: { twitter: '#', discord: 'https://discord.gg/AHxeFxZh', youtube: '#', twitch: '#', tiktok: 'https://www.tiktok.com/@esportnepall?lang=en' }
         };
     }
     return settingsSnap.data();

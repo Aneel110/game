@@ -62,6 +62,7 @@ const socialLinksSchema = z.object({
     discord: z.string().url().optional().or(z.literal('')),
     youtube: z.string().url().optional().or(z.literal('')),
     twitch: z.string().url().optional().or(z.literal('')),
+    tiktok: z.string().url().optional().or(z.literal('')),
 });
 
 export const siteSettingsSchema = z.object({

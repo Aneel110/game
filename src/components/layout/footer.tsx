@@ -38,7 +38,7 @@ function AdminFooterLink() {
 export default function Footer() {
   const [settings, setSettings] = useState<{
       siteName: string;
-      socialLinks: { twitter?: string; discord?: string; youtube?: string; twitch?: string };
+      socialLinks: { twitter?: string; discord?: string; youtube?: string; twitch?: string; tiktok?: string; };
   } | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -72,6 +72,7 @@ export default function Footer() {
       { name: 'Discord', href: settings.socialLinks.discord },
       { name: 'YouTube', href: settings.socialLinks.youtube },
       { name: 'Twitch', href: settings.socialLinks.twitch },
+      { name: 'TikTok', href: settings.socialLinks.tiktok },
   ].filter((link): link is { name: string; href: string } => !!link.href && link.href !== '#') : [];
 
 
@@ -107,8 +108,8 @@ export default function Footer() {
               <h3 className="font-semibold mb-4">Community</h3>
               {loading ? (
                  <div className="space-y-2">
-                    <div className="h-4 w-24" />
-                    <div className="h-4 w-20" />
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-4 w-20" />
                  </div>
               ) : (
                 socialLinks.length > 0 ? (

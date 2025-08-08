@@ -280,6 +280,7 @@ export async function deleteTournament(id: string) {
         return { success: false, message: 'Tournament ID is required.' };
     }
     try {
+        // Here you might want to also delete subcollections like registrations
         await db.collection('tournaments').doc(id).delete();
         revalidatePath('/tournaments');
         revalidatePath('/admin/tournaments');

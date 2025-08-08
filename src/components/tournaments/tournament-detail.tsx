@@ -25,11 +25,11 @@ function getTournamentStatus(tournamentDate: string, manualRegistrationOpen: boo
   }
   
   if (!manualRegistrationOpen) {
-      return { status: 'Upcoming', color: 'bg-blue-500', registrationClosed: true, message: 'Registration has been manually closed by an admin.' };
+      return { status: 'Upcoming', color: 'bg-blue-500', registrationClosed: true, message: 'Registration for this tournament is currently closed by the admin.' };
   }
 
   if (now > registrationCutoff) {
-      return { status: 'Upcoming', color: 'bg-blue-500', registrationClosed: true, message: 'Registration for this tournament has closed.' };
+      return { status: 'Upcoming', color: 'bg-blue-500', registrationClosed: true, message: 'Registration for this tournament has closed as the start time is approaching.' };
   }
   
   return { status: 'Upcoming', color: 'bg-blue-500', registrationClosed: false, message: '' };
@@ -82,7 +82,7 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
              {!loading && status === 'Upcoming' && (
                 <div>
                   {registrationClosed ? (
-                     <Button size="lg" disabled>
+                     <Button size="lg" disabled title={message}>
                         <Lock className="w-4 h-4 mr-2" />
                         Registration Closed
                       </Button>
@@ -262,6 +262,18 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
                   <p className="font-bold">{tournament.mode || 'Squads'}</p>
                 </div>
               </div>
+               {registrationClosed && status === 'Upcoming' && (
+                <>
+                <Separator />
+                 <div className="flex items-start">
+                  <Clock className="w-5 h-5 mr-3 text-yellow-400 mt-0.5" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Registration Update</p>
+                    <p className="font-bold text-yellow-400">{message}</p>
+                  </div>
+                </div>
+                </>
+              )}
             </CardContent>
           </Card>
         </div>

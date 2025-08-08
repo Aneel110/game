@@ -119,12 +119,12 @@ export default function TournamentForm({ tournamentId, defaultValues }: Tourname
           <CardHeader><CardTitle>Prize Distribution (Rs)</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <FormField control={form.control} name="prizeDistribution.first" render={({ field }) => (<FormItem><Label>1st Place</Label><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
-              <FormField control={form.control} name="prizeDistribution.second" render={({ field }) => (<FormItem><Label>2nd Place</Label><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
-              <FormField control={form.control} name="prizeDistribution.third" render={({ field }) => (<FormItem><Label>3rd Place</Label><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
-              <FormField control={form.control} name="prizeDistribution.fourth" render={({ field }) => (<FormItem><Label>4th Place</Label><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
-              <FormField control={form.control} name="prizeDistribution.fifth" render={({ field }) => (<FormItem><Label>5th Place</Label><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
-              <FormField control={form.control} name="prizeDistribution.topKills" render={({ field }) => (<FormItem><Label>Top Kills</Label><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
+              <FormField control={form.control} name="prizeDistribution.first" render={({ field }) => (<FormItem><Label>1st Place</Label><FormControl><Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))} /></FormControl><FormMessage /></FormItem>)} />
+              <FormField control={form.control} name="prizeDistribution.second" render={({ field }) => (<FormItem><Label>2nd Place</Label><FormControl><Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))}/></FormControl><FormMessage /></FormItem>)} />
+              <FormField control={form.control} name="prizeDistribution.third" render={({ field }) => (<FormItem><Label>3rd Place</Label><FormControl><Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))}/></FormControl><FormMessage /></FormItem>)} />
+              <FormField control={form.control} name="prizeDistribution.fourth" render={({ field }) => (<FormItem><Label>4th Place</Label><FormControl><Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))}/></FormControl><FormMessage /></FormItem>)} />
+              <FormField control={form.control} name="prizeDistribution.fifth" render={({ field }) => (<FormItem><Label>5th Place</Label><FormControl><Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))}/></FormControl><FormMessage /></FormItem>)} />
+              <FormField control={form.control} name="prizeDistribution.topKills" render={({ field }) => (<FormItem><Label>Top Kills</Label><FormControl><Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))}/></FormControl><FormMessage /></FormItem>)} />
             </div>
           </CardContent>
         </Card>

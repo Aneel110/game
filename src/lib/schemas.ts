@@ -29,7 +29,7 @@ export const tournamentSchema = z.object({
   description: z.string().min(10, 'Description must be at least 10 characters.'),
   rules: z.string().optional(),
   leaderboard: z.array(leaderboardEntrySchema).optional(),
-  registrationOpen: z.boolean().default(true),
+  registrationOpen: z.coerce.boolean().default(true),
 });
 
 export const streamSchema = z.object({
@@ -49,7 +49,7 @@ export const registrationSchema = z.object({
   teamTag: z.string().min(1, "Team tag is required."),
   players: z.array(playerSchema).min(4, 'You must register at least 4 players.').max(6, 'You can register a maximum of 6 players.'),
   registeredById: z.string().min(1),
-  registeredByName: z_string().min(1),
+  registeredByName: z.string().min(1),
 });
 
 const socialLinksSchema = z.object({

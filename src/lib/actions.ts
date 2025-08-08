@@ -203,19 +203,20 @@ export async function deleteUser(userId: string) {
 
 
 function processTournamentFormData(formData: FormData) {
-    const rawData = Object.fromEntries(formData.entries());
-    const prizeDistribution: { [key: string]: any } = {};
-    const otherData: { [key: string]: any } = {};
+    const rawData: { [key: string]: any } = {};
+    const prizeDistribution: { [key: string]: number } = {};
 
-    for (const [key, value] of Object.entries(rawData)) {
+    for (const [key, value] of formData.entries()) {
         if (key.startsWith('prizeDistribution.')) {
             const prizeKey = key.split('.')[1];
-            prizeDistribution[prizeKey] = value;
+            prizeDistribution[prizeKey] = Number(value);
+        } else if (key === 'registrationOpen') {
+            rawData[key] = value === 'true';
         } else {
-            otherData[key] = value;
+            rawData[key] = value;
         }
     }
-    return { ...otherData, prizeDistribution };
+    return { ...rawData, prizeDistribution };
 }
 
 export async function createTournament(formData: FormData) {

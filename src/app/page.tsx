@@ -19,7 +19,7 @@ async function getSiteSettings() {
     if (!db) {
         return { 
             siteName: 'E-Sports Nepal',
-            siteSlogan: 'It is Free Pubg Tournament',
+            siteSlogan: 'Your one-stop destination for E-Sports tournaments, community, and stats in Nepal.',
             homePageBackground: 'https://placehold.co/1920x1080.png' 
         };
     }
@@ -30,20 +30,20 @@ async function getSiteSettings() {
             const data = settingsSnap.data()
             return {
                 siteName: data?.siteName || 'E-Sports Nepal',
-                siteSlogan: data?.siteSlogan || 'It is Free Pubg Tournament',
+                siteSlogan: data?.siteSlogan || 'Your one-stop destination for E-Sports tournaments, community, and stats in Nepal.',
                 homePageBackground: data?.homePageBackground || 'https://placehold.co/1920x1080.png'
             }
         }
         return { 
             siteName: 'E-Sports Nepal',
-            siteSlogan: 'It is Free Pubg Tournament',
+            siteSlogan: 'Your one-stop destination for E-Sports tournaments, community, and stats in Nepal.',
             homePageBackground: 'https://placehold.co/1920x1080.png' 
         };
     } catch (e) {
         console.error("Could not fetch site settings", e);
         return { 
             siteName: 'E-Sports Nepal',
-            siteSlogan: 'It is Free Pubg Tournament',
+            siteSlogan: 'Your one-stop destination for E-Sports tournaments, community, and stats in Nepal.',
             homePageBackground: 'https://placehold.co/1920x1080.png'
         };
     }
@@ -169,10 +169,10 @@ export default async function Home() {
         </div>
         <div className="z-10 flex flex-col items-center p-4">
           <h1 className="text-4xl md:text-7xl font-headline font-bold mb-4 text-shadow-lg animate-fade-in-down">
-            {settings?.siteName || 'Welcome to E-Sports Nepal'}
+            {settings?.siteName || 'E-Sports Nepal'}
           </h1>
           <p className="text-md md:text-xl mb-8 max-w-2xl text-foreground/80">
-            {settings?.siteSlogan || 'It is Free Pubg Tournament'}
+            {settings?.siteSlogan || 'Your one-stop destination for E-Sports tournaments, community, and stats in Nepal.'}
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold">
@@ -188,9 +188,9 @@ export default async function Home() {
       {/* Live Stream Section */}
       <LiveStreamSection />
 
-      {/* Featured Tournaments Section */}
+      {/* Upcoming Tournaments Section */}
       <section id="tournaments" className="w-full max-w-7xl py-16 px-4">
-        <h2 className="text-4xl font-headline font-bold text-center mb-10">Featured Tournaments</h2>
+        <h2 className="text-4xl font-headline font-bold text-center mb-10">Upcoming Tournaments</h2>
         {tournamentsError && (
             <Alert variant="destructive">
                 <AlertTriangle className="h-4 w-4" />

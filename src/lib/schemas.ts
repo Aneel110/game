@@ -45,6 +45,7 @@ const playerSchema = z.object({
 
 export const registrationSchema = z.object({
   teamName: z.string().min(1, "Team name is required."),
+  teamTag: z.string().min(1, "Team tag is required."),
   players: z.array(playerSchema)
     .min(1, 'You must register at least 1 player.')
     .max(6, 'You can register a maximum of 6 players.')

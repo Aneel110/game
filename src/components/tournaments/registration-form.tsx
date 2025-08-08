@@ -48,6 +48,7 @@ export default function TournamentRegistrationForm({ tournamentId, isLoggedIn, i
     resolver: zodResolver(registrationSchema),
     defaultValues: {
       teamName: '',
+      teamTag: '',
       players: [
         { pubgName: '', discordUsername: '' }
       ],
@@ -128,19 +129,34 @@ export default function TournamentRegistrationForm({ tournamentId, isLoggedIn, i
             </DialogHeader>
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                    <FormField
-                        control={form.control}
-                        name="teamName"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Team Name</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="e.g., Vicious Vipers" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                            control={form.control}
+                            name="teamName"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Team Name</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="e.g., Vicious Vipers" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                         <FormField
+                            control={form.control}
+                            name="teamTag"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Team Tag</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="e.g., VV" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
                     
                     <div>
                         <FormLabel>Players</FormLabel>

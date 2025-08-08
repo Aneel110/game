@@ -74,13 +74,13 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
       <div className="relative w-full h-64 md:h-96 rounded-lg overflow-hidden mb-8">
         <Image src={tournament.image} alt={tournament.name} layout="fill" objectFit="cover" data-ai-hint={tournament.dataAiHint} />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-        <div className="absolute bottom-0 left-0 p-8 flex justify-between items-end w-full">
-            <div>
-                <Badge className={`text-white mb-2 ${color}`}>{status === 'Past' ? 'Finished' : 'Upcoming'}</Badge>
-                <h1 className="text-5xl font-headline font-bold text-white shadow-lg">{tournament.name}</h1>
+        <div className="absolute bottom-0 left-0 p-4 md:p-8 flex flex-col md:flex-row md:justify-between items-start md:items-end w-full gap-4">
+            <div className="space-y-2">
+                <Badge className={`text-white ${color}`}>{status === 'Past' ? 'Finished' : 'Upcoming'}</Badge>
+                <h1 className="text-3xl md:text-5xl font-headline font-bold text-white text-shadow-lg">{tournament.name}</h1>
             </div>
              {!loading && status === 'Upcoming' && (
-                <div>
+                <div className="shrink-0">
                   {registrationClosed ? (
                      <Button size="lg" disabled title={message}>
                         <Lock className="w-4 h-4 mr-2" />
@@ -101,14 +101,16 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
       <div className="grid lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
           <Card>
-            <CardContent className="p-6">
-              <Tabs defaultValue="overview">
-                <TabsList className="mb-4 grid w-full grid-cols-4">
-                  <TabsTrigger value="overview">Overview</TabsTrigger>
-                  <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
-                  <TabsTrigger value="rules">Rules</TabsTrigger>
-                  <TabsTrigger value="prizes">Prizes</TabsTrigger>
-                </TabsList>
+            <CardContent className="p-4 md:p-6">
+              <Tabs defaultValue="overview" className="w-full">
+                <div className="overflow-x-auto">
+                    <TabsList className="mb-4 grid-flow-col">
+                        <TabsTrigger value="overview">Overview</TabsTrigger>
+                        <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
+                        <TabsTrigger value="rules">Rules</TabsTrigger>
+                        <TabsTrigger value="prizes">Prizes</TabsTrigger>
+                    </TabsList>
+                </div>
                 <TabsContent value="overview">
                    <div className="space-y-6">
                       <p className="text-muted-foreground">{tournament.description || "Detailed description of the tournament, including format, schedule, and other relevant information will be displayed here."}</p>
@@ -130,61 +132,63 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
                    </div>
                 </TabsContent>
                  <TabsContent value="leaderboard">
-                    {Array.isArray(tournament.leaderboard) ? (
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead className="w-[80px] text-center">Rank</TableHead>
-                                    <TableHead>Team</TableHead>
-                                    <TableHead className="text-center">Kills</TableHead>
-                                    <TableHead className="text-center">Wins</TableHead>
-                                    <TableHead className="text-right">Points</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {leaderboard.length > 0 ? leaderboard.map((p: any, index: number) => {
-                                    const rank = index + 1;
-                                    return (
-                                    <TableRow key={p.teamName}>
-                                        <TableCell className="font-bold text-lg text-center">
-                                            {rank === 1 ? <Crown className="w-6 h-6 text-yellow-400 inline-block" /> : rank}
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center gap-3">
-                                                <Avatar className="h-10 w-10 border-2 border-primary/50">
-                                                    <AvatarImage src={`https://placehold.co/40x40.png?text=${p.teamName.charAt(0)}`} />
-                                                    <AvatarFallback>{p.teamName.charAt(0)}</AvatarFallback>
-                                                </Avatar>
-                                                <span className="font-medium">{p.teamName}</span>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="text-center">
-                                            <div className="flex items-center justify-center gap-2">
-                                                <Skull className="w-4 h-4 text-muted-foreground" /> {p.kills}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="text-center">
-                                            <div className="flex items-center justify-center gap-2">
-                                                <Drumstick className="w-4 h-4 text-amber-500" /> {p.chickenDinners}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="text-right font-bold text-primary">{p.points}</TableCell>
+                    <div className="overflow-x-auto">
+                        {Array.isArray(tournament.leaderboard) ? (
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead className="w-[80px] text-center">Rank</TableHead>
+                                        <TableHead>Team</TableHead>
+                                        <TableHead className="text-center">Kills</TableHead>
+                                        <TableHead className="text-center">Wins</TableHead>
+                                        <TableHead className="text-right">Points</TableHead>
                                     </TableRow>
-                                )}) : (
-                                     <TableRow>
-                                        <TableCell colSpan={5} className="h-24 text-center">
-                                            No teams on the leaderboard yet. Approved teams will appear here.
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                    ) : (
-                        <div className="text-center text-muted-foreground py-8">
-                            <BarChartHorizontal className="w-12 h-12 mx-auto mb-2" />
-                            <p>The leaderboard for this tournament is not yet available.</p>
-                        </div>
-                    )}
+                                </TableHeader>
+                                <TableBody>
+                                    {leaderboard.length > 0 ? leaderboard.map((p: any, index: number) => {
+                                        const rank = index + 1;
+                                        return (
+                                        <TableRow key={p.teamName}>
+                                            <TableCell className="font-bold text-lg text-center">
+                                                {rank === 1 ? <Crown className="w-6 h-6 text-yellow-400 inline-block" /> : rank}
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex items-center gap-3">
+                                                    <Avatar className="h-10 w-10 border-2 border-primary/50">
+                                                        <AvatarImage src={`https://placehold.co/40x40.png?text=${p.teamName.charAt(0)}`} />
+                                                        <AvatarFallback>{p.teamName.charAt(0)}</AvatarFallback>
+                                                    </Avatar>
+                                                    <span className="font-medium">{p.teamName}</span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <Skull className="w-4 h-4 text-muted-foreground" /> {p.kills}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <Drumstick className="w-4 h-4 text-amber-500" /> {p.chickenDinners}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="text-right font-bold text-primary">{p.points}</TableCell>
+                                        </TableRow>
+                                    )}) : (
+                                        <TableRow>
+                                            <TableCell colSpan={5} className="h-24 text-center">
+                                                No teams on the leaderboard yet. Approved teams will appear here.
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        ) : (
+                            <div className="text-center text-muted-foreground py-8">
+                                <BarChartHorizontal className="w-12 h-12 mx-auto mb-2" />
+                                <p>The leaderboard for this tournament is not yet available.</p>
+                            </div>
+                        )}
+                    </div>
                  </TabsContent>
                 <TabsContent value="rules">
                     {rules.length > 0 ? (

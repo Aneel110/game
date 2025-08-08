@@ -39,14 +39,12 @@ export const streamSchema = z.object({
 });
 
 const playerSchema = z.object({
-  pubgName: z.string().optional(),
-  pubgId: z.string().optional(),
-  discordUsername: z.string().optional(),
+  pubgName: z.string().min(1, 'Player name is required.'),
+  discordUsername: z.string().min(1, 'Discord username is required.'),
 });
 
 export const registrationSchema = z.object({
   teamName: z.string().min(1, "Team name is required."),
-  teamTag: z.string().min(1, "Team tag is required."),
   players: z.array(playerSchema)
     .min(1, 'You must register at least 1 player.')
     .max(6, 'You can register a maximum of 6 players.')

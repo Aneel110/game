@@ -216,6 +216,12 @@ function processTournamentFormData(formData: FormData) {
             rawData[key] = value;
         }
     }
+    
+    // Ensure registrationOpen is set, defaulting to false if not present
+    if (rawData.registrationOpen === undefined) {
+        rawData.registrationOpen = false;
+    }
+
     return { ...rawData, prizeDistribution };
 }
 

@@ -23,13 +23,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { usePathname } from "next/navigation";
 
+// Define roles for each navigation item
 const allAdminNavItems = [
-  { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard, adminOnly: false },
-  { href: "/admin/tournaments", label: "Tournaments", icon: Gamepad2, adminOnly: false },
-  { href: "/admin/users", label: "Users", icon: Users, adminOnly: false },
-  { href: "/admin/streams", label: "Streams", icon: Clapperboard, adminOnly: true },
-  { href: "/admin/prizes", label: "Prizes", icon: Trophy, adminOnly: true },
-  { href: "/admin/settings", label: "Settings", icon: Settings, adminOnly: true },
+  { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ['admin', 'moderator'] },
+  { href: "/admin/tournaments", label: "Tournaments", icon: Gamepad2, roles: ['admin', 'moderator'] },
+  { href: "/admin/users", label: "Users", icon: Users, roles: ['admin'] },
+  { href: "/admin/streams", label: "Streams", icon: Clapperboard, roles: ['admin'] },
+  { href: "/admin/prizes", label: "Prizes", icon: Trophy, roles: ['admin'] },
+  { href: "/admin/settings", label: "Settings", icon: Settings, roles: ['admin'] },
 ];
 
 function AdminNavContent({ children }: { children: React.ReactNode }) {
@@ -38,8 +39,9 @@ function AdminNavContent({ children }: { children: React.ReactNode }) {
     
     // Filter nav items based on user role
     const adminNavItems = allAdminNavItems.filter(item => {
-        if (isAdmin) return true; // Admins see everything
-        return !item.adminOnly; // Moderators and others see non-admin-only items
+        if (isAdmin) return true;
+        if (isModerator) return item.roles.includes('moderator');
+        return false;
     });
     
     const currentPage = adminNavItems.find(item => pathname.startsWith(item.href))?.label || 'Dashboard';

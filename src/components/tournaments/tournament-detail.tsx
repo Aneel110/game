@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Gamepad2, Trophy, ShieldCheck, ShieldAlert, BarChartHorizontal, Crown, Swords, Drumstick, Clock, Target, Gavel, Skull } from "lucide-react";
+import { Calendar, Gamepad2, Trophy, ShieldCheck, ShieldAlert, BarChartHorizontal, Crown, Swords, Drumstick, Clock, Target, Gavel, Skull, Lock } from "lucide-react";
 import TournamentRegistrationForm from "./registration-form";
 import { useAuth } from "@/hooks/use-auth";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
@@ -15,7 +15,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
 import ParticipantsTable from "./participants-table";
 import { Button } from "../ui/button";
 
-function getTournamentStatus(tournamentDate: string): { status: 'Upcoming' | 'Past', color: string, registrationClosed: boolean, message: string } {
+function getTournamentStatus(tournamentDate: string, manualRegistrationOpen: boolean): { status: 'Upcoming' | 'Past', color: string, registrationClosed: boolean, message: string } {
   const now = new Date();
   const date = new Date(tournamentDate);
   const registrationCutoff = new Date(date.getTime() - 6 * 60 * 60 * 1000); // 6 hours before
@@ -23,9 +23,15 @@ function getTournamentStatus(tournamentDate: string): { status: 'Upcoming' | 'Pa
   if (now > date) {
       return { status: 'Past', color: 'bg-gray-500', registrationClosed: true, message: 'This tournament has finished.' };
   }
+  
+  if (!manualRegistrationOpen) {
+      return { status: 'Upcoming', color: 'bg-blue-500', registrationClosed: true, message: 'Registration has been manually closed by an admin.' };
+  }
+
   if (now > registrationCutoff) {
       return { status: 'Upcoming', color: 'bg-blue-500', registrationClosed: true, message: 'Registration for this tournament has closed.' };
   }
+  
   return { status: 'Upcoming', color: 'bg-blue-500', registrationClosed: false, message: '' };
 };
 
@@ -40,7 +46,9 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
     }
   }, [tournament.date]);
 
-  const { status, color, registrationClosed, message } = getTournamentStatus(tournament.date);
+  // Use the manual setting, defaulting to true if it's not set
+  const manualRegistrationOpen = tournament.registrationOpen !== false;
+  const { status, color, registrationClosed, message } = getTournamentStatus(tournament.date, manualRegistrationOpen);
   
   const approvedParticipants = registrations.filter(r => r.status === 'approved');
   const pendingParticipants = registrations.filter(r => r.status === 'pending');
@@ -75,7 +83,7 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
                 <div>
                   {registrationClosed ? (
                      <Button size="lg" disabled>
-                        <Clock className="w-4 h-4 mr-2" />
+                        <Lock className="w-4 h-4 mr-2" />
                         Registration Closed
                       </Button>
                   ) : (

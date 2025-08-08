@@ -13,8 +13,9 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { createTournament, updateTournament } from '@/lib/actions';
 import { tournamentSchema } from '@/lib/schemas';
-import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormMessage, FormLabel } from '@/components/ui/form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
 
 type TournamentFormValues = z.infer<typeof tournamentSchema>;
 
@@ -45,6 +46,7 @@ export default function TournamentForm({ tournamentId, defaultValues }: Tourname
         dataAiHint: '',
         description: '',
         rules: 'Be respectful to all players and staff.\nNo cheating, scripting, or exploiting bugs.\nAdmins have the final say in all disputes.\nCheck-in is required 30 minutes before the tournament starts.\nTeams must have between 4 and 6 players.',
+        registrationOpen: true,
     }
   });
 
@@ -172,6 +174,29 @@ export default function TournamentForm({ tournamentId, defaultValues }: Tourname
               <Label>Rules</Label>
               <FormControl><Textarea rows={8} placeholder="Enter one rule per line." {...field} /></FormControl>
               <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="registrationOpen"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <FormLabel className="text-base">
+                  Registration Status
+                </FormLabel>
+                <p className="text-sm text-muted-foreground">
+                  Allow users to register for this tournament.
+                </p>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
             </FormItem>
           )}
         />

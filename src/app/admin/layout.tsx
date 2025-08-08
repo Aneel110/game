@@ -157,10 +157,10 @@ export default function AdminLayout({
   }
 
   // Grant access if the user is either an admin or a moderator
-  if (isAdmin || isModerator) {
+  if (user && (isAdmin || isModerator)) {
     return <AdminNavContent>{children}</AdminNavContent>;
   }
   
-  // If not admin or moderator, deny access
+  // If not authenticated or doesn't have the right role, deny access
   return <AccessDenied />;
 }

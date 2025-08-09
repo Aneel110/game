@@ -10,11 +10,6 @@ export const leaderboardEntrySchema = z.object({
     chickenDinners: z.coerce.number().int().min(0, 'Chicken Dinners must be a positive number.').default(0),
 });
 
-const finalistLeaderboardEntrySchema = z.object({
-    teamName: z.string().min(1, 'Team name is required.'),
-    points: z.coerce.number().int().min(0, 'Points must be a positive number.').default(0),
-});
-
 const prizeDistributionSchema = z.object({
   first: z.coerce.number().min(0, 'Prize must be a positive number.').default(0),
   second: z.coerce.number().min(0, 'Prize must be a positive number.').default(0),
@@ -36,12 +31,12 @@ export const tournamentSchema = z.object({
   leaderboard: z.array(leaderboardEntrySchema).optional(),
   registrationOpen: z.coerce.boolean().default(true),
   finalistLeaderboardActive: z.boolean().default(false),
-  finalistLeaderboard: z.array(finalistLeaderboardEntrySchema).optional(),
+  finalistLeaderboard: z.array(leaderboardEntrySchema).optional(),
 });
 
 export const finalistFormSchema = z.object({
     finalistLeaderboardActive: z.boolean().default(false),
-    finalistLeaderboard: z.array(finalistLeaderboardEntrySchema).optional(),
+    finalistLeaderboard: z.array(leaderboardEntrySchema).optional(),
 });
 
 

@@ -47,7 +47,7 @@ export default async function FinalistsPage({ params }: FinalistsPageProps) {
       <CardHeader>
         <CardTitle>Manage Finalists: {tournament.name}</CardTitle>
         <CardDescription>
-            Enable and build the finalist leaderboard. Select teams from the approved list and set their points.
+            Enable and build the finalist leaderboard. Select teams from the approved list and set their points and stats. The rank is determined automatically by points.
         </CardDescription>
       </CardHeader>
       <CardContent>

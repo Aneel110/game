@@ -46,8 +46,15 @@ const deterministicShuffle = (array: any[]) => {
   });
 };
 
-function LeaderboardTable({ title, leaderboardData, icon: Icon, isFinals = false }: { title: string, leaderboardData: any[], icon?: React.ElementType, isFinals?: boolean }) {
-    const sortedLeaderboard = leaderboardData.sort((a,b) => b.points - a.points);
+function LeaderboardTable({ title, leaderboardData, icon: Icon }: { title: string, leaderboardData: any[], icon?: React.ElementType }) {
+    const sortedLeaderboard = useMemo(() => {
+        return [...leaderboardData].sort((a,b) => {
+            if (b.points !== a.points) return b.points - a.points;
+            if (b.chickenDinners !== a.chickenDinners) return b.chickenDinners - a.chickenDinners;
+            return b.kills - a.kills;
+        });
+    }, [leaderboardData]);
+    
     return (
         <div className="space-y-4">
             <h3 className="text-xl font-headline font-semibold flex items-center gap-2">
@@ -61,8 +68,9 @@ function LeaderboardTable({ title, leaderboardData, icon: Icon, isFinals = false
                             <TableRow>
                                 <TableHead className="w-[80px] text-center">Rank</TableHead>
                                 <TableHead>Team</TableHead>
-                                {!isFinals && <TableHead className="text-center">Kills</TableHead>}
-                                {!isFinals && <TableHead className="text-center">Wins</TableHead>}
+                                <TableHead className="text-center">Matches</TableHead>
+                                <TableHead className="text-center">Wins</TableHead>
+                                <TableHead className="text-center">Kills</TableHead>
                                 <TableHead className="text-right">Points</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -83,25 +91,26 @@ function LeaderboardTable({ title, leaderboardData, icon: Icon, isFinals = false
                                             <span className="font-medium">{p.teamName}</span>
                                         </div>
                                     </TableCell>
-                                    {!isFinals && (
-                                        <>
-                                            <TableCell className="text-center">
-                                                <div className="flex items-center justify-center gap-2">
-                                                    <Skull className="w-4 h-4 text-muted-foreground" /> {p.kills || 0}
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="text-center">
-                                                <div className="flex items-center justify-center gap-2">
-                                                    <Drumstick className="w-4 h-4 text-amber-500" /> {p.chickenDinners || 0}
-                                                </div>
-                                            </TableCell>
-                                        </>
-                                    )}
+                                    <TableCell className="text-center">
+                                        <div className="flex items-center justify-center gap-2">
+                                            <Swords className="w-4 h-4 text-muted-foreground" /> {p.matches || 0}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="text-center">
+                                        <div className="flex items-center justify-center gap-2">
+                                            <Drumstick className="w-4 h-4 text-amber-500" /> {p.chickenDinners || 0}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="text-center">
+                                        <div className="flex items-center justify-center gap-2">
+                                            <Skull className="w-4 h-4 text-muted-foreground" /> {p.kills || 0}
+                                        </div>
+                                    </TableCell>
                                     <TableCell className="text-right font-bold text-primary">{p.points}</TableCell>
                                 </TableRow>
                             )}) : (
                                 <TableRow>
-                                    <TableCell colSpan={isFinals ? 3 : 5} className="h-24 text-center">
+                                    <TableCell colSpan={6} className="h-24 text-center">
                                         No teams on the leaderboard yet.
                                     </TableCell>
                                 </TableRow>
@@ -126,17 +135,19 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
     }
   }, [tournament.date]);
 
-  const approvedParticipants = registrations.filter(r => r.status === 'approved');
-  const pendingParticipants = registrations.filter(r => r.status === 'pending');
+  const approvedParticipants = useMemo(() => registrations.filter(r => r.status === 'approved'), [registrations]);
+  const pendingParticipants = useMemo(() => registrations.filter(r => r.status === 'pending'), [registrations]);
   const isAlreadyRegistered = user && registrations.some(r => r.id === user.uid);
   const rules = tournament.rules ? tournament.rules.split('\n') : [];
 
-  const leaderboard = tournament.leaderboard || [];
-  const finalistLeaderboard = tournament.finalistLeaderboard || [];
+  const leaderboard = useMemo(() => tournament.leaderboard || [], [tournament.leaderboard]);
+  const finalistLeaderboard = useMemo(() => tournament.finalistLeaderboard || [], [tournament.finalistLeaderboard]);
   const finalistLeaderboardActive = tournament.finalistLeaderboardActive || false;
+  
+  const showGroups = leaderboard.length > 25;
 
   const { groupA, groupB } = useMemo(() => {
-    if (leaderboard.length <= 25) {
+    if (!showGroups) {
         return { groupA: [], groupB: [] };
     }
     const shuffledTeams = deterministicShuffle(leaderboard);
@@ -145,10 +156,8 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
         groupA: shuffledTeams.slice(0, middleIndex),
         groupB: shuffledTeams.slice(middleIndex),
     };
-  }, [leaderboard]);
+  }, [leaderboard, showGroups]);
   
-  const showGroups = leaderboard.length > 25;
-
 
   // Use the manual setting, defaulting to true if it's not set
   const manualRegistrationOpen = tournament.registrationOpen !== false;
@@ -251,7 +260,7 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
                         {finalistLeaderboardActive && finalistLeaderboard.length > 0 && (
                             <>
                                 <Separator />
-                                <LeaderboardTable title="Finals" leaderboardData={finalistLeaderboard} icon={Crown} isFinals={true} />
+                                <LeaderboardTable title="Finals" leaderboardData={finalistLeaderboard} icon={Crown} />
                             </>
                         )}
                     </div>

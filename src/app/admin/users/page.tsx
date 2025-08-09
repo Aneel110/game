@@ -1,41 +1,28 @@
 
+'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { db, auth } from "@/lib/firebase-admin";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertTriangle, UserCheck, UserX } from "lucide-react";
+import { AlertTriangle, UserCheck, UserX, Search } from "lucide-react";
 import UserActions from "./user-actions";
+import { listAllUsers } from "@/lib/actions";
+import { useEffect, useState, useMemo } from "react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 
-export const dynamic = 'force-dynamic';
-
-async function getUsers() {
-    if (!db || !auth) {
-        return { error: "Firebase Admin is not configured. Please set FIREBASE_SERVICE_ACCOUNT_KEY." };
-    }
-    
-    try {
-        const usersSnapshot = await db.collection('users').get();
-        const usersData = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-        const authUsers = await Promise.all(
-            usersData.map(async (user) => {
-                try {
-                    const authUser = await auth.getUser(user.id);
-                    return { ...user, disabled: authUser.disabled };
-                } catch (error) {
-                    console.warn(`Could not fetch auth record for user ${user.id}`, error);
-                    return { ...user, disabled: false }; // Assume enabled if auth record is missing
-                }
-            })
-        );
-        return { users: authUsers };
-
-    } catch(e: any) {
-        return { error: e.message };
-    }
-}
+type User = {
+    id: string;
+    displayName: string;
+    email: string;
+    role: 'admin' | 'moderator' | 'user';
+    disabled: boolean;
+    isNew: boolean;
+    createdAt?: string;
+};
 
 const getRoleBadge = (role: string) => {
     switch (role) {
@@ -64,14 +51,74 @@ const getStatusBadge = (disabled: boolean) => {
     )
 }
 
-export default async function AdminUsersPage() {
-    const { users, error } = await getUsers();
+function UserTableSkeleton() {
+    return (
+        <Table>
+            <TableHeader>
+                <TableRow>
+                    <TableHead>Display Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {Array.from({ length: 5 }).map((_, i) => (
+                    <TableRow key={i}>
+                        <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                        <TableCell><Skeleton className="h-6 w-16" /></TableCell>
+                        <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+                        <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
+                    </TableRow>
+                ))}
+            </TableBody>
+        </Table>
+    )
+}
+
+export default function AdminUsersPage() {
+    const [users, setUsers] = useState<User[]>([]);
+    const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [filter, setFilter] = useState("all");
+
+    useEffect(() => {
+        async function fetchUsers() {
+            setLoading(true);
+            const result = await listAllUsers();
+            if (result.success && result.users) {
+                setUsers(result.users);
+            } else {
+                setError(result.error || "An unknown error occurred.");
+            }
+            setLoading(false);
+        }
+        fetchUsers();
+    }, []);
+    
+    const filteredUsers = useMemo(() => {
+        return users
+            .filter(user => {
+                if (filter === 'new') return user.isNew;
+                if (filter === 'enabled') return !user.disabled;
+                if (filter === 'disabled') return user.disabled;
+                return true;
+            })
+            .filter(user => 
+                user.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                user.email?.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+    }, [users, searchTerm, filter]);
+
 
     if (error) {
         return (
              <Alert variant="destructive">
                 <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Server Configuration Error</AlertTitle>
+                <AlertTitle>Server Error</AlertTitle>
                 <AlertDescription>{error}</AlertDescription>
             </Alert>
         )
@@ -81,39 +128,69 @@ export default async function AdminUsersPage() {
         <Card>
             <CardHeader>
                 <CardTitle>Manage Users</CardTitle>
+                <CardDescription>A list of all users in your database.</CardDescription>
             </CardHeader>
             <CardContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Display Name</TableHead>
-                            <TableHead>Email</TableHead>
-                            <TableHead>Role</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {users && users.map((user: any) => (
-                            <TableRow key={user.id}>
-                                <TableCell className="font-medium">{user.displayName}</TableCell>
-                                <TableCell>{user.email}</TableCell>
-                                <TableCell>{getRoleBadge(user.role)}</TableCell>
-                                <TableCell>{getStatusBadge(user.disabled)}</TableCell>
-                                <TableCell className="text-right">
-                                    <UserActions userId={user.id} currentRole={user.role} isDisabled={user.disabled} />
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                         {(!users || users.length === 0) && (
+                <div className="flex flex-col sm:flex-row gap-4 mb-4">
+                    <div className="relative flex-grow">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input 
+                            placeholder="Search by name or email..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-10"
+                        />
+                    </div>
+                    <Select value={filter} onValueChange={setFilter}>
+                        <SelectTrigger className="w-full sm:w-[180px]">
+                            <SelectValue placeholder="Filter users" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Users</SelectItem>
+                            <SelectItem value="new">New Users</SelectItem>
+                            <SelectItem value="enabled">Enabled</SelectItem>
+                            <SelectItem value="disabled">Disabled</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+                {loading ? <UserTableSkeleton /> : (
+                    <Table>
+                        <TableHeader>
                             <TableRow>
-                                <TableCell colSpan={5} className="h-24 text-center">
-                                    No users found.
-                                </TableCell>
+                                <TableHead>Display Name</TableHead>
+                                <TableHead>Email</TableHead>
+                                <TableHead>Role</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
+                        </TableHeader>
+                        <TableBody>
+                            {filteredUsers.map((user: any) => (
+                                <TableRow key={user.id}>
+                                    <TableCell className="font-medium">
+                                        <div className="flex items-center gap-2">
+                                            <span>{user.displayName}</span>
+                                            {user.isNew && <Badge>New</Badge>}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>{user.email}</TableCell>
+                                    <TableCell>{getRoleBadge(user.role)}</TableCell>
+                                    <TableCell>{getStatusBadge(user.disabled)}</TableCell>
+                                    <TableCell className="text-right">
+                                        <UserActions userId={user.id} currentRole={user.role} isDisabled={user.disabled} />
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                            {filteredUsers.length === 0 && (
+                                <TableRow>
+                                    <TableCell colSpan={5} className="h-24 text-center">
+                                        No users found.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                )}
             </CardContent>
         </Card>
     );

@@ -6,7 +6,7 @@ import { auth, db } from '@/lib/firebase-admin';
 import { revalidatePath } from 'next/cache';
 import { tournamentSchema, streamSchema, registrationSchema, type RegistrationData, leaderboardEntrySchema, siteSettingsSchema, profileSchema } from '@/lib/schemas';
 import { FieldValue } from 'firebase-admin/firestore';
-import { User } from 'firebase/auth';
+import { UserRecord } from 'firebase-admin/auth';
 
 // Helper to extract YouTube video ID from various URL formats
 const getYouTubeVideoId = (url: string): string | null => {
@@ -506,5 +506,48 @@ export async function updateUserProfile(userId: string, data: { displayName: str
     } catch (error) {
         console.error('Error updating profile:', error);
         return { success: false, message: 'An unexpected error occurred.' };
+    }
+}
+
+export async function listAllUsers() {
+    if (!db || !auth) {
+        return { success: false, error: "Firebase Admin is not configured." };
+    }
+
+    try {
+        const userRecords: UserRecord[] = [];
+        let nextPageToken;
+        // Batch fetch all users from Auth
+        do {
+            const listUsersResult = await auth.listUsers(1000, nextPageToken);
+            userRecords.push(...listUsersResult.users);
+            nextPageToken = listUsersResult.pageToken;
+        } while (nextPageToken);
+
+        // Get all role data from Firestore
+        const usersSnapshot = await db.collection('users').get();
+        const rolesData = new Map(usersSnapshot.docs.map(doc => [doc.id, doc.data().role]));
+        
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        const users = userRecords.map(user => {
+            const creationTime = new Date(user.metadata.creationTime);
+            return {
+                id: user.uid,
+                displayName: user.displayName || 'N/A',
+                email: user.email || 'N/A',
+                disabled: user.disabled,
+                role: rolesData.get(user.uid) || 'user',
+                isNew: creationTime > sevenDaysAgo,
+                createdAt: user.metadata.creationTime,
+            };
+        });
+
+        return { success: true, users: users };
+
+    } catch (e: any) {
+        console.error("Error fetching all users:", e);
+        return { success: false, error: `Failed to fetch user data: ${e.message}` };
     }
 }

@@ -2,19 +2,22 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Gamepad2, Trophy, DollarSign, AlertTriangle } from "lucide-react";
-import { db } from "@/lib/firebase-admin";
+import { db, auth } from "@/lib/firebase-admin";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Timestamp } from "firebase-admin/firestore";
 
 export const dynamic = 'force-dynamic';
 
 async function getDashboardStats() {
-    if (!db) {
+    if (!db || !auth) {
         return { error: "Firebase Admin is not configured. Please set FIREBASE_SERVICE_ACCOUNT_KEY." };
     }
 
     try {
-        const usersSnapshot = await db.collection('users').get();
+        // Fetch all users from Firebase Authentication for an accurate count
+        const listUsersResult = await auth.listUsers();
+        const totalUsers = listUsersResult.users.length;
+        
         const tournamentsSnapshot = await db.collection('tournaments').get();
 
         const now = new Date();
@@ -35,7 +38,7 @@ async function getDashboardStats() {
 
         return {
             stats: {
-                totalUsers: usersSnapshot.size,
+                totalUsers: totalUsers,
                 activeTournaments: activeTournaments,
                 prizesRedeemed: 0, // Placeholder
                 totalPrizeMoney: totalPrizeMoney,

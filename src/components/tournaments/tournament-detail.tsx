@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,14 +40,13 @@ const deterministicShuffle = (array: any[]) => {
   return [...array].sort((a, b) => {
     const nameA = a.teamName.toLowerCase();
     const nameB = b.teamName.toLowerCase();
-    // A simple way to create a pseudo-random, but stable order
     const hashA = nameA.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
     const hashB = nameB.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
     return (hashA % 100) - (hashB % 100);
   });
 };
 
-function LeaderboardTable({ title, leaderboardData, icon: Icon }: { title: string, leaderboardData: any[], icon?: React.ElementType }) {
+function LeaderboardTable({ title, leaderboardData, icon: Icon, isFinals = false }: { title: string, leaderboardData: any[], icon?: React.ElementType, isFinals?: boolean }) {
     const sortedLeaderboard = leaderboardData.sort((a,b) => b.points - a.points);
     return (
         <div className="space-y-4">
@@ -62,8 +61,8 @@ function LeaderboardTable({ title, leaderboardData, icon: Icon }: { title: strin
                             <TableRow>
                                 <TableHead className="w-[80px] text-center">Rank</TableHead>
                                 <TableHead>Team</TableHead>
-                                <TableHead className="text-center">Kills</TableHead>
-                                <TableHead className="text-center">Wins</TableHead>
+                                {!isFinals && <TableHead className="text-center">Kills</TableHead>}
+                                {!isFinals && <TableHead className="text-center">Wins</TableHead>}
                                 <TableHead className="text-right">Points</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -84,21 +83,25 @@ function LeaderboardTable({ title, leaderboardData, icon: Icon }: { title: strin
                                             <span className="font-medium">{p.teamName}</span>
                                         </div>
                                     </TableCell>
-                                    <TableCell className="text-center">
-                                        <div className="flex items-center justify-center gap-2">
-                                            <Skull className="w-4 h-4 text-muted-foreground" /> {p.kills}
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="text-center">
-                                        <div className="flex items-center justify-center gap-2">
-                                            <Drumstick className="w-4 h-4 text-amber-500" /> {p.chickenDinners}
-                                        </div>
-                                    </TableCell>
+                                    {!isFinals && (
+                                        <>
+                                            <TableCell className="text-center">
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <Skull className="w-4 h-4 text-muted-foreground" /> {p.kills || 0}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <Drumstick className="w-4 h-4 text-amber-500" /> {p.chickenDinners || 0}
+                                                </div>
+                                            </TableCell>
+                                        </>
+                                    )}
                                     <TableCell className="text-right font-bold text-primary">{p.points}</TableCell>
                                 </TableRow>
                             )}) : (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="h-24 text-center">
+                                    <TableCell colSpan={isFinals ? 3 : 5} className="h-24 text-center">
                                         No teams on the leaderboard yet.
                                     </TableCell>
                                 </TableRow>
@@ -129,17 +132,22 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
   const rules = tournament.rules ? tournament.rules.split('\n') : [];
 
   const leaderboard = tournament.leaderboard || [];
+  const finalistLeaderboard = tournament.finalistLeaderboard || [];
+  const finalistLeaderboardActive = tournament.finalistLeaderboardActive || false;
 
-  // Group logic
+  const { groupA, groupB } = useMemo(() => {
+    if (leaderboard.length <= 25) {
+        return { groupA: [], groupB: [] };
+    }
+    const shuffledTeams = deterministicShuffle(leaderboard);
+    const middleIndex = Math.ceil(shuffledTeams.length / 2);
+    return {
+        groupA: shuffledTeams.slice(0, middleIndex),
+        groupB: shuffledTeams.slice(middleIndex),
+    };
+  }, [leaderboard]);
+  
   const showGroups = leaderboard.length > 25;
-  let groupA: any[] = [];
-  let groupB: any[] = [];
-  if (showGroups) {
-      const shuffledTeams = deterministicShuffle(leaderboard);
-      const middleIndex = Math.ceil(shuffledTeams.length / 2);
-      groupA = shuffledTeams.slice(0, middleIndex);
-      groupB = shuffledTeams.slice(middleIndex);
-  }
 
 
   // Use the manual setting, defaulting to true if it's not set
@@ -222,22 +230,31 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
                    </div>
                 </TabsContent>
                  <TabsContent value="leaderboard">
-                    {showGroups ? (
-                        <div className="space-y-8">
-                            <LeaderboardTable title="Group A" leaderboardData={groupA} icon={Users} />
-                            <LeaderboardTable title="Group B" leaderboardData={groupB} icon={Users} />
-                        </div>
-                    ) : (
-                        leaderboard.length > 0 ? (
-                             <LeaderboardTable title="Leaderboard" leaderboardData={leaderboard} />
+                    <div className="space-y-8">
+                        {showGroups ? (
+                            <>
+                                <LeaderboardTable title="Group A" leaderboardData={groupA} icon={Users} />
+                                <LeaderboardTable title="Group B" leaderboardData={groupB} icon={Users} />
+                            </>
                         ) : (
-                             <div className="text-center text-muted-foreground py-8">
-                                <BarChartHorizontal className="w-12 h-12 mx-auto mb-2" />
-                                <p>The leaderboard for this tournament is not yet available.</p>
-                                <p className="text-sm">Approved teams will appear here once the tournament starts.</p>
-                            </div>
-                        )
-                    )}
+                            leaderboard.length > 0 ? (
+                                <LeaderboardTable title="Leaderboard" leaderboardData={leaderboard} />
+                            ) : (
+                                <div className="text-center text-muted-foreground py-8">
+                                    <BarChartHorizontal className="w-12 h-12 mx-auto mb-2" />
+                                    <p>The leaderboard for this tournament is not yet available.</p>
+                                    <p className="text-sm">Approved teams will appear here once the tournament starts.</p>
+                                </div>
+                            )
+                        )}
+
+                        {finalistLeaderboardActive && finalistLeaderboard.length > 0 && (
+                            <>
+                                <Separator />
+                                <LeaderboardTable title="Finals" leaderboardData={finalistLeaderboard} icon={Crown} isFinals={true} />
+                            </>
+                        )}
+                    </div>
                  </TabsContent>
                 <TabsContent value="rules">
                     {rules.length > 0 ? (
@@ -334,5 +351,3 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
     </div>
   );
 }
-
-    

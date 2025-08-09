@@ -10,6 +10,11 @@ export const leaderboardEntrySchema = z.object({
     chickenDinners: z.coerce.number().int().min(0, 'Chicken Dinners must be a positive number.').default(0),
 });
 
+const finalistLeaderboardEntrySchema = z.object({
+    teamName: z.string().min(1, 'Team name is required.'),
+    points: z.coerce.number().int().min(0, 'Points must be a positive number.').default(0),
+});
+
 const prizeDistributionSchema = z.object({
   first: z.coerce.number().min(0, 'Prize must be a positive number.').default(0),
   second: z.coerce.number().min(0, 'Prize must be a positive number.').default(0),
@@ -30,7 +35,15 @@ export const tournamentSchema = z.object({
   rules: z.string().optional(),
   leaderboard: z.array(leaderboardEntrySchema).optional(),
   registrationOpen: z.coerce.boolean().default(true),
+  finalistLeaderboardActive: z.boolean().default(false),
+  finalistLeaderboard: z.array(finalistLeaderboardEntrySchema).optional(),
 });
+
+export const finalistFormSchema = z.object({
+    finalistLeaderboardActive: z.boolean().default(false),
+    finalistLeaderboard: z.array(finalistLeaderboardEntrySchema).optional(),
+});
+
 
 export const streamSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters.'),
@@ -80,3 +93,4 @@ export const profileSchema = z.object({
 export type RegistrationFormValues = z.infer<typeof registrationSchema>;
 export type RegistrationData = RegistrationFormValues;
 export type ProfileFormValues = z.infer<typeof profileSchema>;
+export type FinalistFormValues = z.infer<typeof finalistFormSchema>;

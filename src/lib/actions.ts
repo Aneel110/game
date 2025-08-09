@@ -1,10 +1,9 @@
 
-
 'use server';
 
 import { auth, db } from '@/lib/firebase-admin';
 import { revalidatePath } from 'next/cache';
-import { tournamentSchema, streamSchema, registrationSchema, type RegistrationData, leaderboardEntrySchema, siteSettingsSchema, profileSchema } from '@/lib/schemas';
+import { tournamentSchema, streamSchema, registrationSchema, type RegistrationData, leaderboardEntrySchema, siteSettingsSchema, profileSchema, finalistFormSchema, FinalistFormValues } from '@/lib/schemas';
 import { FieldValue } from 'firebase-admin/firestore';
 import { UserRecord } from 'firebase-admin/auth';
 
@@ -237,7 +236,7 @@ export async function createTournament(formData: FormData) {
 
     try {
         const { ...dataToSave } = validatedFields.data;
-        await db.collection('tournaments').add({ ...dataToSave, leaderboard: [] });
+        await db.collection('tournaments').add({ ...dataToSave, leaderboard: [], finalistLeaderboard: [], finalistLeaderboardActive: false });
         revalidatePath('/tournaments');
         revalidatePath('/admin/tournaments');
         return { success: true, message: 'Tournament created successfully.' };
@@ -549,5 +548,26 @@ export async function listAllUsers() {
     } catch (e: any) {
         console.error("Error fetching all users:", e);
         return { success: false, error: `Failed to fetch user data: ${e.message}` };
+    }
+}
+
+export async function updateFinalistLeaderboard(tournamentId: string, data: FinalistFormValues) {
+    if (!db) {
+        return { success: false, message: 'Database not initialized.' };
+    }
+
+    const validatedFields = finalistFormSchema.safeParse(data);
+    if (!validatedFields.success) {
+        return { success: false, message: 'Invalid form data.', errors: validatedFields.error.flatten().fieldErrors };
+    }
+
+    try {
+        await db.collection('tournaments').doc(tournamentId).update(validatedFields.data);
+        revalidatePath(`/tournaments/${tournamentId}`);
+        revalidatePath(`/admin/tournaments/${tournamentId}/finalists`);
+        return { success: true, message: 'Finalist leaderboard updated successfully.' };
+    } catch (error) {
+        console.error('Error updating finalist leaderboard:', error);
+        return { success: false, message: 'An unexpected error occurred.' };
     }
 }

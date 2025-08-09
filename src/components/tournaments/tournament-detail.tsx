@@ -131,7 +131,7 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
   const leaderboard = tournament.leaderboard || [];
 
   // Group logic
-  const showGroups = leaderboard.length > 10;
+  const showGroups = leaderboard.length > 25;
   let groupA: any[] = [];
   let groupB: any[] = [];
   if (showGroups) {

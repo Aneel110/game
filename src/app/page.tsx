@@ -81,9 +81,9 @@ const getCachedUpcomingTournaments = unstable_cache(
             return { tournaments: [], error: "Server-side Firebase is not configured correctly." };
         }
         try {
-            const now_string = new Date().toISOString().slice(0, 16).replace('T', ' ');
+            const now = new Date();
             const snapshot = await db.collection('tournaments')
-                .where('date', '>', now_string)
+                .where('date', '>', now.toISOString())
                 .orderBy('date', 'asc')
                 .limit(6)
                 .get();
@@ -381,5 +381,3 @@ export default async function Home() {
     </div>
   );
 }
-
-    

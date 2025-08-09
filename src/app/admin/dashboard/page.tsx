@@ -2,7 +2,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Gamepad2, Trophy, DollarSign, AlertTriangle } from "lucide-react";
-import SeedDatabaseButton from "./seed-button";
 import { db } from "@/lib/firebase-admin";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Timestamp } from "firebase-admin/firestore";
@@ -82,17 +81,6 @@ export default async function AdminDashboardPage() {
                     </CardContent>
                 </Card>
             ))}
-        </div>
-
-        <div className="mt-8">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Admin Actions</CardTitle>
-                </CardHeader>
-                <CardContent>
-                   <SeedDatabaseButton />
-                </CardContent>
-            </Card>
         </div>
 
         <div className="mt-8">

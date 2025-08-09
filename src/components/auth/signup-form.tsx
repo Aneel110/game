@@ -39,8 +39,14 @@ export function SignupForm() {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
 
-            // Send verification email
-            await sendEmailVerification(user);
+            // Define the action code settings for the verification email
+            const actionCodeSettings = {
+                url: `${process.env.NEXT_PUBLIC_BASE_URL}/login`, // URL to redirect to after verification
+                handleCodeInApp: true,
+            };
+
+            // Send verification email with the custom settings
+            await sendEmailVerification(user, actionCodeSettings);
 
             // Update user profile
             await updateProfile(user, { displayName: username });
@@ -60,7 +66,7 @@ export function SignupForm() {
 
             toast({
                 title: "Account Created! Please Verify Your Email",
-                description: "A verification link has been sent to your inbox. Please check your email and click the link to activate your account before logging in.",
+                description: "A verification link has been sent to your inbox. If you don't see it, please check your spam folder. Click the link to activate your account before logging in.",
                 duration: 10000,
             });
 

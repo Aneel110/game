@@ -35,50 +35,117 @@ function getTournamentStatus(tournamentDate: string, manualRegistrationOpen: boo
   return { status: 'Upcoming', color: 'bg-blue-500', registrationClosed: false, message: '' };
 };
 
-// Fisher-Yates shuffle algorithm
-const shuffleArray = (array: any[]) => {
-  let currentIndex = array.length, randomIndex;
-  while (currentIndex !== 0) {
-    randomIndex = Math.floor(Math.random() * currentIndex);
-    currentIndex--;
-    [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
-  }
-  return array;
+// Simple deterministic shuffle based on team name
+const deterministicShuffle = (array: any[]) => {
+  return [...array].sort((a, b) => {
+    const nameA = a.teamName.toLowerCase();
+    const nameB = b.teamName.toLowerCase();
+    // A simple way to create a pseudo-random, but stable order
+    const hashA = nameA.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const hashB = nameB.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return (hashA % 100) - (hashB % 100);
+  });
 };
+
+function LeaderboardTable({ title, leaderboardData, icon: Icon }: { title: string, leaderboardData: any[], icon?: React.ElementType }) {
+    const sortedLeaderboard = leaderboardData.sort((a,b) => b.points - a.points);
+    return (
+        <div className="space-y-4">
+            <h3 className="text-xl font-headline font-semibold flex items-center gap-2">
+                {Icon && <Icon className="w-5 h-5" />}
+                {title} ({leaderboardData.length} teams)
+            </h3>
+            <Card>
+                 <div className="overflow-x-auto">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-[80px] text-center">Rank</TableHead>
+                                <TableHead>Team</TableHead>
+                                <TableHead className="text-center">Kills</TableHead>
+                                <TableHead className="text-center">Wins</TableHead>
+                                <TableHead className="text-right">Points</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {sortedLeaderboard.length > 0 ? sortedLeaderboard.map((p: any, index: number) => {
+                                const rank = index + 1;
+                                return (
+                                <TableRow key={p.teamName}>
+                                    <TableCell className="font-bold text-lg text-center">
+                                        {rank === 1 ? <Crown className="w-6 h-6 text-yellow-400 inline-block" /> : rank}
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="flex items-center gap-3">
+                                            <Avatar className="h-10 w-10 border-2 border-primary/50">
+                                                <AvatarImage src={`https://placehold.co/40x40.png?text=${p.teamName.charAt(0)}`} />
+                                                <AvatarFallback>{p.teamName.charAt(0)}</AvatarFallback>
+                                            </Avatar>
+                                            <span className="font-medium">{p.teamName}</span>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="text-center">
+                                        <div className="flex items-center justify-center gap-2">
+                                            <Skull className="w-4 h-4 text-muted-foreground" /> {p.kills}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="text-center">
+                                        <div className="flex items-center justify-center gap-2">
+                                            <Drumstick className="w-4 h-4 text-amber-500" /> {p.chickenDinners}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="text-right font-bold text-primary">{p.points}</TableCell>
+                                </TableRow>
+                            )}) : (
+                                <TableRow>
+                                    <TableCell colSpan={5} className="h-24 text-center">
+                                        No teams on the leaderboard yet.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
+            </Card>
+        </div>
+    )
+}
+
 
 export default function TournamentDetail({ tournament, registrations }: { tournament: any, registrations: any[] }) {
   const { user, loading } = useAuth();
   const [formattedDate, setFormattedDate] = useState('');
-  const [groupA, setGroupA] = useState<any[]>([]);
-  const [groupB, setGroupB] = useState<any[]>([]);
-
-  const approvedParticipants = registrations.filter(r => r.status === 'approved');
   
   useEffect(() => {
     // This is to avoid hydration mismatch
     if (tournament.date) {
         setFormattedDate(new Date(tournament.date).toLocaleString([], { dateStyle: 'long', timeStyle: 'short' }));
     }
-    
-    if (approvedParticipants.length > 25) {
-        const shuffled = shuffleArray([...approvedParticipants]);
-        const middleIndex = Math.ceil(shuffled.length / 2);
-        setGroupA(shuffled.slice(0, middleIndex));
-        setGroupB(shuffled.slice(middleIndex));
-    }
+  }, [tournament.date]);
 
-  }, [tournament.date, approvedParticipants.length]);
+  const approvedParticipants = registrations.filter(r => r.status === 'approved');
+  const pendingParticipants = registrations.filter(r => r.status === 'pending');
+  const isAlreadyRegistered = user && registrations.some(r => r.id === user.uid);
+  const rules = tournament.rules ? tournament.rules.split('\n') : [];
+
+  const leaderboard = tournament.leaderboard || [];
+
+  // Group logic
+  const showGroups = approvedParticipants.length > 25;
+  let groupA: any[] = [];
+  let groupB: any[] = [];
+  if (showGroups) {
+      const shuffledTeams = deterministicShuffle(leaderboard);
+      const middleIndex = Math.ceil(shuffledTeams.length / 2);
+      groupA = shuffledTeams.slice(0, middleIndex);
+      groupB = shuffledTeams.slice(middleIndex);
+  }
 
 
   // Use the manual setting, defaulting to true if it's not set
   const manualRegistrationOpen = tournament.registrationOpen !== false;
   const { status, color, registrationClosed, message } = getTournamentStatus(tournament.date, manualRegistrationOpen);
   
-  const pendingParticipants = registrations.filter(r => r.status === 'pending');
-  const isAlreadyRegistered = user && registrations.some(r => r.id === user.uid);
-  const leaderboard = tournament.leaderboard?.sort((a: any, b: any) => b.points - a.points) || [];
-  const rules = tournament.rules ? tournament.rules.split('\n') : [];
-
   const prizeDistribution = tournament.prizeDistribution || {};
   const totalPrize = Object.values(prizeDistribution).reduce((sum: any, val: any) => sum + (Number(val) || 0), 0);
 
@@ -129,7 +196,6 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
                 <div className="overflow-x-auto">
                     <TabsList className="mb-4 grid-flow-col">
                         <TabsTrigger value="overview">Overview</TabsTrigger>
-                        {approvedParticipants.length > 25 && <TabsTrigger value="groups">Groups</TabsTrigger>}
                         <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
                         <TabsTrigger value="rules">Rules</TabsTrigger>
                         <TabsTrigger value="prizes">Prizes</TabsTrigger>
@@ -142,13 +208,11 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
                       <Separator />
 
                       <div className="space-y-4">
-                        {approvedParticipants.length <= 25 &&
                          <ParticipantsTable 
                             icon={ShieldCheck}
                             title="Approved Teams"
                             participants={approvedParticipants}
                           />
-                        }
                            <ParticipantsTable 
                             icon={ShieldAlert}
                             title="Pending Approval"
@@ -157,80 +221,23 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
                       </div>
                    </div>
                 </TabsContent>
-                {approvedParticipants.length > 25 && (
-                  <TabsContent value="groups">
-                     <div className="space-y-6">
-                        <ParticipantsTable 
-                            icon={Users}
-                            title="Group A"
-                            participants={groupA}
-                          />
-                        <ParticipantsTable 
-                            icon={Users}
-                            title="Group B"
-                            participants={groupB}
-                          />
-                     </div>
-                  </TabsContent>
-                )}
                  <TabsContent value="leaderboard">
-                    <div className="overflow-x-auto">
-                        {Array.isArray(tournament.leaderboard) ? (
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead className="w-[80px] text-center">Rank</TableHead>
-                                        <TableHead>Team</TableHead>
-                                        <TableHead className="text-center">Kills</TableHead>
-                                        <TableHead className="text-center">Wins</TableHead>
-                                        <TableHead className="text-right">Points</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {leaderboard.length > 0 ? leaderboard.map((p: any, index: number) => {
-                                        const rank = index + 1;
-                                        return (
-                                        <TableRow key={p.teamName}>
-                                            <TableCell className="font-bold text-lg text-center">
-                                                {rank === 1 ? <Crown className="w-6 h-6 text-yellow-400 inline-block" /> : rank}
-                                            </TableCell>
-                                            <TableCell>
-                                                <div className="flex items-center gap-3">
-                                                    <Avatar className="h-10 w-10 border-2 border-primary/50">
-                                                        <AvatarImage src={`https://placehold.co/40x40.png?text=${p.teamName.charAt(0)}`} />
-                                                        <AvatarFallback>{p.teamName.charAt(0)}</AvatarFallback>
-                                                    </Avatar>
-                                                    <span className="font-medium">{p.teamName}</span>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="text-center">
-                                                <div className="flex items-center justify-center gap-2">
-                                                    <Skull className="w-4 h-4 text-muted-foreground" /> {p.kills}
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="text-center">
-                                                <div className="flex items-center justify-center gap-2">
-                                                    <Drumstick className="w-4 h-4 text-amber-500" /> {p.chickenDinners}
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="text-right font-bold text-primary">{p.points}</TableCell>
-                                        </TableRow>
-                                    )}) : (
-                                        <TableRow>
-                                            <TableCell colSpan={5} className="h-24 text-center">
-                                                No teams on the leaderboard yet. Approved teams will appear here.
-                                            </TableCell>
-                                        </TableRow>
-                                    )}
-                                </TableBody>
-                            </Table>
+                    {showGroups ? (
+                        <div className="space-y-8">
+                            <LeaderboardTable title="Group A" leaderboardData={groupA} icon={Users} />
+                            <LeaderboardTable title="Group B" leaderboardData={groupB} icon={Users} />
+                        </div>
+                    ) : (
+                        leaderboard.length > 0 ? (
+                             <LeaderboardTable title="Leaderboard" leaderboardData={leaderboard} />
                         ) : (
-                            <div className="text-center text-muted-foreground py-8">
+                             <div className="text-center text-muted-foreground py-8">
                                 <BarChartHorizontal className="w-12 h-12 mx-auto mb-2" />
                                 <p>The leaderboard for this tournament is not yet available.</p>
+                                <p className="text-sm">Approved teams will appear here once the tournament starts.</p>
                             </div>
-                        )}
-                    </div>
+                        )
+                    )}
                  </TabsContent>
                 <TabsContent value="rules">
                     {rules.length > 0 ? (

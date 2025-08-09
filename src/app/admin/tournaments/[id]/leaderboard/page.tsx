@@ -94,7 +94,7 @@ export default async function AdminTournamentLeaderboardPage({ params }: { param
                                 <TableCell>{entry.chickenDinners}</TableCell>
                                 <TableCell className="text-right flex gap-2 justify-end">
                                     <Button asChild variant="ghost" size="icon">
-                                        <Link href={`/admin/tournaments/${params.id}/leaderboard/edit/${encodeURIComponent(entry.id)}`}>
+                                        <Link href={`/admin/tournaments/${params.id}/leaderboard/edit/${encodeURIComponent(entry.teamName)}`}>
                                             <Edit className="h-4 w-4" />
                                         </Link>
                                     </Button>

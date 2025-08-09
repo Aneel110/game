@@ -365,3 +365,5 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
     </div>
   );
 }
+
+    

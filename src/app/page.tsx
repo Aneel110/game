@@ -112,6 +112,35 @@ const getCachedUpcomingTournaments = unstable_cache(
     { revalidate: 60 }
 );
 
+const getCachedPastStreams = unstable_cache(
+    async () => {
+        if (!db) {
+            return { streams: [], error: "Server-side Firebase is not configured correctly." };
+        }
+        try {
+            const snapshot = await db.collection('streams')
+                .where('status', '==', 'Past')
+                .orderBy('createdAt', 'desc')
+                .limit(4)
+                .get();
+            
+            if (snapshot.empty) {
+                return { streams: [] };
+            }
+            const streams = snapshot.docs.map(doc => {
+                 const data = doc.data();
+                 return { id: doc.id, ...data };
+            });
+            return { streams };
+        } catch (error: any) {
+            console.error("Error fetching past streams:", error);
+            return { streams: [], error: "Failed to fetch past streams." };
+        }
+    },
+    ['past_streams'],
+    { revalidate: 300 } // Revalidate every 5 minutes
+);
+
 
 async function LiveStreamSection() {
     const { stream: liveStream, error } = await getCachedLiveStream();
@@ -162,6 +191,83 @@ async function LiveStreamSection() {
 const FacebookIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
 )
+
+function getWatchUrl(embedUrl: string) {
+    const videoId = embedUrl.split('/').pop();
+    return `https://www.youtube.com/watch?v=${videoId}`;
+}
+
+
+function VideoPreviewCard({ stream }: { stream: any }) {
+    const videoId = stream.youtubeUrl.split('/').pop();
+    const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+    const watchUrl = getWatchUrl(stream.youtubeUrl);
+
+    return (
+        <Link href={watchUrl} target="_blank" rel="noopener noreferrer">
+            <Card className="overflow-hidden transition-transform duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/20 group">
+                <CardHeader className="p-0 relative">
+                    <Image src={thumbnailUrl} alt={stream.title} width={600} height={400} className="w-full aspect-video object-cover" />
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Youtube className="w-16 h-16 text-white" />
+                    </div>
+                </CardHeader>
+                <CardContent className="p-4">
+                    <h3 className="text-md font-semibold line-clamp-2">{stream.title}</h3>
+                </CardContent>
+            </Card>
+        </Link>
+    )
+}
+
+async function YouTubeVideosSection() {
+    const { streams, error } = await getCachedPastStreams();
+
+    if (error) {
+         return (
+            <div className="container mx-auto">
+                <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>Could not load videos</AlertTitle>
+                    <AlertDescription>{error}</AlertDescription>
+                </Alert>
+            </div>
+        )
+    }
+
+    if (streams.length === 0) {
+        return null;
+    }
+
+    return (
+         <section id="youtube" className="w-full bg-card py-16">
+            <div className="container mx-auto text-center">
+                <h2 className="text-4xl font-headline font-bold text-center mb-4">Visit our YouTube Channel</h2>
+                <p className="text-muted-foreground mb-8">
+                    Catch all the highlights, full matches, and exclusive content.
+                </p>
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    {streams.map((stream) => (
+                        <VideoPreviewCard key={stream.id} stream={stream} />
+                    ))}
+                </div>
+                 <Button asChild size="lg">
+                    <Link href="https://www.youtube.com/@esportsnepall" target="_blank" rel="noopener noreferrer">
+                        <Youtube className="mr-2 h-5 w-5" />
+                        See More on YouTube
+                    </Link>
+                </Button>
+                
+                <div className="mt-16">
+                    <Card className="bg-muted/50 border-dashed border-2 p-8 text-center">
+                         <h4 className="text-sm font-semibold uppercase text-muted-foreground tracking-widest">Advertisement</h4>
+                    </Card>
+                </div>
+            </div>
+        </section>
+    )
+}
+
 
 export default async function Home() {
   const settings = await getSiteSettings();
@@ -252,20 +358,8 @@ export default async function Home() {
       </section>
 
       {/* YouTube Section */}
-      <section id="youtube" className="w-full bg-card py-16">
-        <div className="container mx-auto text-center">
-            <h2 className="text-4xl font-headline font-bold text-center mb-4">Visit our YouTube Channel</h2>
-            <p className="text-muted-foreground mb-8">
-                Catch all the highlights, full matches, and exclusive content.
-            </p>
-            <Button asChild size="lg">
-                <Link href="https://www.youtube.com/@esportsnepall" target="_blank" rel="noopener noreferrer">
-                    <Youtube className="mr-2 h-5 w-5" />
-                    Watch on YouTube
-                </Link>
-            </Button>
-        </div>
-      </section>
+      <YouTubeVideosSection />
+
 
       {/* Social Section */}
       <section id="social" className="w-full bg-background py-16">
@@ -287,3 +381,5 @@ export default async function Home() {
     </div>
   );
 }
+
+    

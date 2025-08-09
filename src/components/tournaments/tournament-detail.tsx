@@ -161,10 +161,10 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="relative w-full h-64 md:h-96 rounded-lg overflow-hidden mb-8">
-        <Image src={tournament.image} alt={tournament.name} layout="fill" objectFit="cover" data-ai-hint={tournament.dataAiHint} />
+      <div className="relative w-full h-80 md:h-96 rounded-lg overflow-hidden mb-8">
+        <Image src={tournament.image} alt={tournament.name} fill objectFit="cover" data-ai-hint={tournament.dataAiHint} />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-        <div className="absolute bottom-0 left-0 p-4 md:p-8 flex flex-col md:flex-row md:justify-between items-start md:items-end w-full gap-4">
+        <div className="absolute bottom-0 left-0 p-4 md:p-8 flex flex-col justify-end w-full h-full gap-4">
             <div className="space-y-2">
                 <Badge className={`text-white ${color}`}>{status === 'Past' ? 'Finished' : 'Upcoming'}</Badge>
                 <h1 className="text-3xl md:text-5xl font-headline font-bold text-white text-shadow-lg">{tournament.name}</h1>

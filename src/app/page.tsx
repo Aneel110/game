@@ -120,7 +120,6 @@ const getCachedPastStreams = unstable_cache(
         try {
             const snapshot = await db.collection('streams')
                 .where('status', '==', 'Past')
-                .orderBy('createdAt', 'desc')
                 .limit(4)
                 .get();
             

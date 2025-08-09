@@ -21,6 +21,7 @@ async function getDashboardStats() {
         const activeTournaments = tournamentsSnapshot.docs.filter(doc => {
             const data = doc.data();
             if (!data.date) return false;
+            // The date can be a string (from form) or a Timestamp (from Firestore)
             const tournamentDate = data.date instanceof Timestamp ? data.date.toDate() : new Date(data.date);
             return tournamentDate > now;
         }).length;

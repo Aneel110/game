@@ -20,7 +20,7 @@ export default function ParticipantsTable({ participants, title, icon: Icon }: P
                     <TableHeader>
                         <TableRow className="border-b-primary/20">
                             <TableHead>Team Name</TableHead>
-                            <TableHead>Team Tag</TableHead>
+                            <TableHead>Registered By</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -28,7 +28,7 @@ export default function ParticipantsTable({ participants, title, icon: Icon }: P
                             participants.map(p => (
                                 <TableRow key={p.id} className="border-b-primary/10 hover:bg-primary/10 transition-colors duration-200">
                                     <TableCell className="font-medium">{p.teamName}</TableCell>
-                                    <TableCell>{p.teamTag}</TableCell>
+                                    <TableCell>{p.registeredByName}</TableCell>
                                 </TableRow>
                             ))
                         ) : (

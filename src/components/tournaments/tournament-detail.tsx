@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Gamepad2, Trophy, ShieldCheck, ShieldAlert, BarChartHorizontal, Crown, Swords, Drumstick, Clock, Target, Gavel, Skull, Lock } from "lucide-react";
+import { Calendar, Gamepad2, Trophy, ShieldCheck, ShieldAlert, BarChartHorizontal, Crown, Swords, Drumstick, Clock, Target, Gavel, Skull, Lock, Users } from "lucide-react";
 import TournamentRegistrationForm from "./registration-form";
 import { useAuth } from "@/hooks/use-auth";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
@@ -35,22 +35,45 @@ function getTournamentStatus(tournamentDate: string, manualRegistrationOpen: boo
   return { status: 'Upcoming', color: 'bg-blue-500', registrationClosed: false, message: '' };
 };
 
+// Fisher-Yates shuffle algorithm
+const shuffleArray = (array: any[]) => {
+  let currentIndex = array.length, randomIndex;
+  while (currentIndex !== 0) {
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+    [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+  }
+  return array;
+};
+
 export default function TournamentDetail({ tournament, registrations }: { tournament: any, registrations: any[] }) {
   const { user, loading } = useAuth();
   const [formattedDate, setFormattedDate] = useState('');
+  const [groupA, setGroupA] = useState<any[]>([]);
+  const [groupB, setGroupB] = useState<any[]>([]);
 
+  const approvedParticipants = registrations.filter(r => r.status === 'approved');
+  
   useEffect(() => {
     // This is to avoid hydration mismatch
     if (tournament.date) {
         setFormattedDate(new Date(tournament.date).toLocaleString([], { dateStyle: 'long', timeStyle: 'short' }));
     }
-  }, [tournament.date]);
+    
+    if (approvedParticipants.length > 25) {
+        const shuffled = shuffleArray([...approvedParticipants]);
+        const middleIndex = Math.ceil(shuffled.length / 2);
+        setGroupA(shuffled.slice(0, middleIndex));
+        setGroupB(shuffled.slice(middleIndex));
+    }
+
+  }, [tournament.date, approvedParticipants.length]);
+
 
   // Use the manual setting, defaulting to true if it's not set
   const manualRegistrationOpen = tournament.registrationOpen !== false;
   const { status, color, registrationClosed, message } = getTournamentStatus(tournament.date, manualRegistrationOpen);
   
-  const approvedParticipants = registrations.filter(r => r.status === 'approved');
   const pendingParticipants = registrations.filter(r => r.status === 'pending');
   const isAlreadyRegistered = user && registrations.some(r => r.id === user.uid);
   const leaderboard = tournament.leaderboard?.sort((a: any, b: any) => b.points - a.points) || [];
@@ -106,6 +129,7 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
                 <div className="overflow-x-auto">
                     <TabsList className="mb-4 grid-flow-col">
                         <TabsTrigger value="overview">Overview</TabsTrigger>
+                        {approvedParticipants.length > 25 && <TabsTrigger value="groups">Groups</TabsTrigger>}
                         <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
                         <TabsTrigger value="rules">Rules</TabsTrigger>
                         <TabsTrigger value="prizes">Prizes</TabsTrigger>
@@ -118,11 +142,13 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
                       <Separator />
 
                       <div className="space-y-4">
+                        {approvedParticipants.length <= 25 &&
                          <ParticipantsTable 
                             icon={ShieldCheck}
                             title="Approved Teams"
                             participants={approvedParticipants}
                           />
+                        }
                            <ParticipantsTable 
                             icon={ShieldAlert}
                             title="Pending Approval"
@@ -131,6 +157,22 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
                       </div>
                    </div>
                 </TabsContent>
+                {approvedParticipants.length > 25 && (
+                  <TabsContent value="groups">
+                     <div className="space-y-6">
+                        <ParticipantsTable 
+                            icon={Users}
+                            title="Group A"
+                            participants={groupA}
+                          />
+                        <ParticipantsTable 
+                            icon={Users}
+                            title="Group B"
+                            participants={groupB}
+                          />
+                     </div>
+                  </TabsContent>
+                )}
                  <TabsContent value="leaderboard">
                     <div className="overflow-x-auto">
                         {Array.isArray(tournament.leaderboard) ? (

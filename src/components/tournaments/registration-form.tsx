@@ -169,7 +169,7 @@ export default function TournamentRegistrationForm({ tournamentId, isLoggedIn, i
                         <div className="space-y-4 mt-4">
                         {fields.map((field, index) => (
                             <div key={field.id} className="flex items-start gap-2">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 flex-grow">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 flex-grow">
                                     <FormField
                                         control={form.control}
                                         name={`players.${index}.pubgName`}

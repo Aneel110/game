@@ -31,6 +31,7 @@ async function getTournamentLeaderboard(tournamentId: string) {
     }
     
     const tournamentData = tournamentSnap.data();
+    // Sort by points descending for admin view
     const leaderboard = (tournamentData?.leaderboard || []).sort((a: any, b: any) => b.points - a.points);
 
     return { 

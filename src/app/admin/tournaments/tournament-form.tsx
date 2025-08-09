@@ -136,7 +136,7 @@ export default function TournamentForm({ tournamentId, defaultValues }: Tourname
         <Card>
           <CardHeader><CardTitle>Prize Distribution (Rs)</CardTitle></CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <FormField control={form.control} name="prizeDistribution.first" render={({ field }) => (<FormItem><Label>1st Place</Label><FormControl><Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))} /></FormControl><FormMessage /></FormItem>)} />
               <FormField control={form.control} name="prizeDistribution.second" render={({ field }) => (<FormItem><Label>2nd Place</Label><FormControl><Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))}/></FormControl><FormMessage /></FormItem>)} />
               <FormField control={form.control} name="prizeDistribution.third" render={({ field }) => (<FormItem><Label>3rd Place</Label><FormControl><Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))}/></FormControl><FormMessage /></FormItem>)} />
@@ -232,5 +232,3 @@ export default function TournamentForm({ tournamentId, defaultValues }: Tourname
     </Form>
   );
 }
-
-    

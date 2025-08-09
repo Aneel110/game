@@ -36,14 +36,17 @@ function getTournamentStatus(tournamentDate: string, manualRegistrationOpen: boo
 };
 
 // Simple deterministic shuffle based on team name
-const deterministicShuffle = (array: any[]) => {
-  return [...array].sort((a, b) => {
-    const nameA = a.teamName.toLowerCase();
-    const nameB = b.teamName.toLowerCase();
-    const hashA = nameA.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    const hashB = nameB.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    return (hashA % 100) - (hashB % 100);
-  });
+const deterministicShuffle = (array: any[], newTeams: any[] = []) => {
+    // Separate existing teams from new teams to maintain stability
+    const existingTeams = array.filter(t => !newTeams.find(nt => nt.teamName === t.teamName));
+    
+    // Sort existing teams deterministically
+    const sortedExisting = [...existingTeams].sort((a, b) => a.teamName.localeCompare(b.teamName));
+    
+    // Shuffle new teams randomly and append them
+    const shuffledNew = [...newTeams].sort(() => Math.random() - 0.5);
+
+    return [...sortedExisting, ...shuffledNew];
 };
 
 function LeaderboardTable({ title, leaderboardData, icon: Icon }: { title: string, leaderboardData: any[], icon?: React.ElementType }) {
@@ -144,19 +147,21 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
   const finalistLeaderboard = useMemo(() => tournament.finalistLeaderboard || [], [tournament.finalistLeaderboard]);
   const finalistLeaderboardActive = tournament.finalistLeaderboardActive || false;
   
-  const showGroups = leaderboard.length > 25;
+  const showGroups = approvedParticipants.length > 25;
 
   const { groupA, groupB } = useMemo(() => {
     if (!showGroups) {
-        return { groupA: [], groupB: [] };
+      return { groupA: [], groupB: [] };
     }
-    const shuffledTeams = deterministicShuffle(leaderboard);
+    const approvedTeamNames = new Set(approvedParticipants.map(p => p.teamName));
+    const teamsOnLeaderboard = leaderboard.filter((l: any) => approvedTeamNames.has(l.teamName));
+    const shuffledTeams = deterministicShuffle(teamsOnLeaderboard);
     const middleIndex = Math.ceil(shuffledTeams.length / 2);
     return {
-        groupA: shuffledTeams.slice(0, middleIndex),
-        groupB: shuffledTeams.slice(middleIndex),
+      groupA: shuffledTeams.slice(0, middleIndex),
+      groupB: shuffledTeams.slice(middleIndex),
     };
-  }, [leaderboard, showGroups]);
+  }, [leaderboard, showGroups, approvedParticipants]);
   
 
   // Use the manual setting, defaulting to true if it's not set
@@ -181,10 +186,10 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
       <div className="relative w-full h-80 md:h-96 rounded-lg overflow-hidden mb-8">
         <Image src={tournament.image} alt={tournament.name} fill objectFit="cover" data-ai-hint={tournament.dataAiHint} />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-        <div className="absolute bottom-0 left-0 p-4 md:p-8 flex flex-col justify-end w-full h-full gap-4">
+        <div className="absolute bottom-0 left-0 p-4 md:p-8 flex flex-col sm:flex-row sm:items-end sm:justify-between w-full h-full gap-4">
             <div className="space-y-2">
                 <Badge className={`text-white ${color}`}>{status === 'Past' ? 'Finished' : 'Upcoming'}</Badge>
-                <h1 className="text-3xl md:text-5xl font-headline font-bold text-white text-shadow-lg">{tournament.name}</h1>
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-headline font-bold text-white text-shadow-lg">{tournament.name}</h1>
             </div>
              {!loading && status === 'Upcoming' && (
                 <div className="shrink-0">

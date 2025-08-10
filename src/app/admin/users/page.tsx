@@ -104,13 +104,18 @@ export default function AdminUsersPage() {
     useEffect(() => {
         async function fetchUsers() {
             setLoading(true);
-            const result = await listAllUsers();
-            if (result.success && result.users) {
-                setUsers(result.users);
-            } else {
-                setError(result.error || "An unknown error occurred.");
+            try {
+                const result = await listAllUsers();
+                if (result.success && result.users) {
+                    setUsers(result.users);
+                } else {
+                    setError(result.error || "An unknown error occurred.");
+                }
+            } catch (e: any) {
+                 setError("Failed to fetch users from the server.");
+            } finally {
+                setLoading(false);
             }
-            setLoading(false);
         }
         fetchUsers();
     }, []);

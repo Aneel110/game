@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -104,18 +105,13 @@ export default function AdminUsersPage() {
     useEffect(() => {
         async function fetchUsers() {
             setLoading(true);
-            try {
-                const result = await listAllUsersWithVerification();
-                if (result.success && result.users) {
-                    setUsers(result.users);
-                } else {
-                    setError(result.error || "An unknown error occurred.");
-                }
-            } catch (e: any) {
-                 setError("Failed to fetch users from the server.");
-            } finally {
-                setLoading(false);
+            const result = await listAllUsersWithVerification();
+            if (result.success && result.users) {
+                setUsers(result.users);
+            } else {
+                setError(result.error || "An unknown error occurred.");
             }
+            setLoading(false);
         }
         fetchUsers();
     }, []);
@@ -124,10 +120,10 @@ export default function AdminUsersPage() {
         return users
             .filter(user => {
                 if (filter === 'new') return user.isNew;
-                if (filter === 'enabled') return !user.disabled;
-                if (filter === 'disabled') return user.disabled;
                 if (filter === 'verified') return user.emailVerified;
                 if (filter === 'not_verified') return !user.emailVerified;
+                if (filter === 'enabled') return !user.disabled;
+                if (filter === 'disabled') return user.disabled;
                 return true;
             })
             .filter(user => 
@@ -171,10 +167,10 @@ export default function AdminUsersPage() {
                         <SelectContent>
                             <SelectItem value="all">All Users</SelectItem>
                             <SelectItem value="new">New Users</SelectItem>
+                            <SelectItem value="verified">Verified</SelectItem>
+                            <SelectItem value="not_verified">Not Verified</SelectItem>
                             <SelectItem value="enabled">Enabled</SelectItem>
                             <SelectItem value="disabled">Disabled</SelectItem>
-                             <SelectItem value="verified">Verified</SelectItem>
-                            <SelectItem value="not_verified">Not Verified</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>

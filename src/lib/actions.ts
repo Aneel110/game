@@ -4,7 +4,7 @@
 
 import { auth, db } from '@/lib/firebase-admin';
 import { revalidatePath } from 'next/cache';
-import { tournamentSchema, streamSchema, registrationSchema, type RegistrationData, leaderboardEntrySchema, siteSettingsSchema, profileSchema, finalistFormSchema, FinalistFormValues } from '@/lib/schemas';
+import { tournamentSchema, streamSchema, registrationSchema, type RegistrationData, leaderboardEntrySchema, siteSettingsSchema, profileSchema, finalistFormSchema, type FinalistFormValues } from '@/lib/schemas';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { UserRecord } from 'firebase-admin/auth';
 
@@ -84,7 +84,8 @@ export async function getTournamentRegistrations(tournamentId: string) {
             return { 
                 id: doc.id, 
                 ...data,
-                registeredAt: registeredAt instanceof Timestamp ? registeredAt.toDate().toISOString() : new Date().toISOString(),
+                 registeredAt: registeredAt instanceof Timestamp ? registeredAt.toDate().toISOString() : new Date().toISOString(),
+                 userId: doc.id,
             };
         });
         return { success: true, data: registrations };
@@ -535,21 +536,25 @@ export async function listAllUsersWithVerification() {
 
         // Get all role data from Firestore
         const usersSnapshot = await db.collection('users').get();
-        const rolesData = new Map(usersSnapshot.docs.map(doc => [doc.id, doc.data().role]));
+        const rolesData = new Map(usersSnapshot.docs.map(doc => {
+            const data = doc.data();
+            return [doc.id, { role: data.role, isNew: data.isNew }];
+        }));
         
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
         const users = userRecords.map(user => {
             const creationTime = new Date(user.metadata.creationTime);
+            const userData = rolesData.get(user.uid) || {};
             return {
                 id: user.uid,
                 displayName: user.displayName || 'N/A',
                 email: user.email || 'N/A',
                 disabled: user.disabled,
                 emailVerified: user.emailVerified,
-                role: rolesData.get(user.uid) || 'user',
-                isNew: creationTime > sevenDaysAgo,
+                role: userData.role || 'user',
+                isNew: userData.isNew === true && creationTime > sevenDaysAgo,
                 createdAt: user.metadata.creationTime,
             };
         });
@@ -582,5 +587,3 @@ export async function updateFinalistLeaderboard(tournamentId: string, data: Fina
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }
-
-    

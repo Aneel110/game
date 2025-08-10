@@ -54,7 +54,7 @@ const getStatusBadge = (disabled: boolean) => {
 
 const getVerificationBadge = (isVerified: boolean) => {
     return isVerified ? (
-        <Badge variant="outline" className="text-green-400 border-green-400">
+        <Badge variant="outline" className="text-green-500 border-green-500">
             <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
             Verified
         </Badge>
@@ -73,9 +73,9 @@ function UserTableSkeleton() {
                 <TableRow>
                     <TableHead>Display Name</TableHead>
                     <TableHead>Email</TableHead>
+                    <TableHead>Email Verification</TableHead>
                     <TableHead>Role</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Verification</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
             </TableHeader>
@@ -84,9 +84,9 @@ function UserTableSkeleton() {
                     <TableRow key={i}>
                         <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                         <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                        <TableCell><Skeleton className="h-6 w-24" /></TableCell>
                         <TableCell><Skeleton className="h-6 w-16" /></TableCell>
                         <TableCell><Skeleton className="h-6 w-20" /></TableCell>
-                        <TableCell><Skeleton className="h-6 w-24" /></TableCell>
                         <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
                     </TableRow>
                 ))}
@@ -180,9 +180,9 @@ export default function AdminUsersPage() {
                             <TableRow>
                                 <TableHead>Display Name</TableHead>
                                 <TableHead>Email</TableHead>
+                                <TableHead>Email Verification</TableHead>
                                 <TableHead>Role</TableHead>
                                 <TableHead>Status</TableHead>
-                                <TableHead>Verification</TableHead>
                                 <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -196,9 +196,9 @@ export default function AdminUsersPage() {
                                         </div>
                                     </TableCell>
                                     <TableCell>{user.email}</TableCell>
+                                    <TableCell>{getVerificationBadge(user.emailVerified)}</TableCell>
                                     <TableCell>{getRoleBadge(user.role)}</TableCell>
                                     <TableCell>{getStatusBadge(user.disabled)}</TableCell>
-                                    <TableCell>{getVerificationBadge(user.emailVerified)}</TableCell>
                                     <TableCell className="text-right">
                                         <UserActions userId={user.id} currentRole={user.role} isDisabled={user.disabled} />
                                     </TableCell>

@@ -3,7 +3,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { db, auth } from "@/lib/firebase-admin";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle, UserCheck, UserX, Search, CheckCircle2, XCircle } from "lucide-react";
@@ -169,7 +168,7 @@ export default function AdminUsersPage() {
                             <SelectItem value="new">New Users</SelectItem>
                             <SelectItem value="enabled">Enabled</SelectItem>
                             <SelectItem value="disabled">Disabled</SelectItem>
-                            <SelectItem value="verified">Verified</SelectItem>
+                             <SelectItem value="verified">Verified</SelectItem>
                             <SelectItem value="not_verified">Not Verified</SelectItem>
                         </SelectContent>
                     </Select>

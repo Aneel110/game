@@ -538,6 +538,7 @@ export async function listAllUsers() {
                 displayName: user.displayName || 'N/A',
                 email: user.email || 'N/A',
                 disabled: user.disabled,
+                emailVerified: user.emailVerified,
                 role: rolesData.get(user.uid) || 'user',
                 isNew: creationTime > sevenDaysAgo,
                 createdAt: user.metadata.creationTime,

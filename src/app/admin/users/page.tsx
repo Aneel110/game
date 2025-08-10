@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { db, auth } from "@/lib/firebase-admin";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertTriangle, UserCheck, UserX, Search } from "lucide-react";
+import { AlertTriangle, UserCheck, UserX, Search, CheckCircle2, XCircle } from "lucide-react";
 import UserActions from "./user-actions";
 import { listAllUsers } from "@/lib/actions";
 import { useEffect, useState, useMemo } from "react";
@@ -20,6 +20,7 @@ type User = {
     email: string;
     role: 'admin' | 'moderator' | 'user';
     disabled: boolean;
+    emailVerified: boolean;
     isNew: boolean;
     createdAt?: string;
 };
@@ -51,6 +52,20 @@ const getStatusBadge = (disabled: boolean) => {
     )
 }
 
+const getVerificationBadge = (isVerified: boolean) => {
+    return isVerified ? (
+        <Badge variant="outline" className="text-green-400 border-green-400">
+            <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+            Verified
+        </Badge>
+    ) : (
+        <Badge variant="destructive">
+            <XCircle className="w-3.5 h-3.5 mr-1" />
+            Not Verified
+        </Badge>
+    )
+}
+
 function UserTableSkeleton() {
     return (
         <Table>
@@ -60,6 +75,7 @@ function UserTableSkeleton() {
                     <TableHead>Email</TableHead>
                     <TableHead>Role</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Verification</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
             </TableHeader>
@@ -70,6 +86,7 @@ function UserTableSkeleton() {
                         <TableCell><Skeleton className="h-5 w-32" /></TableCell>
                         <TableCell><Skeleton className="h-6 w-16" /></TableCell>
                         <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+                        <TableCell><Skeleton className="h-6 w-24" /></TableCell>
                         <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
                     </TableRow>
                 ))}
@@ -105,6 +122,8 @@ export default function AdminUsersPage() {
                 if (filter === 'new') return user.isNew;
                 if (filter === 'enabled') return !user.disabled;
                 if (filter === 'disabled') return user.disabled;
+                if (filter === 'verified') return user.emailVerified;
+                if (filter === 'not_verified') return !user.emailVerified;
                 return true;
             })
             .filter(user => 
@@ -150,6 +169,8 @@ export default function AdminUsersPage() {
                             <SelectItem value="new">New Users</SelectItem>
                             <SelectItem value="enabled">Enabled</SelectItem>
                             <SelectItem value="disabled">Disabled</SelectItem>
+                            <SelectItem value="verified">Verified</SelectItem>
+                            <SelectItem value="not_verified">Not Verified</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
@@ -161,6 +182,7 @@ export default function AdminUsersPage() {
                                 <TableHead>Email</TableHead>
                                 <TableHead>Role</TableHead>
                                 <TableHead>Status</TableHead>
+                                <TableHead>Verification</TableHead>
                                 <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -176,6 +198,7 @@ export default function AdminUsersPage() {
                                     <TableCell>{user.email}</TableCell>
                                     <TableCell>{getRoleBadge(user.role)}</TableCell>
                                     <TableCell>{getStatusBadge(user.disabled)}</TableCell>
+                                    <TableCell>{getVerificationBadge(user.emailVerified)}</TableCell>
                                     <TableCell className="text-right">
                                         <UserActions userId={user.id} currentRole={user.role} isDisabled={user.disabled} />
                                     </TableCell>
@@ -183,7 +206,7 @@ export default function AdminUsersPage() {
                             ))}
                             {filteredUsers.length === 0 && (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="h-24 text-center">
+                                    <TableCell colSpan={6} className="h-24 text-center">
                                         No users found.
                                     </TableCell>
                                 </TableRow>

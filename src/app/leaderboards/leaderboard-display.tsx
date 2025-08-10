@@ -172,7 +172,11 @@ export default function LeaderboardDisplay() {
   const handleTournamentChange = (tournamentId: string) => {
     const tournament = tournaments.find(t => t.id === tournamentId);
     if (tournament) {
-        const sortedLeaderboard = tournament.leaderboard.sort((a, b) => b.points - a.points);
+        const sortedLeaderboard = tournament.leaderboard.sort((a, b) => {
+          if (b.points !== a.points) return b.points - a.points;
+          if (b.chickenDinners !== a.chickenDinners) return b.chickenDinners - a.chickenDinners;
+          return b.kills - a.kills;
+        });
         setSelectedTournament({ ...tournament, leaderboard: sortedLeaderboard });
     }
   };

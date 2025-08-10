@@ -39,14 +39,8 @@ export function SignupForm() {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
 
-            // Define the action code settings for the verification email
-            const actionCodeSettings = {
-                url: `${process.env.NEXT_PUBLIC_BASE_URL}/login`, // URL to redirect to after verification
-                handleCodeInApp: true,
-            };
-
-            // Send verification email with the custom settings
-            await sendEmailVerification(user, actionCodeSettings);
+            // Send verification email
+            await sendEmailVerification(user);
 
             // Update user profile
             await updateProfile(user, { displayName: username });

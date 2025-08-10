@@ -84,8 +84,9 @@ function RegistrationsSkeleton() {
 }
 
 
-export default function AdminTournamentDetailPage({ params }: { params: { id: string }}) {
-    const { id } = params;
+export default function AdminTournamentDetailPage() {
+    const params = useParams();
+    const id = params.id as string;
     const [tournament, setTournament] = useState<any>(null);
     const [registrations, setRegistrations] = useState<Registration[]>([]);
     const [usersMap, setUsersMap] = useState<Map<string, UserVerificationInfo>>(new Map());
@@ -95,7 +96,7 @@ export default function AdminTournamentDetailPage({ params }: { params: { id: st
         async function fetchData() {
             setLoading(true);
 
-            if (!db) {
+            if (!db || !id) {
                 setLoading(false);
                 return;
             }

@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import RegistrationActions from "./registration-actions";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { User, Mail, CheckCircle2, XCircle } from "lucide-react";
-import { notFound } from 'next/navigation';
+import { notFound, useParams } from 'next/navigation';
 import { listAllUsersWithVerification, getTournamentRegistrations } from "@/lib/actions";
 import { useEffect, useState, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -85,6 +85,7 @@ function RegistrationsSkeleton() {
 
 
 export default function AdminTournamentDetailPage({ params }: { params: { id: string }}) {
+    const { id } = params;
     const [tournament, setTournament] = useState<any>(null);
     const [registrations, setRegistrations] = useState<Registration[]>([]);
     const [usersMap, setUsersMap] = useState<Map<string, UserVerificationInfo>>(new Map());
@@ -100,7 +101,7 @@ export default function AdminTournamentDetailPage({ params }: { params: { id: st
             }
 
             // Fetch tournament data using client-side SDK
-            const tournamentDoc = await getDoc(doc(db, "tournaments", params.id));
+            const tournamentDoc = await getDoc(doc(db, "tournaments", id));
             if (!tournamentDoc.exists()) {
                 notFound();
                 return;
@@ -108,7 +109,7 @@ export default function AdminTournamentDetailPage({ params }: { params: { id: st
             setTournament({ id: tournamentDoc.id, ...tournamentDoc.data() });
 
             // Fetch registrations via server action
-            const { data, success } = await getTournamentRegistrations(params.id);
+            const { data, success } = await getTournamentRegistrations(id);
             if (success) {
                 setRegistrations(data.map((reg: any) => ({
                     ...reg,
@@ -128,7 +129,7 @@ export default function AdminTournamentDetailPage({ params }: { params: { id: st
         }
 
         fetchData();
-    }, [params.id]);
+    }, [id]);
     
     if (loading || !tournament) {
         return (
@@ -203,7 +204,7 @@ export default function AdminTournamentDetailPage({ params }: { params: { id: st
                                 </TableCell>
                                 <TableCell>{getStatusBadge(reg.status)}</TableCell>
                                 <TableCell className="text-right">
-                                   {reg.status !== 'declined' && <RegistrationActions tournamentId={params.id} registrationId={reg.id} currentStatus={reg.status} teamName={reg.teamName} />}
+                                   {reg.status !== 'declined' && <RegistrationActions tournamentId={id} registrationId={reg.id} currentStatus={reg.status} teamName={reg.teamName} />}
                                 </TableCell>
                             </TableRow>
                         ))}
@@ -220,5 +221,3 @@ export default function AdminTournamentDetailPage({ params }: { params: { id: st
         </Card>
     );
 }
-
-    

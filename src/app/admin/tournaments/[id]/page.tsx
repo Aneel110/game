@@ -1,18 +1,32 @@
 
 
+'use client';
+
 import { db } from "@/lib/firebase-admin";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import RegistrationActions from "./registration-actions";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { User, Mail } from "lucide-react";
+import { User, Mail, CheckCircle2, XCircle } from "lucide-react";
 import { notFound } from 'next/navigation';
+import { listAllUsersWithVerification } from "@/lib/actions";
+import { useEffect, useState, useMemo } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
-type AdminTournamentDetailPageProps = {
-    params: {
-        id: string;
-    }
+
+type Registration = {
+    id: string;
+    registeredByName: string;
+    teamName: string;
+    teamTag: string;
+    players: { pubgName: string; discordUsername: string; }[];
+    status: 'pending' | 'approved' | 'declined';
+    registeredAt: string;
+}
+
+type UserVerificationInfo = {
+    emailVerified: boolean;
 }
 
 const getStatusBadge = (status: string) => {
@@ -28,36 +42,102 @@ const getStatusBadge = (status: string) => {
     }
 }
 
-async function getTournamentData(id: string) {
-    if (!db) return null;
-    const docRef = db.collection("tournaments").doc(id);
-    const docSnap = await docRef.get();
-    return docSnap.exists ? { id: docSnap.id, ...docSnap.data() } : null;
+const getVerificationBadge = (isVerified: boolean) => {
+    return isVerified ? (
+        <Badge variant="outline" className="text-green-500 border-green-500">
+            <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+            Verified
+        </Badge>
+    ) : (
+        <Badge variant="destructive">
+            <XCircle className="w-3.5 h-3.5 mr-1" />
+            Not Verified
+        </Badge>
+    )
 }
 
-async function getSerializableRegistrations(tournamentId: string) {
-    if (!db) return [];
-    const registrationsSnapshot = await db.collection('tournaments').doc(tournamentId).collection('registrations').get();
-    const registrations = registrationsSnapshot.docs.map(doc => {
-        const data = doc.data();
-        if (!data) return null;
-        return {
-            id: doc.id,
-            ...data,
-            registeredAt: data.registeredAt?.toDate().toISOString() || new Date().toISOString(),
-        };
-    }).filter(Boolean); // Filter out any null entries
-    return registrations;
+function RegistrationsSkeleton() {
+    return (
+        <Table>
+            <TableHeader>
+                <TableRow>
+                    <TableHead>Team Name</TableHead>
+                    <TableHead>Registered By</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {Array.from({ length: 3 }).map((_, i) => (
+                     <TableRow key={i}>
+                        <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                        <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+                        <TableCell className="text-right"><Skeleton className="h-8 w-16" /></TableCell>
+                    </TableRow>
+                ))}
+            </TableBody>
+        </Table>
+    )
 }
 
-export default async function AdminTournamentDetailPage({ params }: AdminTournamentDetailPageProps) {
-    const tournament = await getTournamentData(params.id);
+
+export default function AdminTournamentDetailPage({ params }: { params: { id: string }}) {
+    const [tournament, setTournament] = useState<any>(null);
+    const [registrations, setRegistrations] = useState<Registration[]>([]);
+    const [usersMap, setUsersMap] = useState<Map<string, UserVerificationInfo>>(new Map());
+    const [loading, setLoading] = useState(true);
     
-    if (!tournament) {
-        notFound();
+    useEffect(() => {
+        async function fetchData() {
+            setLoading(true);
+
+            // Fetch tournament data
+            const tournamentDoc = await db.collection("tournaments").doc(params.id).get();
+            if (!tournamentDoc.exists) {
+                notFound();
+                return;
+            }
+            setTournament({ id: tournamentDoc.id, ...tournamentDoc.data() });
+
+            // Fetch registrations
+            const registrationsSnapshot = await db.collection('tournaments').doc(params.id).collection('registrations').get();
+            const registrationData = registrationsSnapshot.docs.map(doc => {
+                const data = doc.data();
+                return {
+                    id: doc.id,
+                    ...data,
+                    registeredAt: data.registeredAt?.toDate().toISOString() || new Date().toISOString(),
+                } as Registration;
+            });
+            setRegistrations(registrationData);
+
+            // Fetch all users with verification status
+            const { users, error } = await listAllUsersWithVerification();
+            if (!error) {
+                const userVerificationMap = new Map(users.map(u => [u.id, { emailVerified: u.emailVerified }]));
+                setUsersMap(userVerificationMap);
+            }
+            
+            setLoading(false);
+        }
+
+        fetchData();
+    }, [params.id]);
+    
+    if (loading || !tournament) {
+        return (
+            <Card>
+                <CardHeader>
+                    <CardTitle><Skeleton className="h-8 w-1/2" /></CardTitle>
+                    <CardDescription><Skeleton className="h-4 w-3/4" /></CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <RegistrationsSkeleton />
+                </CardContent>
+            </Card>
+        )
     }
-    
-    const registrations = await getSerializableRegistrations(params.id);
     
     return (
         <Card>
@@ -78,7 +158,7 @@ export default async function AdminTournamentDetailPage({ params }: AdminTournam
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {registrations.map((reg: any) => (
+                        {registrations.map((reg: Registration) => (
                              <TableRow key={reg.id}>
                                 <TableCell>
                                     <div className="font-medium">{reg.teamName}</div>
@@ -112,6 +192,9 @@ export default async function AdminTournamentDetailPage({ params }: AdminTournam
                                 </TableCell>
                                 <TableCell>
                                     <div className="text-sm">{reg.registeredByName}</div>
+                                    <div className="text-xs mt-1">
+                                        {usersMap.has(reg.id) && getVerificationBadge(usersMap.get(reg.id)!.emailVerified)}
+                                    </div>
                                 </TableCell>
                                 <TableCell>{getStatusBadge(reg.status)}</TableCell>
                                 <TableCell className="text-right">

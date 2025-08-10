@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle, UserCheck, UserX, Search, CheckCircle2, XCircle } from "lucide-react";
 import UserActions from "./user-actions";
-import { listAllUsers } from "@/lib/actions";
+import { listAllUsersWithVerification } from "@/lib/actions";
 import { useEffect, useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -105,7 +105,7 @@ export default function AdminUsersPage() {
         async function fetchUsers() {
             setLoading(true);
             try {
-                const result = await listAllUsers();
+                const result = await listAllUsersWithVerification();
                 if (result.success && result.users) {
                     setUsers(result.users);
                 } else {

@@ -509,9 +509,9 @@ export async function updateUserProfile(userId: string, data: { displayName: str
     }
 }
 
-export async function listAllUsers() {
+export async function listAllUsersWithVerification() {
     if (!db || !auth) {
-        return { success: false, error: "Firebase Admin is not configured." };
+        return { success: false, error: "Firebase Admin is not configured.", users: [] };
     }
 
     try {
@@ -549,7 +549,7 @@ export async function listAllUsers() {
 
     } catch (e: any) {
         console.error("Error fetching all users:", e);
-        return { success: false, error: `Failed to fetch user data: ${e.message}` };
+        return { success: false, error: `Failed to fetch user data: ${e.message}`, users: [] };
     }
 }
 

@@ -5,6 +5,7 @@ import { Users, Gamepad2, Trophy, DollarSign, AlertTriangle } from "lucide-react
 import { db, auth } from "@/lib/firebase-admin";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Timestamp } from "firebase-admin/firestore";
+import { listAllUsersWithVerification } from "@/lib/actions";
 
 export const dynamic = 'force-dynamic';
 
@@ -15,8 +16,11 @@ async function getDashboardStats() {
 
     try {
         // Fetch all users from Firebase Authentication for an accurate count
-        const listUsersResult = await auth.listUsers();
-        const totalUsers = listUsersResult.users.length;
+        const { users: allUsers, error: userError } = await listAllUsersWithVerification();
+        if (userError) {
+            throw new Error(userError);
+        }
+        const totalUsers = allUsers.length;
         
         const tournamentsSnapshot = await db.collection('tournaments').get();
 
@@ -100,3 +104,5 @@ export default async function AdminDashboardPage() {
     </div>
   );
 }
+
+    

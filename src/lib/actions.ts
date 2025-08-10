@@ -545,7 +545,7 @@ export async function listAllUsersWithVerification() {
             };
         });
 
-        return { success: true, users: users };
+        return { success: true, users: users, error: null };
 
     } catch (e: any) {
         console.error("Error fetching all users:", e);
@@ -573,3 +573,5 @@ export async function updateFinalistLeaderboard(tournamentId: string, data: Fina
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }
+
+    

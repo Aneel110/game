@@ -2,7 +2,6 @@
 
 'use client';
 
-import { db } from "@/lib/firebase-admin";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -10,9 +9,11 @@ import RegistrationActions from "./registration-actions";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { User, Mail, CheckCircle2, XCircle } from "lucide-react";
 import { notFound } from 'next/navigation';
-import { listAllUsersWithVerification } from "@/lib/actions";
+import { listAllUsersWithVerification, getTournamentRegistrations } from "@/lib/actions";
 import { useEffect, useState, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 
 type Registration = {
@@ -23,6 +24,7 @@ type Registration = {
     players: { pubgName: string; discordUsername: string; }[];
     status: 'pending' | 'approved' | 'declined';
     registeredAt: string;
+    userId: string;
 }
 
 type UserVerificationInfo = {
@@ -92,29 +94,32 @@ export default function AdminTournamentDetailPage({ params }: { params: { id: st
         async function fetchData() {
             setLoading(true);
 
-            // Fetch tournament data
-            const tournamentDoc = await db.collection("tournaments").doc(params.id).get();
-            if (!tournamentDoc.exists) {
+            if (!db) {
+                setLoading(false);
+                return;
+            }
+
+            // Fetch tournament data using client-side SDK
+            const tournamentDoc = await getDoc(doc(db, "tournaments", params.id));
+            if (!tournamentDoc.exists()) {
                 notFound();
                 return;
             }
             setTournament({ id: tournamentDoc.id, ...tournamentDoc.data() });
 
-            // Fetch registrations
-            const registrationsSnapshot = await db.collection('tournaments').doc(params.id).collection('registrations').get();
-            const registrationData = registrationsSnapshot.docs.map(doc => {
-                const data = doc.data();
-                return {
-                    id: doc.id,
-                    ...data,
-                    registeredAt: data.registeredAt?.toDate().toISOString() || new Date().toISOString(),
-                } as Registration;
-            });
-            setRegistrations(registrationData);
+            // Fetch registrations via server action
+            const { data, success } = await getTournamentRegistrations(params.id);
+            if (success) {
+                setRegistrations(data.map((reg: any) => ({
+                    ...reg,
+                    userId: reg.id,
+                    registeredAt: reg.registeredAt?.toDate ? reg.registeredAt.toDate().toISOString() : new Date().toISOString(),
+                })));
+            }
 
-            // Fetch all users with verification status
+            // Fetch all users with verification status via server action
             const { users, error } = await listAllUsersWithVerification();
-            if (!error) {
+            if (!error && users) {
                 const userVerificationMap = new Map(users.map(u => [u.id, { emailVerified: u.emailVerified }]));
                 setUsersMap(userVerificationMap);
             }
@@ -193,7 +198,7 @@ export default function AdminTournamentDetailPage({ params }: { params: { id: st
                                 <TableCell>
                                     <div className="text-sm">{reg.registeredByName}</div>
                                     <div className="text-xs mt-1">
-                                        {usersMap.has(reg.id) && getVerificationBadge(usersMap.get(reg.id)!.emailVerified)}
+                                        {usersMap.has(reg.userId) && getVerificationBadge(usersMap.get(reg.userId)!.emailVerified)}
                                     </div>
                                 </TableCell>
                                 <TableCell>{getStatusBadge(reg.status)}</TableCell>
@@ -215,3 +220,5 @@ export default function AdminTournamentDetailPage({ params }: { params: { id: st
         </Card>
     );
 }
+
+    

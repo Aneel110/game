@@ -75,9 +75,9 @@ export default function FinalistForm({ tournamentId, defaultValues, approvedTeam
         <div className="space-y-4">
             <Label className="text-lg font-semibold">Finalist Teams</Label>
             {fields.map((field, index) => (
-                <div key={field.id} className="flex items-end gap-2 p-4 border rounded-md relative">
+                <div key={field.id} className="flex flex-col md:flex-row items-end gap-2 p-4 border rounded-md relative">
                      <div className="absolute top-2 left-4 text-xs font-bold text-muted-foreground">Rank #{index + 1}</div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-grow pt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-grow pt-4 w-full">
                         <FormField
                             control={form.control}
                             name={`finalistLeaderboard.${index}.teamName`}
@@ -114,7 +114,7 @@ export default function FinalistForm({ tournamentId, defaultValues, approvedTeam
                             )}
                             />
                     </div>
-                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 flex-grow pt-4">
+                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 flex-grow pt-4 w-full">
                          <FormField control={form.control} name={`finalistLeaderboard.${index}.points`} render={({ field }) => ( <FormItem><FormLabel>Points</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || 0)} /></FormControl><FormMessage /></FormItem>)} />
                          <FormField control={form.control} name={`finalistLeaderboard.${index}.matches`} render={({ field }) => ( <FormItem><FormLabel>Matches</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || 0)} /></FormControl><FormMessage /></FormItem>)} />
                          <FormField control={form.control} name={`finalistLeaderboard.${index}.kills`} render={({ field }) => ( <FormItem><FormLabel>Kills</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || 0)} /></FormControl><FormMessage /></FormItem>)} />

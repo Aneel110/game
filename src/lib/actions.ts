@@ -1,5 +1,4 @@
 
-
 'use server';
 
 import { auth, db } from '@/lib/firebase-admin';
@@ -116,11 +115,11 @@ export async function updateRegistrationStatus(tournamentId: string, registratio
                 const newEntry = {
                     rank: 0,
                     teamName: teamName,
+                    logoUrl: '',
                     points: 0,
                     matches: 0,
                     kills: 0,
                     chickenDinners: 0,
-                    logoUrl: '',
                 };
                 leaderboard.push(newEntry);
                 transaction.update(tournamentRef, { leaderboard });

@@ -83,7 +83,7 @@ export default function LeaderboardForm({ tournamentId, entryTeamName, defaultVa
                 />
             </div>
             
-             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <FormField
                     control={form.control}
                     name="points"

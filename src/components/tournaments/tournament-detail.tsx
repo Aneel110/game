@@ -69,7 +69,7 @@ function LeaderboardTable({ title, leaderboardData, icon: Icon }: { title: strin
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="w-[80px] text-center">Rank</TableHead>
+                                <TableHead className="w-[50px] text-center">Rank</TableHead>
                                 <TableHead>Team</TableHead>
                                 <TableHead className="text-center">Matches</TableHead>
                                 <TableHead className="text-center">Wins</TableHead>
@@ -82,31 +82,31 @@ function LeaderboardTable({ title, leaderboardData, icon: Icon }: { title: strin
                                 const rank = index + 1;
                                 return (
                                 <TableRow key={p.teamName}>
-                                    <TableCell className="font-bold text-lg text-center">
-                                        {rank === 1 ? <Crown className="w-6 h-6 text-yellow-400 inline-block" /> : rank}
+                                    <TableCell className="font-bold text-md text-center">
+                                        {rank === 1 ? <Crown className="w-5 h-5 text-yellow-400 inline-block" /> : rank}
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-3">
-                                            <Avatar className="h-10 w-10 border-2 border-primary/50">
+                                            <Avatar className="h-8 w-8 border-2 border-primary/50">
                                                 <AvatarImage src={p.logoUrl || `https://placehold.co/40x40.png?text=${p.teamName.charAt(0)}`} />
                                                 <AvatarFallback>{p.teamName.charAt(0)}</AvatarFallback>
                                             </Avatar>
-                                            <span className="font-medium">{p.teamName}</span>
+                                            <span className="font-medium text-sm md:text-base">{p.teamName}</span>
                                         </div>
                                     </TableCell>
-                                    <TableCell className="text-center">
-                                        <div className="flex items-center justify-center gap-2">
-                                            <Swords className="w-4 h-4 text-muted-foreground" /> {p.matches || 0}
+                                    <TableCell className="text-center text-sm md:text-base">
+                                        <div className="flex items-center justify-center gap-1 md:gap-2">
+                                            <Swords className="w-3.5 h-3.5 text-muted-foreground" /> {p.matches || 0}
                                         </div>
                                     </TableCell>
-                                    <TableCell className="text-center">
-                                        <div className="flex items-center justify-center gap-2">
-                                            <Drumstick className="w-4 h-4 text-amber-500" /> {p.chickenDinners || 0}
+                                    <TableCell className="text-center text-sm md:text-base">
+                                        <div className="flex items-center justify-center gap-1 md:gap-2">
+                                            <Drumstick className="w-3.5 h-3.5 text-amber-500" /> {p.chickenDinners || 0}
                                         </div>
                                     </TableCell>
-                                    <TableCell className="text-center">
-                                        <div className="flex items-center justify-center gap-2">
-                                            <Skull className="w-4 h-4 text-muted-foreground" /> {p.kills || 0}
+                                    <TableCell className="text-center text-sm md:text-base">
+                                        <div className="flex items-center justify-center gap-1 md:gap-2">
+                                            <Skull className="w-3.5 h-3.5 text-muted-foreground" /> {p.kills || 0}
                                         </div>
                                     </TableCell>
                                     <TableCell className="text-right font-bold text-primary">{p.points}</TableCell>

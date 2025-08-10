@@ -17,6 +17,7 @@ type LeaderboardEntry = {
     matches: number;
     kills: number;
     chickenDinners: number;
+    logoUrl?: string;
 }
 
 type Tournament = {
@@ -119,7 +120,7 @@ function LeaderboardTable({ leaderboardData }: { leaderboardData: LeaderboardEnt
                   <TableCell>
                     <div className="flex items-center gap-4">
                       <Avatar className="h-12 w-12 border-2 border-primary/50">
-                        <AvatarImage src={`https://placehold.co/40x40.png?text=${p.teamName.charAt(0)}`} />
+                        <AvatarImage src={p.logoUrl || `https://placehold.co/40x40.png?text=${p.teamName.charAt(0)}`} />
                         <AvatarFallback>{p.teamName.charAt(0)}</AvatarFallback>
                       </Avatar>
                       <span className="font-medium text-lg">{p.teamName}</span>

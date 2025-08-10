@@ -8,11 +8,13 @@ import Link from "next/link";
 import DeleteLeaderboardButton from "./delete-leaderboard-button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { notFound } from "next/navigation";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type LeaderboardEntry = {
     id: string; // This will be the team's name for simplicity if we don't have unique IDs per entry
     rank: number;
     teamName: string;
+    logoUrl?: string;
     points: number;
     matches: number;
     kills: number;
@@ -76,6 +78,7 @@ export default async function AdminTournamentLeaderboardPage({ params }: { param
                     <TableHeader>
                         <TableRow>
                             <TableHead>Rank</TableHead>
+                            <TableHead>Logo</TableHead>
                             <TableHead>Team Name</TableHead>
                             <TableHead>Points</TableHead>
                             <TableHead>Matches</TableHead>
@@ -88,6 +91,12 @@ export default async function AdminTournamentLeaderboardPage({ params }: { param
                         {entries && entries.map((entry, index) => (
                             <TableRow key={entry.id}>
                                 <TableCell className="font-medium">{index + 1}</TableCell>
+                                <TableCell>
+                                    <Avatar className="h-10 w-10">
+                                        <AvatarImage src={entry.logoUrl || `https://placehold.co/40x40.png?text=${entry.teamName.charAt(0)}`} alt={entry.teamName} />
+                                        <AvatarFallback>{entry.teamName.charAt(0)}</AvatarFallback>
+                                    </Avatar>
+                                </TableCell>
                                 <TableCell>{entry.teamName}</TableCell>
                                 <TableCell>{entry.points}</TableCell>
                                 <TableCell>{entry.matches}</TableCell>
@@ -105,7 +114,7 @@ export default async function AdminTournamentLeaderboardPage({ params }: { param
                         ))}
                          {(!entries || entries.length === 0) && (
                             <TableRow>
-                                <TableCell colSpan={7} className="h-24 text-center">
+                                <TableCell colSpan={8} className="h-24 text-center">
                                     No entries found.
                                 </TableCell>
                             </TableRow>

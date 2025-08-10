@@ -120,6 +120,7 @@ export async function updateRegistrationStatus(tournamentId: string, registratio
                     matches: 0,
                     kills: 0,
                     chickenDinners: 0,
+                    logoUrl: '',
                 };
                 leaderboard.push(newEntry);
                 transaction.update(tournamentRef, { leaderboard });
@@ -572,5 +573,3 @@ export async function updateFinalistLeaderboard(tournamentId: string, data: Fina
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }
-
-    

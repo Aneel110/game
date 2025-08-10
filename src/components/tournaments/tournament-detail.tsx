@@ -88,7 +88,7 @@ function LeaderboardTable({ title, leaderboardData, icon: Icon }: { title: strin
                                     <TableCell>
                                         <div className="flex items-center gap-3">
                                             <Avatar className="h-10 w-10 border-2 border-primary/50">
-                                                <AvatarImage src={`https://placehold.co/40x40.png?text=${p.teamName.charAt(0)}`} />
+                                                <AvatarImage src={p.logoUrl || `https://placehold.co/40x40.png?text=${p.teamName.charAt(0)}`} />
                                                 <AvatarFallback>{p.teamName.charAt(0)}</AvatarFallback>
                                             </Avatar>
                                             <span className="font-medium">{p.teamName}</span>
@@ -365,5 +365,3 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
     </div>
   );
 }
-
-    

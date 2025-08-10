@@ -77,12 +77,12 @@ export default function FinalistForm({ tournamentId, defaultValues, approvedTeam
             {fields.map((field, index) => (
                 <div key={field.id} className="flex items-end gap-2 p-4 border rounded-md relative">
                      <div className="absolute top-2 left-4 text-xs font-bold text-muted-foreground">Rank #{index + 1}</div>
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 flex-grow pt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-grow pt-4">
                         <FormField
                             control={form.control}
                             name={`finalistLeaderboard.${index}.teamName`}
                             render={({ field }) => (
-                                <FormItem className="md:col-span-2">
+                                <FormItem>
                                     <FormLabel>Team</FormLabel>
                                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                                         <FormControl>
@@ -100,6 +100,21 @@ export default function FinalistForm({ tournamentId, defaultValues, approvedTeam
                                 </FormItem>
                             )}
                         />
+                         <FormField
+                            control={form.control}
+                            name={`finalistLeaderboard.${index}.logoUrl`}
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Logo URL</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="https://example.com/logo.png" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
+                    </div>
+                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 flex-grow pt-4">
                          <FormField control={form.control} name={`finalistLeaderboard.${index}.points`} render={({ field }) => ( <FormItem><FormLabel>Points</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || 0)} /></FormControl><FormMessage /></FormItem>)} />
                          <FormField control={form.control} name={`finalistLeaderboard.${index}.matches`} render={({ field }) => ( <FormItem><FormLabel>Matches</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || 0)} /></FormControl><FormMessage /></FormItem>)} />
                          <FormField control={form.control} name={`finalistLeaderboard.${index}.kills`} render={({ field }) => ( <FormItem><FormLabel>Kills</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || 0)} /></FormControl><FormMessage /></FormItem>)} />
@@ -115,7 +130,7 @@ export default function FinalistForm({ tournamentId, defaultValues, approvedTeam
                 variant="outline"
                 size="sm"
                 className="mt-2"
-                onClick={() => append({ teamName: '', points: 0, matches: 0, kills: 0, chickenDinners: 0, rank: 0 })}
+                onClick={() => append({ teamName: '', logoUrl: '', points: 0, matches: 0, kills: 0, chickenDinners: 0, rank: 0 })}
             >
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Add Finalist Team

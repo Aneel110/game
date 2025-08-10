@@ -31,6 +31,7 @@ export default function LeaderboardForm({ tournamentId, entryTeamName, defaultVa
     defaultValues: defaultValues || {
         rank: 1,
         teamName: '',
+        logoUrl: '',
         points: 0,
         matches: 0,
         kills: 0,
@@ -69,12 +70,12 @@ export default function LeaderboardForm({ tournamentId, entryTeamName, defaultVa
                 />
                  <FormField
                     control={form.control}
-                    name="rank"
+                    name="logoUrl"
                     render={({ field }) => (
                         <FormItem>
-                            <Label>Rank</Label>
+                            <Label>Team Logo URL</Label>
                             <FormControl>
-                                <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || 0)} />
+                                <Input placeholder="https://example.com/logo.png" {...field} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -82,7 +83,7 @@ export default function LeaderboardForm({ tournamentId, entryTeamName, defaultVa
                 />
             </div>
             
-             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                 <FormField
                     control={form.control}
                     name="points"

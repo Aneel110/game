@@ -5,7 +5,7 @@
 import { auth, db } from '@/lib/firebase-admin';
 import { revalidatePath } from 'next/cache';
 import { tournamentSchema, streamSchema, registrationSchema, type RegistrationData, leaderboardEntrySchema, siteSettingsSchema, profileSchema, finalistFormSchema, FinalistFormValues } from '@/lib/schemas';
-import { FieldValue } from 'firebase-admin/firestore';
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { User } from 'firebase/auth';
 
 // Helper to extract YouTube video ID from various URL formats
@@ -78,7 +78,15 @@ export async function getTournamentRegistrations(tournamentId: string) {
     }
     try {
         const registrationsSnapshot = await db.collection('tournaments').doc(tournamentId).collection('registrations').get();
-        const registrations = registrationsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const registrations = registrationsSnapshot.docs.map(doc => {
+            const data = doc.data();
+            return { 
+                id: doc.id, 
+                ...data,
+                // Convert Timestamp to a serializable format (ISO string)
+                registeredAt: data.registeredAt instanceof Timestamp ? data.registeredAt.toDate().toISOString() : new Date().toISOString(),
+            };
+        });
         return { success: true, data: registrations };
     } catch (error) {
         console.error('Error fetching registrations:', error);

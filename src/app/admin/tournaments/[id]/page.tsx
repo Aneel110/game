@@ -115,7 +115,8 @@ export default function AdminTournamentDetailPage() {
                 setRegistrations(data.map((reg: any) => ({
                     ...reg,
                     userId: reg.id,
-                    registeredAt: reg.registeredAt?.toDate ? reg.registeredAt.toDate().toISOString() : new Date().toISOString(),
+                    // The date is now an ISO string, no need for conversion here
+                    registeredAt: reg.registeredAt, 
                 })));
             }
 

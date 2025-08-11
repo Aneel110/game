@@ -1,11 +1,12 @@
 
+
 'use server';
 
 import { auth, db } from '@/lib/firebase-admin';
 import { revalidatePath } from 'next/cache';
-import { tournamentSchema, streamSchema, registrationSchema, type RegistrationData, leaderboardEntrySchema, siteSettingsSchema, profileSchema, finalistFormSchema, FinalistFormValues } from '@/lib/schemas';
+import { tournamentSchema, streamSchema, registrationSchema, type RegistrationData, leaderboardEntrySchema, siteSettingsSchema, profileSchema } from '@/lib/schemas';
 import { FieldValue } from 'firebase-admin/firestore';
-import { UserRecord } from 'firebase-admin/auth';
+import { User } from 'firebase/auth';
 
 // Helper to extract YouTube video ID from various URL formats
 const getYouTubeVideoId = (url: string): string | null => {
@@ -115,7 +116,6 @@ export async function updateRegistrationStatus(tournamentId: string, registratio
                 const newEntry = {
                     rank: 0,
                     teamName: teamName,
-                    logoUrl: '',
                     points: 0,
                     matches: 0,
                     kills: 0,
@@ -237,7 +237,7 @@ export async function createTournament(formData: FormData) {
 
     try {
         const { ...dataToSave } = validatedFields.data;
-        await db.collection('tournaments').add({ ...dataToSave, leaderboard: [], finalistLeaderboard: [], finalistLeaderboardActive: false });
+        await db.collection('tournaments').add({ ...dataToSave, leaderboard: [] });
         revalidatePath('/tournaments');
         revalidatePath('/admin/tournaments');
         return { success: true, message: 'Tournament created successfully.' };
@@ -511,27 +511,19 @@ export async function updateUserProfile(userId: string, data: { displayName: str
 
 export async function listAllUsersWithVerification() {
     if (!db || !auth) {
-        return { success: false, error: "Firebase Admin is not configured.", users: [] };
+        return { error: "Firebase Admin is not configured. Please set FIREBASE_SERVICE_ACCOUNT_KEY." };
     }
 
-    try {
-        const userRecords: UserRecord[] = [];
-        let nextPageToken;
-        // Batch fetch all users from Auth
-        do {
-            const listUsersResult = await auth.listUsers(1000, nextPageToken);
-            userRecords.push(...listUsersResult.users);
-            nextPageToken = listUsersResult.pageToken;
-        } while (nextPageToken);
+    const listUsersResult = await auth.listUsers();
+    const uids = listUsersResult.users.map(user => user.uid);
+    const usersSnapshot = await db.collection('users').where('uid', 'in', uids).get();
+    const rolesData = new Map(usersSnapshot.docs.map(doc => [doc.id, doc.data().role]));
+    
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-        // Get all role data from Firestore
-        const usersSnapshot = await db.collection('users').get();
-        const rolesData = new Map(usersSnapshot.docs.map(doc => [doc.id, doc.data().role]));
-        
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-        const users = userRecords.map(user => {
+    return {
+        users: listUsersResult.users.map(user => {
             const creationTime = new Date(user.metadata.creationTime);
             return {
                 id: user.uid,
@@ -543,35 +535,6 @@ export async function listAllUsersWithVerification() {
                 isNew: creationTime > sevenDaysAgo,
                 createdAt: user.metadata.creationTime,
             };
-        });
-
-        return { success: true, users: users, error: null };
-
-    } catch (e: any) {
-        console.error("Error fetching all users:", e);
-        return { success: false, error: `Failed to fetch user data: ${e.message}`, users: [] };
-    }
+        })
+    };
 }
-
-export async function updateFinalistLeaderboard(tournamentId: string, data: FinalistFormValues) {
-    if (!db) {
-        return { success: false, message: 'Database not initialized.' };
-    }
-
-    const validatedFields = finalistFormSchema.safeParse(data);
-    if (!validatedFields.success) {
-        return { success: false, message: 'Invalid form data.', errors: validatedFields.error.flatten().fieldErrors };
-    }
-
-    try {
-        await db.collection('tournaments').doc(tournamentId).update(validatedFields.data);
-        revalidatePath(`/tournaments/${tournamentId}`);
-        revalidatePath(`/admin/tournaments/${tournamentId}/finalists`);
-        return { success: true, message: 'Finalist leaderboard updated successfully.' };
-    } catch (error) {
-        console.error('Error updating finalist leaderboard:', error);
-        return { success: false, message: 'An unexpected error occurred.' };
-    }
-}
-
-    

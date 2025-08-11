@@ -1,18 +1,11 @@
 
-
 'use server';
 
 import { auth, db } from '@/lib/firebase-admin';
 import { revalidatePath } from 'next/cache';
-<<<<<<< HEAD
-import { tournamentSchema, streamSchema, registrationSchema, type RegistrationData, leaderboardEntrySchema, siteSettingsSchema, profileSchema, finalistFormSchema, FinalistFormValues } from '@/lib/schemas';
-import { FieldValue, Timestamp } from 'firebase-admin/firestore';
-import { User } from 'firebase/auth';
-=======
 import { tournamentSchema, streamSchema, registrationSchema, type RegistrationData, leaderboardEntrySchema, siteSettingsSchema, profileSchema, finalistFormSchema, type FinalistFormValues } from '@/lib/schemas';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { UserRecord } from 'firebase-admin/auth';
->>>>>>> af103e7ec7dbc369de12e349d65989b9298fd841
 
 // Helper to extract YouTube video ID from various URL formats
 const getYouTubeVideoId = (url: string): string | null => {
@@ -86,20 +79,12 @@ export async function getTournamentRegistrations(tournamentId: string) {
         const registrationsSnapshot = await db.collection('tournaments').doc(tournamentId).collection('registrations').get();
         const registrations = registrationsSnapshot.docs.map(doc => {
             const data = doc.data();
-<<<<<<< HEAD
-            return { 
-                id: doc.id, 
-                ...data,
-                // Convert Timestamp to a serializable format (ISO string)
-                registeredAt: data.registeredAt instanceof Timestamp ? data.registeredAt.toDate().toISOString() : new Date().toISOString(),
-=======
             const registeredAt = data.registeredAt;
             return { 
                 id: doc.id, 
                 ...data,
                  registeredAt: registeredAt instanceof Timestamp ? registeredAt.toDate().toISOString() : new Date().toISOString(),
                  userId: doc.id,
->>>>>>> af103e7ec7dbc369de12e349d65989b9298fd841
             };
         });
         return { success: true, data: registrations };
@@ -565,29 +550,12 @@ export async function listAllUsersWithVerification() {
             return { users: [], success: true };
         }
 
-<<<<<<< HEAD
-        const uids = allAuthUsers.map(user => user.uid);
-        const rolesData = new Map<string, string>();
-        
-        // Firestore 'in' query has a limit of 30 items. We need to batch the requests.
-        const BATCH_SIZE = 30;
-        for (let i = 0; i < uids.length; i += BATCH_SIZE) {
-            const batchUids = uids.slice(i, i + BATCH_SIZE);
-            if (batchUids.length > 0) {
-                const usersSnapshot = await db.collection('users').where('uid', 'in', batchUids).get();
-                usersSnapshot.docs.forEach(doc => {
-                    rolesData.set(doc.id, doc.data().role);
-                });
-            }
-        }
-=======
         // Get all role data from Firestore
         const usersSnapshot = await db.collection('users').get();
         const rolesData = new Map(usersSnapshot.docs.map(doc => {
             const data = doc.data();
             return [doc.id, { role: data.role, isNew: data.isNew }];
         }));
->>>>>>> af103e7ec7dbc369de12e349d65989b9298fd841
         
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -613,27 +581,3 @@ export async function listAllUsersWithVerification() {
         return { error: `Failed to list users: ${error.message}` };
     }
 }
-<<<<<<< HEAD
-=======
-
-export async function updateFinalistLeaderboard(tournamentId: string, data: FinalistFormValues) {
-    if (!db) {
-        return { success: false, message: 'Database not initialized.' };
-    }
-
-    const validatedFields = finalistFormSchema.safeParse(data);
-    if (!validatedFields.success) {
-        return { success: false, message: 'Invalid form data.', errors: validatedFields.error.flatten().fieldErrors };
-    }
-
-    try {
-        await db.collection('tournaments').doc(tournamentId).update(validatedFields.data);
-        revalidatePath(`/tournaments/${tournamentId}`);
-        revalidatePath(`/admin/tournaments/${tournamentId}/finalists`);
-        return { success: true, message: 'Finalist leaderboard updated successfully.' };
-    } catch (error) {
-        console.error('Error updating finalist leaderboard:', error);
-        return { success: false, message: 'An unexpected error occurred.' };
-    }
-}
->>>>>>> af103e7ec7dbc369de12e349d65989b9298fd841

@@ -86,11 +86,7 @@ function RegistrationsSkeleton() {
 
 export default function AdminTournamentDetailPage() {
     const params = useParams();
-<<<<<<< HEAD
     const tournamentId = params.id as string;
-=======
-    const id = params.id as string;
->>>>>>> af103e7ec7dbc369de12e349d65989b9298fd841
     const [tournament, setTournament] = useState<any>(null);
     const [registrations, setRegistrations] = useState<Registration[]>([]);
     const [usersMap, setUsersMap] = useState<Map<string, UserVerificationInfo>>(new Map());
@@ -100,17 +96,13 @@ export default function AdminTournamentDetailPage() {
         async function fetchData() {
             setLoading(true);
 
-            if (!db || !id) {
+            if (!db || !tournamentId) {
                 setLoading(false);
                 return;
             }
 
             // Fetch tournament data using client-side SDK
-<<<<<<< HEAD
             const tournamentDoc = await getDoc(doc(db, "tournaments", tournamentId));
-=======
-            const tournamentDoc = await getDoc(doc(db, "tournaments", id));
->>>>>>> af103e7ec7dbc369de12e349d65989b9298fd841
             if (!tournamentDoc.exists()) {
                 notFound();
                 return;
@@ -118,20 +110,9 @@ export default function AdminTournamentDetailPage() {
             setTournament({ id: tournamentDoc.id, ...tournamentDoc.data() });
 
             // Fetch registrations via server action
-<<<<<<< HEAD
             const { data, success } = await getTournamentRegistrations(tournamentId);
             if (success) {
-                setRegistrations(data.map((reg: any) => ({
-                    ...reg,
-                    userId: reg.id,
-                    // The date is now an ISO string, no need for conversion here
-                    registeredAt: reg.registeredAt, 
-                })));
-=======
-            const { data, success } = await getTournamentRegistrations(id);
-            if (success) {
                 setRegistrations(data);
->>>>>>> af103e7ec7dbc369de12e349d65989b9298fd841
             }
 
             // Fetch all users with verification status via server action
@@ -144,15 +125,10 @@ export default function AdminTournamentDetailPage() {
             setLoading(false);
         }
 
-<<<<<<< HEAD
         if (tournamentId) {
           fetchData();
         }
     }, [tournamentId]);
-=======
-        fetchData();
-    }, [id]);
->>>>>>> af103e7ec7dbc369de12e349d65989b9298fd841
     
     if (loading || !tournament) {
         return (
@@ -227,11 +203,7 @@ export default function AdminTournamentDetailPage() {
                                 </TableCell>
                                 <TableCell>{getStatusBadge(reg.status)}</TableCell>
                                 <TableCell className="text-right">
-<<<<<<< HEAD
                                    {reg.status !== 'declined' && <RegistrationActions tournamentId={tournamentId} registrationId={reg.id} currentStatus={reg.status} teamName={reg.teamName} />}
-=======
-                                   {reg.status !== 'declined' && <RegistrationActions tournamentId={id} registrationId={reg.id} currentStatus={reg.status} teamName={reg.teamName} />}
->>>>>>> af103e7ec7dbc369de12e349d65989b9298fd841
                                 </TableCell>
                             </TableRow>
                         ))}

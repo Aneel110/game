@@ -4,7 +4,7 @@
 
 import { auth, db } from '@/lib/firebase-admin';
 import { revalidatePath } from 'next/cache';
-import { tournamentSchema, streamSchema, registrationSchema, type RegistrationData, leaderboardEntrySchema, siteSettingsSchema, profileSchema } from '@/lib/schemas';
+import { tournamentSchema, streamSchema, registrationSchema, type RegistrationData, leaderboardEntrySchema, siteSettingsSchema, profileSchema, finalistFormSchema, FinalistFormValues } from '@/lib/schemas';
 import { FieldValue } from 'firebase-admin/firestore';
 import { User } from 'firebase/auth';
 
@@ -509,21 +509,58 @@ export async function updateUserProfile(userId: string, data: { displayName: str
     }
 }
 
+export async function updateFinalistLeaderboard(tournamentId: string, data: FinalistFormValues) {
+    if (!db) {
+        return { success: false, message: 'Database not initialized.' };
+    }
+    const validatedFields = finalistFormSchema.safeParse(data);
+    if (!validatedFields.success) {
+        return { success: false, message: 'Invalid form data.', errors: validatedFields.error.flatten().fieldErrors };
+    }
+    try {
+        const tournamentRef = db.collection('tournaments').doc(tournamentId);
+        await tournamentRef.update(validatedFields.data);
+        revalidatePath(`/admin/tournaments/${tournamentId}/finalists`);
+        revalidatePath(`/tournaments/${tournamentId}`);
+        return { success: true, message: 'Finalist leaderboard updated successfully.' };
+    } catch (error) {
+        console.error('Error updating finalist leaderboard:', error);
+        return { success: false, message: 'An unexpected error occurred.' };
+    }
+}
+
 export async function listAllUsersWithVerification() {
     if (!db || !auth) {
         return { error: "Firebase Admin is not configured. Please set FIREBASE_SERVICE_ACCOUNT_KEY." };
     }
 
-    const listUsersResult = await auth.listUsers();
-    const uids = listUsersResult.users.map(user => user.uid);
-    const usersSnapshot = await db.collection('users').where('uid', 'in', uids).get();
-    const rolesData = new Map(usersSnapshot.docs.map(doc => [doc.id, doc.data().role]));
-    
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    try {
+        const listUsersResult = await auth.listUsers();
+        const allAuthUsers = listUsersResult.users;
+        
+        if (allAuthUsers.length === 0) {
+            return { users: [], success: true };
+        }
 
-    return {
-        users: listUsersResult.users.map(user => {
+        const uids = allAuthUsers.map(user => user.uid);
+        const rolesData = new Map<string, string>();
+        
+        // Firestore 'in' query has a limit of 30 items. We need to batch the requests.
+        const BATCH_SIZE = 30;
+        for (let i = 0; i < uids.length; i += BATCH_SIZE) {
+            const batchUids = uids.slice(i, i + BATCH_SIZE);
+            if (batchUids.length > 0) {
+                const usersSnapshot = await db.collection('users').where('uid', 'in', batchUids).get();
+                usersSnapshot.docs.forEach(doc => {
+                    rolesData.set(doc.id, doc.data().role);
+                });
+            }
+        }
+        
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        const users = allAuthUsers.map(user => {
             const creationTime = new Date(user.metadata.creationTime);
             return {
                 id: user.uid,
@@ -535,6 +572,11 @@ export async function listAllUsersWithVerification() {
                 isNew: creationTime > sevenDaysAgo,
                 createdAt: user.metadata.creationTime,
             };
-        })
-    };
+        });
+
+        return { users, success: true };
+    } catch (error: any) {
+        console.error("Error listing users with verification:", error);
+        return { error: `Failed to list users: ${error.message}` };
+    }
 }

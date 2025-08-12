@@ -7,6 +7,7 @@ import { revalidatePath } from 'next/cache';
 import { tournamentSchema, streamSchema, registrationSchema, type RegistrationData, leaderboardEntrySchema, siteSettingsSchema, profileSchema, finalistFormSchema, type FinalistFormValues } from '@/lib/schemas';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { UserRecord } from 'firebase-admin/auth';
+import { z } from 'zod';
 
 // Helper to extract YouTube video ID from various URL formats
 const getYouTubeVideoId = (url: string): string | null => {
@@ -211,36 +212,14 @@ export async function deleteUser(userId: string) {
 }
 
 
-function processTournamentFormData(formData: FormData) {
-    const rawData: { [key: string]: any } = {};
-    const prizeDistribution: { [key: string]: number } = {};
-
-    for (const [key, value] of formData.entries()) {
-        if (key.startsWith('prizeDistribution.')) {
-            const prizeKey = key.split('.')[1];
-            prizeDistribution[prizeKey] = Number(value);
-        } else {
-            rawData[key] = value;
-        }
-    }
-    
-    // Correctly handle the checkbox value. 'true' string means true, absence means false.
-    rawData.registrationOpen = formData.get('registrationOpen') === 'true';
-
-    return { ...rawData, prizeDistribution };
-}
-
-
-export async function createTournament(formData: FormData) {
+export async function createTournament(data: z.infer<typeof tournamentSchema>) {
     if (!db) {
       return { success: false, message: 'Database not initialized.' };
     }
     
-    const processedData = processTournamentFormData(formData);
-    
     // Ensure optional/array fields exist before validation for a new tournament
     const dataToValidate = {
-        ...processedData,
+        ...data,
         leaderboard: [],
         finalistLeaderboard: [],
         finalistLeaderboardActive: false,
@@ -266,11 +245,10 @@ export async function createTournament(formData: FormData) {
     }
 }
 
-export async function updateTournament(id: string, formData: FormData) {
+export async function updateTournament(id: string, data: z.infer<typeof tournamentSchema>) {
     if (!db) {
       return { success: false, message: 'Database not initialized.' };
     }
-    const processedData = processTournamentFormData(formData);
 
     // Fetch existing tournament to merge leaderboard/groups data
     const tournamentRef = db.collection('tournaments').doc(id);
@@ -284,9 +262,8 @@ export async function updateTournament(id: string, formData: FormData) {
     // not present in the form, like leaderboards and groups.
     const dataToValidate = {
         ...existingData,
-        ...processedData,
+        ...data,
     };
-
 
     const validatedFields = tournamentSchema.safeParse(dataToValidate);
     
@@ -638,5 +615,3 @@ export async function listAllUsersWithVerification() {
         return { error: `Failed to list users: ${error.message}` };
     }
 }
-
-    

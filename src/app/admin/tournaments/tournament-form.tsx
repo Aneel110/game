@@ -63,27 +63,15 @@ export default function TournamentForm({ tournamentId, defaultValues }: Tourname
   }, [defaultValues, form]);
 
 
-  const action = tournamentId ? updateTournament.bind(null, tournamentId) : createTournament;
+  const action = tournamentId ? updateTournament : createTournament;
 
   async function onSubmit(data: TournamentFormValues) {
-    const formData = new FormData();
-    // Flatten the data for FormData
-    Object.entries(data).forEach(([key, value]) => {
-      if (key === 'prizeDistribution' && typeof value === 'object' && value !== null) {
-        Object.entries(value).forEach(([prizeKey, prizeValue]) => {
-          formData.append(`prizeDistribution.${prizeKey}`, String(prizeValue));
-        });
-      } else if (key === 'registrationOpen') {
-          // Only append if true, because unchecked switches don't appear in form data
-          if (value) {
-            formData.append(key, 'true');
-          }
-      } else {
-        formData.append(key, String(value));
-      }
-    });
-
-    const result = await action(formData);
+    let result;
+    if (tournamentId) {
+      result = await updateTournament(tournamentId, data);
+    } else {
+      result = await createTournament(data);
+    }
 
     if(result.success) {
         toast({ title: 'Success', description: result.message });
@@ -233,5 +221,3 @@ export default function TournamentForm({ tournamentId, defaultValues }: Tourname
     </Form>
   );
 }
-
-    

@@ -224,8 +224,8 @@ function processTournamentFormData(formData: FormData) {
         }
     }
     
-    // Correctly handle the checkbox value. 'on' means true, absence means false.
-    rawData.registrationOpen = formData.has('registrationOpen');
+    // Correctly handle the checkbox value. 'true' string means true, absence means false.
+    rawData.registrationOpen = formData.get('registrationOpen') === 'true';
 
     return { ...rawData, prizeDistribution };
 }
@@ -238,7 +238,7 @@ export async function createTournament(formData: FormData) {
     
     const processedData = processTournamentFormData(formData);
     
-    // Ensure optional/array fields exist before validation
+    // Ensure optional/array fields exist before validation for a new tournament
     const dataToValidate = {
         ...processedData,
         leaderboard: [],
@@ -280,7 +280,8 @@ export async function updateTournament(id: string, formData: FormData) {
     }
     const existingData = tournamentSnap.data() || {};
     
-    // We only want to update with the new form data, while preserving existing complex fields
+    // Merge existing data with the new form data. This preserves complex fields
+    // not present in the form, like leaderboards and groups.
     const dataToValidate = {
         ...existingData,
         ...processedData,
@@ -637,3 +638,5 @@ export async function listAllUsersWithVerification() {
         return { error: `Failed to list users: ${error.message}` };
     }
 }
+
+    

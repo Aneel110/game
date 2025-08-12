@@ -5,6 +5,7 @@ import { db } from "@/lib/firebase-admin";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { Timestamp } from "firebase-admin/firestore";
 
 type TournamentDetailPageProps = {
     params: {
@@ -21,7 +22,17 @@ async function getTournamentData(id: string) {
         const docSnap = await docRef.get();
 
         if (docSnap.exists) {
-            return { tournament: { id: docSnap.id, ...docSnap.data() } };
+            const data = docSnap.data();
+            if (!data) return { tournament: null };
+
+            // Serialize timestamp fields
+            const serializedData = {
+                ...data,
+                date: data.date instanceof Timestamp ? data.date.toDate().toISOString() : data.date,
+                groupsLastUpdated: data.groupsLastUpdated instanceof Timestamp ? data.groupsLastUpdated.toDate().toISOString() : data.groupsLastUpdated,
+            };
+
+            return { tournament: { id: docSnap.id, ...serializedData } };
         } else {
             return { tournament: null };
         }

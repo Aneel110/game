@@ -10,12 +10,13 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel';
-import { ArrowRight, Trophy, Users, Newspaper, Signal, AlertTriangle, Youtube, Gamepad2 } from 'lucide-react';
+import { ArrowRight, Trophy, Users, Newspaper, Signal, AlertTriangle, Youtube, Gamepad2, Crown } from 'lucide-react';
 import Link from 'next/link';
 import { db } from '@/lib/firebase-admin';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Timestamp } from 'firebase-admin/firestore';
 import { unstable_cache } from 'next/cache';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const getCachedSiteSettings = unstable_cache(
     async () => {
@@ -110,7 +111,7 @@ const getCachedUpcomingTournaments = unstable_cache(
         }
     },
     ['upcoming_tournaments'],
-    { revalidate: 60 }
+    { revalidate: 60, tags: ['tournaments'] }
 );
 
 const getCachedPastStreams = unstable_cache(
@@ -138,9 +139,35 @@ const getCachedPastStreams = unstable_cache(
         }
     },
     ['past_streams'],
-    { revalidate: 300 } // Revalidate every 5 minutes
+    { revalidate: 300, tags: ['streams'] }
 );
 
+const getCachedRecentWinners = unstable_cache(
+    async () => {
+        if (!db) return { winners: [], tournamentName: null };
+
+        const now = new Date();
+        const snapshot = await db.collection('tournaments')
+            .where('date', '<', now)
+            .orderBy('date', 'desc')
+            .limit(1)
+            .get();
+
+        if (snapshot.empty) return { winners: [], tournamentName: null };
+
+        const latestTournament = snapshot.docs[0].data();
+        const leaderboard = latestTournament.leaderboard || [];
+
+        const winners = leaderboard
+            .sort((a: any, b: any) => b.points - a.points)
+            .slice(0, 3)
+            .map((team: any, index: number) => ({ ...team, rank: index + 1}));
+        
+        return { winners, tournamentName: latestTournament.name };
+    },
+    ['recent_winners'],
+    { revalidate: 3600, tags: ['tournaments'] }
+);
 
 async function LiveStreamSection() {
     const { stream: liveStream, error } = await getCachedLiveStream();
@@ -268,6 +295,53 @@ async function YouTubeVideosSection() {
     )
 }
 
+function WinnerCard({ team, rank }: { team: any, rank: number }) {
+    const rankColors: any = {
+        1: "border-yellow-400/50 bg-yellow-400/10 hover:bg-yellow-400/20",
+        2: "border-gray-400/50 bg-gray-400/10 hover:bg-gray-400/20",
+        3: "border-orange-400/50 bg-orange-400/10 hover:bg-orange-400/20",
+    }
+    const rankIconColors: any = {
+        1: "text-yellow-400",
+        2: "text-gray-400",
+        3: "text-orange-400",
+    }
+    return (
+        <Card className={`text-center p-4 transition-all duration-300 ${rankColors[rank]}`}>
+            <Crown className={`w-8 h-8 mx-auto mb-2 ${rankIconColors[rank]}`} />
+            <Avatar className="w-16 h-16 mx-auto mb-2 border-2 border-primary/50">
+                <AvatarImage src={team.logoUrl || `https://placehold.co/64x64.png?text=${team.teamName.charAt(0)}`} />
+                <AvatarFallback>{team.teamName.charAt(0)}</AvatarFallback>
+            </Avatar>
+            <p className="font-bold text-lg">{team.teamName}</p>
+            <p className="text-sm text-muted-foreground">#{rank} Place</p>
+            <p className="text-xl font-bold text-primary mt-1">{team.points} Points</p>
+        </Card>
+    )
+}
+
+async function RecentWinnersSection() {
+    const { winners, tournamentName } = await getCachedRecentWinners();
+
+    if (winners.length === 0) return null;
+
+    return (
+        <section id="winners" className="w-full bg-background py-16">
+            <div className="container mx-auto text-center">
+                <h2 className="text-4xl font-headline font-bold text-center mb-2">Recent Winners</h2>
+                <p className="text-muted-foreground mb-8">
+                    Congratulations to the champions of the {tournamentName}!
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+                    {winners.map(team => (
+                        <WinnerCard key={team.teamName} team={team} rank={team.rank}/>
+                    ))}
+                </div>
+            </div>
+        </section>
+    )
+}
+
 
 export default async function Home() {
   const settings = await getSiteSettings();
@@ -284,6 +358,7 @@ export default async function Home() {
             data-ai-hint="battle royale landscape"
             fill
             className="opacity-40 object-cover"
+            priority
           />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background" />
         </div>
@@ -356,6 +431,9 @@ export default async function Home() {
             </Card>
         )}
       </section>
+
+      {/* Recent Winners Section */}
+      <RecentWinnersSection />
 
       {/* YouTube Section */}
       <YouTubeVideosSection />

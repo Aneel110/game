@@ -51,6 +51,7 @@ export const streamSchema = z.object({
 
 const playerSchema = z.object({
   pubgName: z.string().min(1, 'Player name is required.'),
+  pubgId: z.string().optional(),
   discordUsername: z.string().min(1, 'Discord username is required.'),
 });
 

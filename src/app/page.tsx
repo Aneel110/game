@@ -85,14 +85,13 @@ const getCachedUpcomingTournaments = unstable_cache(
         try {
             const now = new Date();
             const snapshot = await db.collection('tournaments')
-                .where('date', '>', now)
                 .orderBy('date', 'asc')
-                .limit(6)
                 .get();
 
             if (snapshot.empty) {
                 return { tournaments: [] };
             }
+            
             const tournaments = snapshot.docs.map(doc => {
                 const data = doc.data();
                 return {
@@ -103,7 +102,8 @@ const getCachedUpcomingTournaments = unstable_cache(
                     image: data.image,
                     dataAiHint: data.dataAiHint || ''
                 }
-            });
+            }).filter(t => new Date(t.date) > now).slice(0, 6);
+
             return { tournaments };
         } catch (error: any) {
             console.error("Error fetching upcoming tournaments:", error);

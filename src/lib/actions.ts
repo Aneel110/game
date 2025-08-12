@@ -1,10 +1,11 @@
 
+
 'use server';
 
 import { auth, db } from '@/lib/firebase-admin';
 import { revalidatePath } from 'next/cache';
 import { tournamentSchema, streamSchema, registrationSchema, type RegistrationData, leaderboardEntrySchema, siteSettingsSchema, profileSchema, finalistFormSchema, FinalistFormValues } from '@/lib/schemas';
-import { FieldValue } from 'firebase-admin/firestore';
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { UserRecord } from 'firebase-admin/auth';
 
 // Helper to extract YouTube video ID from various URL formats
@@ -77,7 +78,15 @@ export async function getTournamentRegistrations(tournamentId: string) {
     }
     try {
         const registrationsSnapshot = await db.collection('tournaments').doc(tournamentId).collection('registrations').get();
-        const registrations = registrationsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const registrations = registrationsSnapshot.docs.map(doc => {
+            const data = doc.data();
+            if (!data) return null;
+            return {
+                id: doc.id,
+                ...data,
+                registeredAt: data.registeredAt?.toDate().toISOString() || new Date().toISOString(),
+            };
+        }).filter(Boolean); // Filter out any null entries
         return { success: true, data: registrations };
     } catch (error) {
         console.error('Error fetching registrations:', error);
@@ -573,3 +582,29 @@ export async function updateFinalistLeaderboard(tournamentId: string, data: Fina
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }
+
+export async function updateTeamGroup(tournamentId: string, teamName: string, newGroup: 'A' | 'B') {
+    if (!db) {
+        return { success: false, message: 'Database not initialized.' };
+    }
+
+    try {
+        const tournamentRef = db.collection('tournaments').doc(tournamentId);
+        
+        // Use dot notation to update a specific field in the 'groups' map
+        const fieldToUpdate = `groups.${teamName}`;
+
+        await tournamentRef.update({
+            [fieldToUpdate]: newGroup
+        });
+        
+        revalidatePath(`/admin/tournaments/${tournamentId}/leaderboard`);
+        return { success: true, message: `Team ${teamName} moved to Group ${newGroup}.` };
+
+    } catch (error) {
+        console.error('Error updating team group:', error);
+        return { success: false, message: 'An unexpected error occurred while updating the group.' };
+    }
+}
+
+    

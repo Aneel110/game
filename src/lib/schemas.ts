@@ -1,4 +1,5 @@
 
+
 import { z } from 'zod';
 
 export const leaderboardEntrySchema = z.object({
@@ -33,6 +34,8 @@ export const tournamentSchema = z.object({
   registrationOpen: z.coerce.boolean().default(true),
   finalistLeaderboardActive: z.boolean().default(false),
   finalistLeaderboard: z.array(leaderboardEntrySchema).optional(),
+  groups: z.record(z.enum(['A', 'B'])).optional(),
+  groupsLastUpdated: z.any().optional(),
 });
 
 export const finalistFormSchema = z.object({
@@ -90,3 +93,5 @@ export type RegistrationFormValues = z.infer<typeof registrationSchema>;
 export type RegistrationData = RegistrationFormValues;
 export type ProfileFormValues = z.infer<typeof profileSchema>;
 export type FinalistFormValues = z.infer<typeof finalistFormSchema>;
+
+    

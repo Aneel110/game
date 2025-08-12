@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -72,10 +73,8 @@ export default function TournamentForm({ tournamentId, defaultValues }: Tourname
           formData.append(`prizeDistribution.${prizeKey}`, String(prizeValue));
         });
       } else if (key === 'registrationOpen') {
-          // Only append if true, because unchecked switches don't appear in form data
-          if (value) {
-            formData.append(key, 'true');
-          }
+          // Always append the boolean value as a string
+          formData.append(key, String(value));
       } else {
         formData.append(key, String(value));
       }
@@ -212,7 +211,9 @@ export default function TournamentForm({ tournamentId, defaultValues }: Tourname
                 <Switch
                   checked={field.value}
                   onCheckedChange={field.onChange}
-                  name="registrationOpen"
+                  name={field.name}
+                  ref={field.ref}
+                  onBlur={field.onBlur}
                 />
               </FormControl>
             </FormItem>
@@ -229,3 +230,5 @@ export default function TournamentForm({ tournamentId, defaultValues }: Tourname
     </Form>
   );
 }
+
+    

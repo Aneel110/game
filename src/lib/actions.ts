@@ -1,3 +1,4 @@
+
 'use server';
 
 import { auth, db } from '@/lib/firebase-admin';
@@ -223,7 +224,7 @@ function processTournamentFormData(formData: FormData) {
     }
     
     // Explicitly set registrationOpen to false if it's not present in the form data (switch is off)
-    rawData.registrationOpen = formData.has('registrationOpen');
+    rawData.registrationOpen = formData.get('registrationOpen') === 'true';
 
     return { ...rawData, prizeDistribution };
 }
@@ -239,11 +240,11 @@ export async function createTournament(formData: FormData) {
     // Ensure optional/array fields exist before validation
     const dataToValidate = {
         ...processedData,
-        leaderboard: processedData.leaderboard || [],
-        finalistLeaderboard: processedData.finalistLeaderboard || [],
-        finalistLeaderboardActive: processedData.finalistLeaderboardActive || false,
-        groups: processedData.groups || {},
-        groupsLastUpdated: processedData.groupsLastUpdated || null,
+        leaderboard: [],
+        finalistLeaderboard: [],
+        finalistLeaderboardActive: false,
+        groups: {},
+        groupsLastUpdated: null,
     };
     
     const validatedFields = tournamentSchema.safeParse(dataToValidate);
@@ -275,6 +276,7 @@ export async function updateTournament(id: string, formData: FormData) {
     const tournamentSnap = await tournamentRef.get();
     const existingData = tournamentSnap.data() || {};
     
+    // We only want to update with the new form data, while preserving existing complex fields
     const dataToValidate = {
         ...existingData,
         ...processedData,
@@ -289,7 +291,7 @@ export async function updateTournament(id: string, formData: FormData) {
     }
 
     try {
-        // We only want to update with the new form data, not the merged data
+        // Update with the validated data, which includes the merged fields
         await tournamentRef.update(validatedFields.data);
         revalidatePath('/tournaments');
         revalidatePath(`/tournaments/${id}`);
@@ -631,3 +633,5 @@ export async function listAllUsersWithVerification() {
         return { error: `Failed to list users: ${error.message}` };
     }
 }
+
+    

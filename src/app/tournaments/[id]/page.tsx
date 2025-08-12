@@ -24,11 +24,12 @@ async function getTournamentData(id: string) {
         if (docSnap.exists) {
             const data = docSnap.data();
             if (data) {
-                // Serialize the date field
+                // Serialize the date and groupsLastUpdated fields
                 const tournament = {
                     id: docSnap.id,
                     ...data,
                     date: data.date instanceof Timestamp ? data.date.toDate().toISOString() : data.date,
+                    groupsLastUpdated: data.groupsLastUpdated instanceof Timestamp ? data.groupsLastUpdated.toDate().toISOString() : null,
                 };
                 return { tournament };
             }

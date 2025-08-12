@@ -223,8 +223,7 @@ function processTournamentFormData(formData: FormData) {
         }
     }
     
-    // Explicitly set registrationOpen to false if it's not present in the form data (switch is off)
-    rawData.registrationOpen = formData.get('registrationOpen') === 'true';
+    rawData.registrationOpen = formData.has('registrationOpen');
 
     return { ...rawData, prizeDistribution };
 }
@@ -633,5 +632,3 @@ export async function listAllUsersWithVerification() {
         return { error: `Failed to list users: ${error.message}` };
     }
 }
-
-    

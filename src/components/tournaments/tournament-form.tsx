@@ -73,8 +73,10 @@ export default function TournamentForm({ tournamentId, defaultValues }: Tourname
           formData.append(`prizeDistribution.${prizeKey}`, String(prizeValue));
         });
       } else if (key === 'registrationOpen') {
-          // Always append the boolean value as a string
-          formData.append(key, String(value));
+          // Only append if true, because unchecked switches don't appear in form data
+          if (value) {
+            formData.append(key, 'on');
+          }
       } else {
         formData.append(key, String(value));
       }
@@ -230,5 +232,3 @@ export default function TournamentForm({ tournamentId, defaultValues }: Tourname
     </Form>
   );
 }
-
-    

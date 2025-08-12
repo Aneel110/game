@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState } from 'react';
@@ -178,18 +177,6 @@ export default function TournamentRegistrationForm({ tournamentId, isLoggedIn, i
                                             <FormItem>
                                                 <FormControl>
                                                     <Input placeholder={`Player ${index + 1} Name`} {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                     <FormField
-                                        control={form.control}
-                                        name={`players.${index}.pubgId`}
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormControl>
-                                                    <Input placeholder="PUBG ID (Optional)" {...field} />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>

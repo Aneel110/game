@@ -1,5 +1,4 @@
 
-
 'use server';
 
 import { auth, db } from '@/lib/firebase-admin';
@@ -532,6 +531,33 @@ export async function updateFinalistLeaderboard(tournamentId: string, data: Fina
         return { success: true, message: 'Finalist leaderboard updated successfully.' };
     } catch (error) {
         console.error('Error updating finalist leaderboard:', error);
+        return { success: false, message: 'An unexpected error occurred.' };
+    }
+}
+
+export async function updateTeamGroup(tournamentId: string, teamName: string, group: 'A' | 'B' | null) {
+    if (!db) {
+        return { success: false, message: 'Database not initialized.' };
+    }
+    try {
+        const tournamentRef = db.collection('tournaments').doc(tournamentId);
+        const groupField = `groups.${teamName}`;
+
+        const updateData: { [key: string]: any } = {
+            [groupField]: group,
+            groupsLastUpdated: FieldValue.serverTimestamp(),
+        };
+
+        if (group === null) {
+            updateData[groupField] = FieldValue.delete();
+        }
+
+        await tournamentRef.update(updateData);
+
+        revalidatePath(`/admin/tournaments/${tournamentId}/leaderboard`);
+        return { success: true, message: `Team ${teamName} moved to Group ${group}.` };
+    } catch (error) {
+        console.error('Error updating team group:', error);
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }

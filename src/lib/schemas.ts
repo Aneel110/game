@@ -33,6 +33,8 @@ export const tournamentSchema = z.object({
   registrationOpen: z.coerce.boolean().default(true),
   finalistLeaderboardActive: z.boolean().default(false),
   finalistLeaderboard: z.array(leaderboardEntrySchema).optional(),
+  groups: z.record(z.string()).optional(),
+  groupsLastUpdated: z.date().optional(),
 });
 
 export const finalistFormSchema = z.object({

@@ -21,7 +21,7 @@ type Registration = {
     registeredByName: string;
     teamName: string;
     teamTag: string;
-    players: { pubgName: string; discordUsername: string; }[];
+    players: { pubgName: string; pubgId: string; discordUsername: string; }[];
     status: 'pending' | 'approved' | 'declined';
     registeredAt: string;
     userId: string;
@@ -96,7 +96,7 @@ export default function AdminTournamentDetailPage() {
         async function fetchData() {
             setLoading(true);
 
-            if (!db) {
+            if (!db || !tournamentId) {
                 setLoading(false);
                 return;
             }
@@ -112,12 +112,7 @@ export default function AdminTournamentDetailPage() {
             // Fetch registrations via server action
             const { data, success } = await getTournamentRegistrations(tournamentId);
             if (success) {
-                setRegistrations(data.map((reg: any) => ({
-                    ...reg,
-                    userId: reg.id,
-                    // The date is now an ISO string, no need for conversion here
-                    registeredAt: reg.registeredAt, 
-                })));
+                setRegistrations(data);
             }
 
             // Fetch all users with verification status via server action

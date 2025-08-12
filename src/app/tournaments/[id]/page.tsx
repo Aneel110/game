@@ -29,13 +29,12 @@ async function getTournamentData(id: string) {
             const serializedData = {
                 ...data,
                 date: data.date instanceof Timestamp ? data.date.toDate().toISOString() : data.date,
-                groupsLastUpdated: data.groupsLastUpdated instanceof Timestamp ? data.groupsLastUpdated.toDate().toISOString() : data.groupsLastUpdated,
+                groupsLastUpdated: data.groupsLastUpdated instanceof Timestamp ? data.groupsLastUpdated.toDate().toISOString() : (data.groupsLastUpdated || null),
             };
 
             return { tournament: { id: docSnap.id, ...serializedData } };
-        } else {
-            return { tournament: null };
         }
+        return { tournament: null };
     } catch (error: any) {
         return { error: "Failed to fetch tournament data. Ensure Firestore is enabled and permissions are correct." };
     }
@@ -50,10 +49,11 @@ async function getRegistrations(id: string) {
         // Convert Firestore Timestamps to serializable strings
         const registrations = registrationsSnapshot.docs.map(doc => {
             const data = doc.data();
+            const registeredAt = data.registeredAt;
             return { 
                 id: doc.id, 
                 ...data,
-                registeredAt: data.registeredAt.toDate().toISOString(),
+                registeredAt: registeredAt instanceof Timestamp ? registeredAt.toDate().toISOString() : new Date().toISOString(),
             };
         });
         return { registrations };

@@ -29,7 +29,8 @@ async function getTournamentsWithRegistrationCounts() {
 
     for (const doc of tournamentsSnapshot.docs) {
         const tournamentData = doc.data();
-        const tournament = { id: doc.id, ...tournamentData };
+        const date = tournamentData.date instanceof Timestamp ? tournamentData.date.toDate().toISOString() : tournamentData.date;
+        const tournament = { id: doc.id, ...tournamentData, date };
         // Correctly query the subcollection for pending registrations
         const registrationsSnapshot = await doc.ref.collection('registrations').where('status', '==', 'pending').get();
         tournaments.push({ ...tournament, pendingCount: registrationsSnapshot.size, status: getTournamentStatus(tournament.date) });
@@ -77,7 +78,7 @@ export default async function AdminTournamentsPage() {
                         {tournaments && tournaments.map((t: any) => (
                             <TableRow key={t.id}>
                                 <TableCell className="font-medium">{t.name}</TableCell>
-                                <TableCell>{t.date instanceof Timestamp ? t.date.toDate().toLocaleString() : new Date(t.date).toLocaleString()}</TableCell>
+                                <TableCell>{new Date(t.date).toLocaleString()}</TableCell>
                                 <TableCell>{t.status}</TableCell>
                                 <TableCell className="text-center font-bold text-primary">{t.pendingCount}</TableCell>
                                 <TableCell className="text-right flex gap-2 justify-end">

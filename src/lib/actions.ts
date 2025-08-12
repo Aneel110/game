@@ -1,12 +1,11 @@
 
-
 'use server';
 
 import { auth, db } from '@/lib/firebase-admin';
 import { revalidatePath } from 'next/cache';
-import { tournamentSchema, streamSchema, registrationSchema, type RegistrationData, leaderboardEntrySchema, siteSettingsSchema, profileSchema, finalistFormSchema, FinalistFormValues } from '@/lib/schemas';
+import { tournamentSchema, streamSchema, registrationSchema, type RegistrationData, leaderboardEntrySchema, siteSettingsSchema, profileSchema, finalistFormSchema, type FinalistFormValues } from '@/lib/schemas';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
-import { User } from 'firebase/auth';
+import { UserRecord } from 'firebase-admin/auth';
 
 // Helper to extract YouTube video ID from various URL formats
 const getYouTubeVideoId = (url: string): string | null => {
@@ -80,11 +79,12 @@ export async function getTournamentRegistrations(tournamentId: string) {
         const registrationsSnapshot = await db.collection('tournaments').doc(tournamentId).collection('registrations').get();
         const registrations = registrationsSnapshot.docs.map(doc => {
             const data = doc.data();
+            const registeredAt = data.registeredAt;
             return { 
                 id: doc.id, 
                 ...data,
-                // Convert Timestamp to a serializable format (ISO string)
-                registeredAt: data.registeredAt instanceof Timestamp ? data.registeredAt.toDate().toISOString() : new Date().toISOString(),
+                 registeredAt: registeredAt instanceof Timestamp ? registeredAt.toDate().toISOString() : new Date().toISOString(),
+                 userId: doc.id,
             };
         });
         return { success: true, data: registrations };
@@ -537,6 +537,33 @@ export async function updateFinalistLeaderboard(tournamentId: string, data: Fina
     }
 }
 
+export async function updateTeamGroup(tournamentId: string, teamName: string, group: 'A' | 'B' | null) {
+    if (!db) {
+        return { success: false, message: 'Database not initialized.' };
+    }
+    try {
+        const tournamentRef = db.collection('tournaments').doc(tournamentId);
+        const groupField = `groups.${teamName}`;
+
+        const updateData: { [key: string]: any } = {
+            [groupField]: group,
+            groupsLastUpdated: FieldValue.serverTimestamp(),
+        };
+
+        if (group === null) {
+            updateData[groupField] = FieldValue.delete();
+        }
+
+        await tournamentRef.update(updateData);
+
+        revalidatePath(`/admin/tournaments/${tournamentId}/leaderboard`);
+        return { success: true, message: `Team ${teamName} moved to Group ${group}.` };
+    } catch (error) {
+        console.error('Error updating team group:', error);
+        return { success: false, message: 'An unexpected error occurred.' };
+    }
+}
+
 export async function listAllUsersWithVerification() {
     if (!db || !auth) {
         return { error: "Firebase Admin is not configured. Please set FIREBASE_SERVICE_ACCOUNT_KEY." };
@@ -550,34 +577,27 @@ export async function listAllUsersWithVerification() {
             return { users: [], success: true };
         }
 
-        const uids = allAuthUsers.map(user => user.uid);
-        const rolesData = new Map<string, string>();
-        
-        // Firestore 'in' query has a limit of 30 items. We need to batch the requests.
-        const BATCH_SIZE = 30;
-        for (let i = 0; i < uids.length; i += BATCH_SIZE) {
-            const batchUids = uids.slice(i, i + BATCH_SIZE);
-            if (batchUids.length > 0) {
-                const usersSnapshot = await db.collection('users').where('uid', 'in', batchUids).get();
-                usersSnapshot.docs.forEach(doc => {
-                    rolesData.set(doc.id, doc.data().role);
-                });
-            }
-        }
+        // Get all role data from Firestore
+        const usersSnapshot = await db.collection('users').get();
+        const rolesData = new Map(usersSnapshot.docs.map(doc => {
+            const data = doc.data();
+            return [doc.id, { role: data.role, isNew: data.isNew }];
+        }));
         
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
         const users = allAuthUsers.map(user => {
             const creationTime = new Date(user.metadata.creationTime);
+            const userData = rolesData.get(user.uid) || {};
             return {
                 id: user.uid,
                 displayName: user.displayName || 'N/A',
                 email: user.email || 'N/A',
                 disabled: user.disabled,
                 emailVerified: user.emailVerified,
-                role: rolesData.get(user.uid) || 'user',
-                isNew: creationTime > sevenDaysAgo,
+                role: userData.role || 'user',
+                isNew: userData.isNew === true && creationTime > sevenDaysAgo,
                 createdAt: user.metadata.creationTime,
             };
         });
@@ -588,3 +608,5 @@ export async function listAllUsersWithVerification() {
         return { error: `Failed to list users: ${error.message}` };
     }
 }
+
+    

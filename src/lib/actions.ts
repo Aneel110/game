@@ -237,11 +237,16 @@ export async function createTournament(formData: FormData) {
     
     const processedData = processTournamentFormData(formData);
     
-    // Manually add arrays before validation
-    processedData.leaderboard = [];
-    processedData.finalistLeaderboard = [];
+    // Ensure optional/array fields exist before validation
+    const dataToValidate = {
+        ...processedData,
+        leaderboard: processedData.leaderboard || [],
+        finalistLeaderboard: processedData.finalistLeaderboard || [],
+        finalistLeaderboardActive: processedData.finalistLeaderboardActive || false,
+        groups: processedData.groups || {},
+    };
     
-    const validatedFields = tournamentSchema.safeParse(processedData);
+    const validatedFields = tournamentSchema.safeParse(dataToValidate);
     
     if (!validatedFields.success) {
         console.error("Validation Errors:", validatedFields.error.flatten().fieldErrors);
@@ -264,7 +269,23 @@ export async function updateTournament(id: string, formData: FormData) {
       return { success: false, message: 'Database not initialized.' };
     }
     const processedData = processTournamentFormData(formData);
-    const validatedFields = tournamentSchema.safeParse(processedData);
+
+    // Fetch existing tournament to merge leaderboard/groups data
+    const tournamentRef = db.collection('tournaments').doc(id);
+    const tournamentSnap = await tournamentRef.get();
+    const existingData = tournamentSnap.data() || {};
+    
+    const dataToValidate = {
+        ...existingData,
+        ...processedData,
+        leaderboard: existingData.leaderboard || [],
+        finalistLeaderboard: existingData.finalistLeaderboard || [],
+        finalistLeaderboardActive: processedData.finalistLeaderboardActive || existingData.finalistLeaderboardActive || false,
+        groups: existingData.groups || {},
+    };
+
+
+    const validatedFields = tournamentSchema.safeParse(dataToValidate);
     
     if (!validatedFields.success) {
         console.log("Validation Errors:", validatedFields.error.flatten().fieldErrors);
@@ -272,7 +293,7 @@ export async function updateTournament(id: string, formData: FormData) {
     }
 
     try {
-        await db.collection('tournaments').doc(id).update(validatedFields.data);
+        await tournamentRef.update(validatedFields.data);
         revalidatePath('/tournaments');
         revalidatePath(`/tournaments/${id}`);
         revalidatePath('/admin/tournaments');
@@ -613,6 +634,8 @@ export async function listAllUsersWithVerification() {
         return { error: `Failed to list users: ${error.message}` };
     }
 }
+
+    
 
     
 

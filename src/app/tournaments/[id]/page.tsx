@@ -5,6 +5,7 @@ import { db } from "@/lib/firebase-admin";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { Timestamp } from "firebase-admin/firestore";
 
 type TournamentDetailPageProps = {
     params: {
@@ -21,10 +22,18 @@ async function getTournamentData(id: string) {
         const docSnap = await docRef.get();
 
         if (docSnap.exists) {
-            return { tournament: { id: docSnap.id, ...docSnap.data() } };
-        } else {
-            return { tournament: null };
+            const data = docSnap.data();
+            if (data) {
+                // Serialize the date field
+                const tournament = {
+                    id: docSnap.id,
+                    ...data,
+                    date: data.date instanceof Timestamp ? data.date.toDate().toISOString() : data.date,
+                };
+                return { tournament };
+            }
         }
+        return { tournament: null };
     } catch (error: any) {
         return { error: "Failed to fetch tournament data. Ensure Firestore is enabled and permissions are correct." };
     }

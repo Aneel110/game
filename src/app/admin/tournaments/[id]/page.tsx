@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import RegistrationActions from "./registration-actions";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { User, Mail, CheckCircle2, XCircle } from "lucide-react";
-import { notFound } from 'next/navigation';
+import { notFound, useParams } from 'next/navigation';
 import { listAllUsersWithVerification, getTournamentRegistrations } from "@/lib/actions";
 import { useEffect, useState, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -84,7 +84,9 @@ function RegistrationsSkeleton() {
 }
 
 
-export default function AdminTournamentDetailPage({ params: { id: tournamentId } }: { params: { id: string }}) {
+export default function AdminTournamentDetailPage() {
+    const params = useParams();
+    const tournamentId = params.id as string;
     const [tournament, setTournament] = useState<any>(null);
     const [registrations, setRegistrations] = useState<Registration[]>([]);
     const [usersMap, setUsersMap] = useState<Map<string, UserVerificationInfo>>(new Map());
@@ -94,7 +96,7 @@ export default function AdminTournamentDetailPage({ params: { id: tournamentId }
         async function fetchData() {
             setLoading(true);
 
-            if (!db) {
+            if (!db || !tournamentId) {
                 setLoading(false);
                 return;
             }
@@ -220,5 +222,3 @@ export default function AdminTournamentDetailPage({ params: { id: tournamentId }
         </Card>
     );
 }
-
-    

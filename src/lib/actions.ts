@@ -3,9 +3,15 @@
 
 import { auth, db } from '@/lib/firebase-admin';
 import { revalidatePath } from 'next/cache';
+<<<<<<< HEAD
 import { tournamentSchema, streamSchema, registrationSchema, type RegistrationData, leaderboardEntrySchema, siteSettingsSchema, profileSchema, finalistFormSchema, FinalistFormValues } from '@/lib/schemas';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { User } from 'firebase/auth';
+=======
+import { tournamentSchema, streamSchema, registrationSchema, type RegistrationData, leaderboardEntrySchema, siteSettingsSchema, profileSchema, finalistFormSchema, type FinalistFormValues } from '@/lib/schemas';
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
+import { UserRecord } from 'firebase-admin/auth';
+>>>>>>> be811fe333a8a6e248f090004970833bd8b4e3fa
 
 // Helper to extract YouTube video ID from various URL formats
 const getYouTubeVideoId = (url: string): string | null => {
@@ -79,11 +85,21 @@ export async function getTournamentRegistrations(tournamentId: string) {
         const registrationsSnapshot = await db.collection('tournaments').doc(tournamentId).collection('registrations').get();
         const registrations = registrationsSnapshot.docs.map(doc => {
             const data = doc.data();
+<<<<<<< HEAD
             return {
                 id: doc.id,
                 ...data,
                 registeredAt: data.registeredAt instanceof Timestamp ? data.registeredAt.toDate().toISOString() : data.registeredAt,
             }
+=======
+            const registeredAt = data.registeredAt;
+            return { 
+                id: doc.id, 
+                ...data,
+                 registeredAt: registeredAt instanceof Timestamp ? registeredAt.toDate().toISOString() : new Date().toISOString(),
+                 userId: doc.id,
+            };
+>>>>>>> be811fe333a8a6e248f090004970833bd8b4e3fa
         });
         return { success: true, data: registrations };
     } catch (error) {
@@ -575,34 +591,27 @@ export async function listAllUsersWithVerification() {
             return { users: [], success: true };
         }
 
-        const uids = allAuthUsers.map(user => user.uid);
-        const rolesData = new Map<string, string>();
-        
-        // Firestore 'in' query has a limit of 30 items. We need to batch the requests.
-        const BATCH_SIZE = 30;
-        for (let i = 0; i < uids.length; i += BATCH_SIZE) {
-            const batchUids = uids.slice(i, i + BATCH_SIZE);
-            if (batchUids.length > 0) {
-                const usersSnapshot = await db.collection('users').where('uid', 'in', batchUids).get();
-                usersSnapshot.docs.forEach(doc => {
-                    rolesData.set(doc.id, doc.data().role);
-                });
-            }
-        }
+        // Get all role data from Firestore
+        const usersSnapshot = await db.collection('users').get();
+        const rolesData = new Map(usersSnapshot.docs.map(doc => {
+            const data = doc.data();
+            return [doc.id, { role: data.role, isNew: data.isNew }];
+        }));
         
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
         const users = allAuthUsers.map(user => {
             const creationTime = new Date(user.metadata.creationTime);
+            const userData = rolesData.get(user.uid) || {};
             return {
                 id: user.uid,
                 displayName: user.displayName || 'N/A',
                 email: user.email || 'N/A',
                 disabled: user.disabled,
                 emailVerified: user.emailVerified,
-                role: rolesData.get(user.uid) || 'user',
-                isNew: creationTime > sevenDaysAgo,
+                role: userData.role || 'user',
+                isNew: userData.isNew === true && creationTime > sevenDaysAgo,
                 createdAt: user.metadata.creationTime,
             };
         });

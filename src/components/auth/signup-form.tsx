@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { Button } from "@/components/ui/button"
@@ -52,6 +53,7 @@ export function SignupForm() {
                 email: user.email,
                 role: 'user', // Default role
                 createdAt: new Date(),
+                isNew: true, // Flag for new users
                 bio: "",
             });
             

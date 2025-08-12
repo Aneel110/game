@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState } from 'react';
@@ -163,7 +164,7 @@ export default function TournamentRegistrationForm({ tournamentId, isLoggedIn, i
                          <Alert className="mt-2">
                            <Info className="h-4 w-4" />
                            <AlertDescription>
-                            Enter at least one player with their name and Discord username.
+                            Enter at least one player with their name, PUBG ID, and Discord username.
                            </AlertDescription>
                          </Alert>
                         <div className="space-y-4 mt-4">
@@ -189,6 +190,18 @@ export default function TournamentRegistrationForm({ tournamentId, isLoggedIn, i
                                             <FormItem>
                                                 <FormControl>
                                                     <Input placeholder="PUBG ID (Optional)" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name={`players.${index}.pubgId`}
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormControl>
+                                                    <Input placeholder={`PUBG ID`} {...field} />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>

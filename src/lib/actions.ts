@@ -245,7 +245,10 @@ export async function createTournament(formData: FormData) {
 
     try {
         const { ...dataToSave } = validatedFields.data;
-        await db.collection('tournaments').add({ ...dataToSave, leaderboard: [] });
+        // Ensure arrays are initialized
+        dataToSave.leaderboard = [];
+        dataToSave.finalistLeaderboard = [];
+        await db.collection('tournaments').add(dataToSave);
         revalidatePath('/tournaments');
         revalidatePath('/admin/tournaments');
         return { success: true, message: 'Tournament created successfully.' };
@@ -557,6 +560,7 @@ export async function updateTeamGroup(tournamentId: string, teamName: string, gr
         await tournamentRef.update(updateData);
 
         revalidatePath(`/admin/tournaments/${tournamentId}/leaderboard`);
+        revalidatePath(`/tournaments/${tournamentId}`);
         return { success: true, message: `Team ${teamName} moved to Group ${group}.` };
     } catch (error) {
         console.error('Error updating team group:', error);

@@ -1,5 +1,3 @@
-
-
 'use server';
 
 import { auth, db } from '@/lib/firebase-admin';
@@ -224,7 +222,8 @@ function processTournamentFormData(formData: FormData) {
         }
     }
     
-    rawData.registrationOpen = formData.get('registrationOpen') === 'true';
+    // Explicitly set registrationOpen to false if it's not present in the form data (switch is off)
+    rawData.registrationOpen = formData.has('registrationOpen');
 
     return { ...rawData, prizeDistribution };
 }
@@ -244,6 +243,7 @@ export async function createTournament(formData: FormData) {
         finalistLeaderboard: processedData.finalistLeaderboard || [],
         finalistLeaderboardActive: processedData.finalistLeaderboardActive || false,
         groups: processedData.groups || {},
+        groupsLastUpdated: processedData.groupsLastUpdated || null,
     };
     
     const validatedFields = tournamentSchema.safeParse(dataToValidate);
@@ -278,10 +278,6 @@ export async function updateTournament(id: string, formData: FormData) {
     const dataToValidate = {
         ...existingData,
         ...processedData,
-        leaderboard: existingData.leaderboard || [],
-        finalistLeaderboard: existingData.finalistLeaderboard || [],
-        finalistLeaderboardActive: processedData.finalistLeaderboardActive || existingData.finalistLeaderboardActive || false,
-        groups: existingData.groups || {},
     };
 
 
@@ -293,6 +289,7 @@ export async function updateTournament(id: string, formData: FormData) {
     }
 
     try {
+        // We only want to update with the new form data, not the merged data
         await tournamentRef.update(validatedFields.data);
         revalidatePath('/tournaments');
         revalidatePath(`/tournaments/${id}`);
@@ -634,9 +631,3 @@ export async function listAllUsersWithVerification() {
         return { error: `Failed to list users: ${error.message}` };
     }
 }
-
-    
-
-    
-
-    

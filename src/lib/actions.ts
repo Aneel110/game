@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { auth, db } from '@/lib/firebase-admin';
@@ -122,7 +123,6 @@ export async function updateRegistrationStatus(tournamentId: string, registratio
             if (status === 'approved' && !leaderboardEntryExists) {
                 // Add to leaderboard if approved and not already there
                 const newEntry = {
-                    rank: 0,
                     teamName: teamName,
                     points: 0,
                     matches: 0,
@@ -236,6 +236,11 @@ export async function createTournament(formData: FormData) {
     }
     
     const processedData = processTournamentFormData(formData);
+    
+    // Manually add arrays before validation
+    processedData.leaderboard = [];
+    processedData.finalistLeaderboard = [];
+    
     const validatedFields = tournamentSchema.safeParse(processedData);
     
     if (!validatedFields.success) {
@@ -244,11 +249,7 @@ export async function createTournament(formData: FormData) {
     }
 
     try {
-        const { ...dataToSave } = validatedFields.data;
-        // Ensure arrays are initialized
-        dataToSave.leaderboard = [];
-        dataToSave.finalistLeaderboard = [];
-        await db.collection('tournaments').add(dataToSave);
+        await db.collection('tournaments').add(validatedFields.data);
         revalidatePath('/tournaments');
         revalidatePath('/admin/tournaments');
         return { success: true, message: 'Tournament created successfully.' };
@@ -612,5 +613,7 @@ export async function listAllUsersWithVerification() {
         return { error: `Failed to list users: ${error.message}` };
     }
 }
+
+    
 
     

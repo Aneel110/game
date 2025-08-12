@@ -1,4 +1,5 @@
 
+
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -83,7 +84,7 @@ const getCachedUpcomingTournaments = unstable_cache(
         try {
             const now = new Date();
             const snapshot = await db.collection('tournaments')
-                .where('date', '>', now.toISOString())
+                .where('date', '>', now)
                 .orderBy('date', 'asc')
                 .limit(6)
                 .get();

@@ -15,17 +15,24 @@ export async function GET() {
     const tournamentsSnapshot = await db.collection("tournaments").get();
     
     const finishedTournaments = tournamentsSnapshot.docs
-        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .map(doc => {
+            const data = doc.data();
+            return { 
+              id: doc.id, 
+              ...data,
+              date: data.date instanceof Timestamp ? data.date.toDate().toISOString() : data.date,
+            }
+        })
         .filter(t => {
             if (!t.date) return false;
-            const tournamentDate = t.date instanceof Timestamp ? t.date.toDate() : new Date(t.date);
+            const tournamentDate = new Date(t.date);
             // A tournament is finished if its date is in the past.
             // It should be shown even if the leaderboard is not populated yet.
             return tournamentDate < now;
         })
         .sort((a, b) => {
-            const dateA = a.date instanceof Timestamp ? a.date.toDate() : new Date(a.date);
-            const dateB = b.date instanceof Timestamp ? b.date.toDate() : new Date(b.date);
+            const dateA = new Date(a.date);
+            const dateB = new Date(b.date);
             return dateB.getTime() - dateA.getTime();
         });
 

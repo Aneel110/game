@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { auth, db } from '@/lib/firebase-admin';
@@ -223,6 +224,7 @@ function processTournamentFormData(formData: FormData) {
         }
     }
     
+    // Correctly handle the checkbox value. 'on' means true, absence means false.
     rawData.registrationOpen = formData.has('registrationOpen');
 
     return { ...rawData, prizeDistribution };
@@ -273,6 +275,9 @@ export async function updateTournament(id: string, formData: FormData) {
     // Fetch existing tournament to merge leaderboard/groups data
     const tournamentRef = db.collection('tournaments').doc(id);
     const tournamentSnap = await tournamentRef.get();
+    if (!tournamentSnap.exists) {
+        return { success: false, message: 'Tournament not found.' };
+    }
     const existingData = tournamentSnap.data() || {};
     
     // We only want to update with the new form data, while preserving existing complex fields

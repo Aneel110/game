@@ -1,11 +1,15 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { db } from "@/lib/firebase-admin";
-import { Signal, Clapperboard, Calendar } from "lucide-react";
+import { Signal, Clapperboard, Calendar, AlertTriangle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 async function getStreams() {
+    if (!db) {
+        return { error: "Firebase Admin is not configured. Please set FIREBASE_SERVICE_ACCOUNT_KEY." }
+    }
     const streamsSnapshot = await db.collection('streams').orderBy('createdAt', 'desc').get();
     const streams = streamsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
@@ -13,7 +17,7 @@ async function getStreams() {
     const upcoming = streams.filter(s => s.status === 'Upcoming');
     const past = streams.filter(s => s.status === 'Past');
 
-    return { live, upcoming, past };
+    return { live, upcoming, past, error: null };
 }
 
 function StreamCard({ stream }: { stream: any }) {
@@ -38,7 +42,19 @@ function getWatchUrl(embedUrl: string) {
 }
 
 export default async function StreamsPage() {
-    const { live, upcoming, past } = await getStreams();
+    const { live, upcoming, past, error } = await getStreams();
+
+    if (error) {
+        return (
+            <div className="container mx-auto px-4 py-8">
+                 <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>Server Configuration Error</AlertTitle>
+                    <AlertDescription>{error}</AlertDescription>
+                </Alert>
+            </div>
+        )
+    }
 
     return (
         <div className="container mx-auto px-4 py-8">

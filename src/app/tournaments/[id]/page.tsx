@@ -23,6 +23,7 @@ async function getTournamentData(id: string) {
 
         if (docSnap.exists) {
             const data = docSnap.data();
+<<<<<<< HEAD
             if (!data) {
                 return { tournament: null };
             }
@@ -37,9 +38,29 @@ async function getTournamentData(id: string) {
             };
 
             return { tournament: { id: docSnap.id, ...serializableData } };
+=======
+<<<<<<< HEAD
+            if (data) {
+                // Serialize the date and groupsLastUpdated fields
+                const tournament = {
+                    id: docSnap.id,
+                    ...data,
+                    date: data.date instanceof Timestamp ? data.date.toDate().toISOString() : data.date,
+                    groupsLastUpdated: data.groupsLastUpdated instanceof Timestamp ? data.groupsLastUpdated.toDate().toISOString() : null,
+                };
+                return { tournament };
+            }
+=======
+            if (data && data.date && data.date instanceof Timestamp) {
+                data.date = data.date.toDate().toISOString();
+            }
+            return { tournament: { id: docSnap.id, ...data } };
+>>>>>>> 56c742d778ee53cffcfe472680a4b87000408193
         } else {
             return { tournament: null };
+>>>>>>> be811fe333a8a6e248f090004970833bd8b4e3fa
         }
+        return { tournament: null };
     } catch (error: any) {
         return { error: "Failed to fetch tournament data. Ensure Firestore is enabled and permissions are correct." };
     }
@@ -54,10 +75,11 @@ async function getRegistrations(id: string) {
         // Convert Firestore Timestamps to serializable strings
         const registrations = registrationsSnapshot.docs.map(doc => {
             const data = doc.data();
+            const registeredAt = data.registeredAt;
             return { 
                 id: doc.id, 
                 ...data,
-                registeredAt: data.registeredAt.toDate().toISOString(),
+                registeredAt: registeredAt instanceof Timestamp ? registeredAt.toDate().toISOString() : new Date().toISOString(),
             };
         });
         return { registrations };

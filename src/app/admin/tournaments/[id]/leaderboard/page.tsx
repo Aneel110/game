@@ -46,6 +46,7 @@ async function getTournamentLeaderboard(tournamentId: string) {
     let groupsUpdated = false;
 
     // Sort by points descending for admin view
+<<<<<<< HEAD
     const leaderboard = (tournamentData.leaderboard || []).sort((a: any, b: any) => b.points - a.points);
     
     // Assign groups if they don't exist
@@ -74,10 +75,17 @@ async function getTournamentLeaderboard(tournamentId: string) {
         group: groups[entry.teamName],
     })) as LeaderboardEntry[];
 
+=======
+    const leaderboard = (tournamentData?.leaderboard || []).sort((a: any, b: any) => b.points - a.points);
+    
+    const registrationsSnapshot = await tournamentRef.collection('registrations').where('status', '==', 'approved').get();
+    const approvedCount = registrationsSnapshot.size;
+>>>>>>> 56c742d778ee53cffcfe472680a4b87000408193
 
     return { 
         tournament: { 
             id: tournamentSnap.id, 
+<<<<<<< HEAD
             name: tournamentData.name,
             groupsLastUpdated: tournamentData.groupsLastUpdated 
                 ? (tournamentData.groupsLastUpdated as Timestamp).toDate().toISOString() 
@@ -188,6 +196,139 @@ export default async function AdminTournamentLeaderboardPage({ params }: { param
                             </span>
                         )}
                     </CardDescription>
+=======
+            name: tournamentData?.name, 
+            groups: tournamentData?.groups || {},
+            groupsLastUpdated: tournamentData?.groupsLastUpdated instanceof Timestamp ? tournamentData.groupsLastUpdated.toDate().toISOString() : null,
+        },
+        entries: leaderboard.map((entry: any, index: number) => ({ ...entry, id: entry.teamName || index.toString() })) as LeaderboardEntry[],
+        approvedCount,
+    };
+}
+
+function LeaderboardTable({ tournament, entries, title }: { tournament: any, entries: LeaderboardEntry[], title: string }) {
+    return (
+        <div className="space-y-4">
+            <h3 className="text-xl font-semibold mb-2">{title} ({entries.length} teams)</h3>
+            <Card>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Rank</TableHead>
+                            <TableHead>Logo</TableHead>
+                            <TableHead>Team Name</TableHead>
+                            <TableHead>Group</TableHead>
+                            <TableHead>Points</TableHead>
+                            <TableHead>Matches</TableHead>
+                            <TableHead>Kills</TableHead>
+                            <TableHead>Chicken Dinners</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {entries && entries.map((entry, index) => (
+                            <TableRow key={entry.id}>
+                                <TableCell className="font-medium">{index + 1}</TableCell>
+                                <TableCell>
+                                    <Avatar className="h-10 w-10">
+                                        <AvatarImage src={entry.logoUrl || `https://placehold.co/40x40.png?text=${entry.teamName.charAt(0)}`} alt={entry.teamName} />
+                                        <AvatarFallback>{entry.teamName.charAt(0)}</AvatarFallback>
+                                    </Avatar>
+                                </TableCell>
+                                <TableCell>{entry.teamName}</TableCell>
+                                <TableCell>
+                                    <GroupActions tournamentId={tournament.id} teamName={entry.teamName} currentGroup={tournament.groups?.[entry.teamName]} />
+                                </TableCell>
+                                <TableCell>{entry.points}</TableCell>
+                                <TableCell>{entry.matches}</TableCell>
+                                <TableCell>{entry.kills}</TableCell>
+                                <TableCell>{entry.chickenDinners}</TableCell>
+                                <TableCell className="text-right flex gap-2 justify-end">
+                                    <Button asChild variant="ghost" size="icon">
+                                        <Link href={`/admin/tournaments/${tournament.id}/leaderboard/edit/${encodeURIComponent(entry.teamName)}`}>
+                                            <Edit className="h-4 w-4" />
+                                        </Link>
+                                    </Button>
+                                    <DeleteLeaderboardButton tournamentId={tournament.id} entryTeamName={entry.teamName} />
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                         {(!entries || entries.length === 0) && (
+                            <TableRow>
+                                <TableCell colSpan={9} className="h-24 text-center">
+                                    No entries found.
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </Card>
+        </div>
+    )
+}
+
+export default async function AdminTournamentLeaderboardPage({ params }: { params: { id: string }}) {
+    const { tournament, entries, approvedCount, error } = await getTournamentLeaderboard(params.id);
+
+    if (error) {
+        return (
+             <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Server Configuration Error</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+            </Alert>
+        )
+    }
+
+    if (!tournament) {
+        notFound();
+    }
+    
+    const showGroups = approvedCount > 25;
+    const manualGroups = tournament.groups || {};
+    
+    let groupA: LeaderboardEntry[] = [];
+    let groupB: LeaderboardEntry[] = [];
+
+    if (showGroups) {
+        const unassignedTeams = entries.filter(e => !manualGroups[e.teamName]);
+        const shuffledUnassigned = deterministicShuffle(unassignedTeams, tournament.id);
+
+        let autoGroupA = 0;
+        let autoGroupB = 0;
+
+        for (const team of entries) {
+            const assignedGroup = manualGroups[team.teamName];
+            if (assignedGroup === 'A') {
+                groupA.push(team);
+            } else if (assignedGroup === 'B') {
+                groupB.push(team);
+            }
+        }
+        
+        for (const team of shuffledUnassigned) {
+             if (groupA.length <= groupB.length) {
+                groupA.push(team);
+            } else {
+                groupB.push(team);
+            }
+        }
+
+    } else {
+        groupA = entries;
+    }
+
+
+    return (
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                    <CardTitle>Manage Leaderboard</CardTitle>
+                    <CardDescription>For tournament: {tournament.name}</CardDescription>
+                     {tournament.groupsLastUpdated && (
+                        <p className="text-xs text-muted-foreground mt-1">Groups last updated: {new Date(tournament.groupsLastUpdated).toLocaleString()}</p>
+                    )}
+>>>>>>> 56c742d778ee53cffcfe472680a4b87000408193
                 </div>
                 <Button asChild>
                     <Link href={`/admin/tournaments/${params.id}/leaderboard/add`}>
@@ -196,6 +337,7 @@ export default async function AdminTournamentLeaderboardPage({ params }: { param
                     </Link>
                 </Button>
             </CardHeader>
+<<<<<<< HEAD
             <CardContent>
                 {showGroups ? (
                     <>
@@ -205,6 +347,17 @@ export default async function AdminTournamentLeaderboardPage({ params }: { param
                 ) : (
                     <LeaderboardTable title="Leaderboard" entries={entries} tournamentId={params.id} />
                 )}
+=======
+            <CardContent className="space-y-8">
+               {showGroups ? (
+                   <>
+                    <LeaderboardTable tournament={tournament} entries={groupA} title="Group A" />
+                    <LeaderboardTable tournament={tournament} entries={groupB} title="Group B" />
+                   </>
+               ) : (
+                    <LeaderboardTable tournament={tournament} entries={entries} title="Overall Leaderboard" />
+               )}
+>>>>>>> 56c742d778ee53cffcfe472680a4b87000408193
             </CardContent>
         </Card>
     );

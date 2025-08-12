@@ -1,14 +1,14 @@
 
+
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { db, auth } from "@/lib/firebase-admin";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle, UserCheck, UserX, Search, CheckCircle2, XCircle } from "lucide-react";
 import UserActions from "./user-actions";
-import { listAllUsers } from "@/lib/actions";
+import { listAllUsersWithVerification } from "@/lib/actions";
 import { useEffect, useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -54,7 +54,7 @@ const getStatusBadge = (disabled: boolean) => {
 
 const getVerificationBadge = (isVerified: boolean) => {
     return isVerified ? (
-        <Badge variant="outline" className="text-green-400 border-green-400">
+        <Badge variant="outline" className="text-green-500 border-green-500">
             <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
             Verified
         </Badge>
@@ -73,9 +73,9 @@ function UserTableSkeleton() {
                 <TableRow>
                     <TableHead>Display Name</TableHead>
                     <TableHead>Email</TableHead>
+                    <TableHead>Email Verification</TableHead>
                     <TableHead>Role</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Verification</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
             </TableHeader>
@@ -84,9 +84,9 @@ function UserTableSkeleton() {
                     <TableRow key={i}>
                         <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                         <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                        <TableCell><Skeleton className="h-6 w-24" /></TableCell>
                         <TableCell><Skeleton className="h-6 w-16" /></TableCell>
                         <TableCell><Skeleton className="h-6 w-20" /></TableCell>
-                        <TableCell><Skeleton className="h-6 w-24" /></TableCell>
                         <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
                     </TableRow>
                 ))}
@@ -105,7 +105,7 @@ export default function AdminUsersPage() {
     useEffect(() => {
         async function fetchUsers() {
             setLoading(true);
-            const result = await listAllUsers();
+            const result = await listAllUsersWithVerification();
             if (result.success && result.users) {
                 setUsers(result.users);
             } else {
@@ -120,10 +120,10 @@ export default function AdminUsersPage() {
         return users
             .filter(user => {
                 if (filter === 'new') return user.isNew;
-                if (filter === 'enabled') return !user.disabled;
-                if (filter === 'disabled') return user.disabled;
                 if (filter === 'verified') return user.emailVerified;
                 if (filter === 'not_verified') return !user.emailVerified;
+                if (filter === 'enabled') return !user.disabled;
+                if (filter === 'disabled') return user.disabled;
                 return true;
             })
             .filter(user => 
@@ -167,10 +167,10 @@ export default function AdminUsersPage() {
                         <SelectContent>
                             <SelectItem value="all">All Users</SelectItem>
                             <SelectItem value="new">New Users</SelectItem>
-                            <SelectItem value="enabled">Enabled</SelectItem>
-                            <SelectItem value="disabled">Disabled</SelectItem>
                             <SelectItem value="verified">Verified</SelectItem>
                             <SelectItem value="not_verified">Not Verified</SelectItem>
+                            <SelectItem value="enabled">Enabled</SelectItem>
+                            <SelectItem value="disabled">Disabled</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
@@ -180,9 +180,9 @@ export default function AdminUsersPage() {
                             <TableRow>
                                 <TableHead>Display Name</TableHead>
                                 <TableHead>Email</TableHead>
+                                <TableHead>Email Verification</TableHead>
                                 <TableHead>Role</TableHead>
                                 <TableHead>Status</TableHead>
-                                <TableHead>Verification</TableHead>
                                 <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -196,9 +196,9 @@ export default function AdminUsersPage() {
                                         </div>
                                     </TableCell>
                                     <TableCell>{user.email}</TableCell>
+                                    <TableCell>{getVerificationBadge(user.emailVerified)}</TableCell>
                                     <TableCell>{getRoleBadge(user.role)}</TableCell>
                                     <TableCell>{getStatusBadge(user.disabled)}</TableCell>
-                                    <TableCell>{getVerificationBadge(user.emailVerified)}</TableCell>
                                     <TableCell className="text-right">
                                         <UserActions userId={user.id} currentRole={user.role} isDisabled={user.disabled} />
                                     </TableCell>

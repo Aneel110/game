@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState } from 'react';
@@ -50,7 +51,7 @@ export default function TournamentRegistrationForm({ tournamentId, isLoggedIn, i
       teamName: '',
       teamTag: '',
       players: [
-        { pubgName: '', discordUsername: '' }
+        { pubgName: '', pubgId: '', discordUsername: '' }
       ],
       registeredById: user?.uid || '',
       registeredByName: user?.displayName || '',
@@ -163,13 +164,13 @@ export default function TournamentRegistrationForm({ tournamentId, isLoggedIn, i
                          <Alert className="mt-2">
                            <Info className="h-4 w-4" />
                            <AlertDescription>
-                            Enter at least one player with their name and Discord username.
+                            Enter at least one player with their name, PUBG ID, and Discord username.
                            </AlertDescription>
                          </Alert>
                         <div className="space-y-4 mt-4">
                         {fields.map((field, index) => (
                             <div key={field.id} className="flex items-start gap-2">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 flex-grow">
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 flex-grow">
                                     <FormField
                                         control={form.control}
                                         name={`players.${index}.pubgName`}
@@ -182,13 +183,37 @@ export default function TournamentRegistrationForm({ tournamentId, isLoggedIn, i
                                             </FormItem>
                                         )}
                                     />
+                                     <FormField
+                                        control={form.control}
+                                        name={`players.${index}.pubgId`}
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormControl>
+                                                    <Input placeholder="PUBG ID (Optional)" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name={`players.${index}.pubgId`}
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormControl>
+                                                    <Input placeholder={`PUBG ID`} {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
                                     <FormField
                                         control={form.control}
                                         name={`players.${index}.discordUsername`}
                                         render={({ field }) => (
                                             <FormItem>
                                                 <FormControl>
-                                                    <Input placeholder="Discord Username (e.g., user#1234)" {...field} />
+                                                    <Input placeholder="Discord Username" {...field} />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -216,7 +241,7 @@ export default function TournamentRegistrationForm({ tournamentId, isLoggedIn, i
                             variant="outline"
                             size="sm"
                             className="mt-2"
-                            onClick={() => append({ pubgName: '', discordUsername: '' })}
+                            onClick={() => append({ pubgName: '', pubgId: '', discordUsername: '' })}
                             disabled={fields.length >= 6}
                             >
                             <PlusCircle className="mr-2 h-4 w-4" />
@@ -255,7 +280,7 @@ export default function TournamentRegistrationForm({ tournamentId, isLoggedIn, i
       <DialogTrigger asChild>
         {getTriggerButton()}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[625px]">
+      <DialogContent className="sm:max-w-[725px]">
         {renderContent()}
       </DialogContent>
     </Dialog>

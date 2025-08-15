@@ -474,6 +474,7 @@ export async function updateTeamGroup(tournamentId: string, teamName: string, gr
             updateData[groupFieldPath.toString()] = group;
         }
         await tournamentRef.update(updateData);
+        // Do not revalidate here, as real-time listeners will handle the update.
         return { success: true, message: `Team ${teamName} assigned to ${group || 'Unassigned'}.` };
     } catch (error) {
         return { success: false, message: 'An unexpected error occurred.' };
@@ -634,3 +635,5 @@ export async function manageTournamentGroups(tournamentId: string, reset: boolea
         return { success: false, message: error.message || "An unexpected error occurred." };
     }
 }
+
+    

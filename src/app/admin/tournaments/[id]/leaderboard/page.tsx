@@ -12,7 +12,7 @@ import { useParams, notFound } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import GroupActions from "./group-actions";
 import { useEffect, useState, useMemo } from "react";
-import { doc, onSnapshot, collection, Unsubscribe } from "firebase/firestore";
+import { doc, onSnapshot, collection, Unsubscribe, query, where } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { manageTournamentGroups } from "@/lib/actions";
 import { useToast } from "@/hooks/use-toast";
@@ -32,7 +32,7 @@ type RegistrationData = {
 }
 
 type CombinedTeamEntry = {
-    id: string;
+    id: string; // This will be the registration doc ID or team name if no registration exists
     teamName: string;
     logoUrl?: string;
     points?: number;
@@ -53,13 +53,13 @@ function LeaderboardSkeleton() {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            {Array.from({length: 8}).map((_, i) => <TableHead key={i}><Skeleton className="h-5 w-full" /></TableHead>)}
+                            {Array.from({length: 7}).map((_, i) => <TableHead key={i}><Skeleton className="h-5 w-full" /></TableHead>)}
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                          {Array.from({length: 5}).map((_, i) => (
                             <TableRow key={i}>
-                                {Array.from({length: 8}).map((_, j) => <TableCell key={j}><Skeleton className="h-6 w-full" /></TableCell>)}
+                                {Array.from({length: 7}).map((_, j) => <TableCell key={j}><Skeleton className="h-6 w-full" /></TableCell>)}
                             </TableRow>
                         ))}
                     </TableBody>
@@ -88,7 +88,6 @@ function LeaderboardTable({ tournament, entries, title }: { tournament: Tourname
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead className="w-[80px]">Rank</TableHead>
                             <TableHead>Team Name</TableHead>
                             <TableHead>Group</TableHead>
                             <TableHead className="text-center">Points</TableHead>
@@ -99,9 +98,8 @@ function LeaderboardTable({ tournament, entries, title }: { tournament: Tourname
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {sortedEntries.map((entry, index) => (
+                        {sortedEntries.map((entry) => (
                             <TableRow key={entry.id}>
-                                <TableCell className="font-medium text-center">{index + 1}</TableCell>
                                 <TableCell>
                                     <div className="flex items-center gap-3">
                                         <Avatar className="h-10 w-10">
@@ -155,16 +153,17 @@ export default function AdminTournamentLeaderboardPage() {
             if (docSnap.exists()) {
                 setTournament({ id: docSnap.id, ...docSnap.data() } as TournamentData);
             } else {
-                notFound();
+                setTournament(null); // Or trigger notFound()
             }
             setLoading(false);
         });
 
         const regsRef = collection(db, 'tournaments', tournamentId, 'registrations');
-        const unsubscribeRegs = onSnapshot(regsRef, (querySnapshot) => {
+        const q = query(regsRef, where('status', '==', 'approved'));
+
+        const unsubscribeRegs = onSnapshot(q, (querySnapshot) => {
             const approvedRegs = querySnapshot.docs
-                .filter(doc => doc.data().status === 'approved')
-                .map(doc => ({ id: doc.id, teamName: doc.data().teamName }));
+                .map(d => ({ id: d.id, teamName: d.data().teamName }));
             setRegistrations(approvedRegs);
         });
 
@@ -199,7 +198,7 @@ export default function AdminTournamentLeaderboardPage() {
             allTeamsMap.set(reg.teamName, {
                 id: reg.id,
                 teamName: reg.teamName,
-                group: groups[reg.teamName] || 'Unassigned',
+                group: groups[reg.teamName],
                 points: 0,
                 matches: 0,
                 kills: 0,
@@ -207,13 +206,18 @@ export default function AdminTournamentLeaderboardPage() {
             });
         });
 
-        // Merge leaderboard data into the map
+        // Merge leaderboard data into the map, overwriting defaults
         leaderboard.forEach((entry: any) => {
             const existingTeam = allTeamsMap.get(entry.teamName);
             allTeamsMap.set(entry.teamName, {
-                ...(existingTeam || { id: entry.teamName }),
-                ...entry,
-                group: groups[entry.teamName] || 'Unassigned',
+                id: existingTeam?.id || entry.teamName, // Use registration ID if available
+                teamName: entry.teamName,
+                group: groups[entry.teamName],
+                logoUrl: entry.logoUrl,
+                points: entry.points,
+                matches: entry.matches,
+                kills: entry.kills,
+                chickenDinners: entry.chickenDinners,
             });
         });
 
@@ -232,24 +236,32 @@ export default function AdminTournamentLeaderboardPage() {
         return groups;
     }, [combinedTeams]);
 
-    if (loading || !tournament) {
+    if (loading) {
         return <LeaderboardSkeleton />;
     }
 
-    const sortedGroupNames = Object.keys(groupedTeams).sort((a,b) => a.localeCompare(b));
+    if (!tournament) {
+        return notFound();
+    }
+
+    const sortedGroupNames = Object.keys(groupedTeams).sort((a,b) => {
+      if (a === 'Unassigned') return 1;
+      if (b === 'Unassigned') return -1;
+      return a.localeCompare(b)
+    });
 
     return (
         <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-row items-start justify-between">
                 <div>
                     <CardTitle>Manage Leaderboard & Groups</CardTitle>
-                    <CardDescription>For tournament: {tournament.name}.</CardDescription>
+                    <CardDescription>For tournament: {tournament.name}. Real-time updates are active.</CardDescription>
                      {tournament.groupsLastUpdated && (
                         <p className="text-xs text-muted-foreground mt-1">Groups last updated: {tournament.groupsLastUpdated.toDate().toLocaleString()}</p>
                     )}
                 </div>
                 <div className="flex gap-2">
-                    <Button onClick={() => handleManageGroups()} disabled={isManagingGroups || registrations.length < 25}>
+                    <Button onClick={() => handleManageGroups()} disabled={isManagingGroups || registrations.length === 0}>
                         <Bot className="mr-2 h-4 w-4" />
                         {isManagingGroups ? 'Processing...' : 'Auto-Manage Groups'}
                     </Button>
@@ -269,7 +281,7 @@ export default function AdminTournamentLeaderboardPage() {
                ) : (
                 <>
                     {sortedGroupNames.map(groupName => (
-                         <LeaderboardTable key={groupName} tournament={tournament} entries={groupedTeams[groupName]} title={groupName === 'Unassigned' ? 'Unassigned' : `Group ${groupName}`} />
+                         <LeaderboardTable key={groupName} tournament={tournament} entries={groupedTeams[groupName]} title={groupName === 'Unassigned' ? 'Unassigned Teams' : `Group ${groupName}`} />
                     ))}
                 </>
                )}

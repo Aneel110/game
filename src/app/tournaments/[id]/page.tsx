@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,7 +15,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import ParticipantsTable from "@/components/tournaments/participants-table";
 import { Button } from "@/components/ui/button";
 import { db } from "@/lib/firebase";
-import { doc, onSnapshot, collection, Unsubscribe } from "firebase/firestore";
+import { doc, onSnapshot, collection, Unsubscribe, query, where } from "firebase/firestore";
 import { useParams, notFound } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -39,6 +39,8 @@ type Tournament = {
 type Registration = {
     id: string;
     status: 'approved' | 'pending' | 'declined';
+    teamName: string;
+    teamTag: string;
     [key: string]: any;
 };
 
@@ -185,11 +187,11 @@ export default function TournamentDetailPage() {
                 const tournamentData = {
                     ...data,
                     id: docSnap.id,
-                    date: data.date.toDate ? data.date.toDate().toISOString() : data.date,
+                    date: data.date?.toDate ? data.date.toDate().toISOString() : data.date,
                 } as Tournament;
                 setTournament(tournamentData);
             } else {
-                notFound();
+                setTournament(null);
             }
             setLoading(false);
         });
@@ -209,13 +211,13 @@ export default function TournamentDetailPage() {
 
     const formattedDate = tournament?.date ? new Date(tournament.date).toLocaleString([], { dateStyle: 'long', timeStyle: 'short' }) : 'Loading...';
     
-    const approvedParticipants = registrations.filter(r => r.status === 'approved');
-    const pendingParticipants = registrations.filter(r => r.status === 'pending');
+    const approvedParticipants = useMemo(() => registrations.filter(r => r.status === 'approved'), [registrations]);
+    const pendingParticipants = useMemo(() => registrations.filter(r => r.status === 'pending'), [registrations]);
     const isAlreadyRegistered = user && registrations.some(r => r.id === user.uid);
     const rules = tournament?.rules ? tournament.rules.split('\n') : [];
 
-    const leaderboard = tournament?.leaderboard || [];
-    const finalistLeaderboard = tournament?.finalistLeaderboard || [];
+    const leaderboard = useMemo(() => tournament?.leaderboard || [], [tournament?.leaderboard]);
+    const finalistLeaderboard = useMemo(() => tournament?.finalistLeaderboard || [], [tournament?.finalistLeaderboard]);
     const finalistLeaderboardActive = tournament?.finalistLeaderboardActive || false;
     
     const groupedTeams = useMemo(() => {
@@ -233,7 +235,11 @@ export default function TournamentDetailPage() {
         return groups;
     }, [tournament?.leaderboard, tournament?.groups]);
 
-    const sortedGroupNames = Object.keys(groupedTeams).sort((a,b) => a.localeCompare(b));
+    const sortedGroupNames = Object.keys(groupedTeams).sort((a,b) => {
+      if (a === 'Unassigned') return 1;
+      if (b === 'Unassigned') return -1;
+      return a.localeCompare(b);
+    });
 
     if (loading || authLoading) {
         return <PageSkeleton />;
@@ -323,7 +329,7 @@ export default function TournamentDetailPage() {
                             <div className="space-y-8">
                                 {Object.keys(groupedTeams).length > 0 ? (
                                     sortedGroupNames.map(groupName => (
-                                        <LeaderboardTable key={groupName} title={`Group ${groupName}`} leaderboardData={groupedTeams[groupName]} icon={Users} />
+                                        <LeaderboardTable key={groupName} title={groupName === 'Unassigned' ? 'Unassigned Teams' : `Group ${groupName}`} leaderboardData={groupedTeams[groupName]} icon={Users} />
                                     ))
                                 ) : (
                                     leaderboard.length > 0 ? (

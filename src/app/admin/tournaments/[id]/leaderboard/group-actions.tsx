@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState } from 'react';
@@ -28,7 +29,7 @@ export default function GroupActions({ tournamentId, teamName, currentGroup }: G
     
     setIsLoading(true);
     try {
-      const newGroup = group.trim() === '' ? null : group.trim();
+      const newGroup = group.trim() === '' ? null : group.trim().toUpperCase();
       const result = await updateTeamGroup(tournamentId, teamName, newGroup);
       if (result.success) {
         toast({ title: 'Success', description: result.message });
@@ -57,7 +58,7 @@ export default function GroupActions({ tournamentId, teamName, currentGroup }: G
           onKeyDown={(e) => e.key === 'Enter' && handleSave()}
           className="h-8 w-24"
           disabled={isLoading}
-          placeholder="e.g., Group A"
+          placeholder="e.g., A"
         />
         <Button size="icon" variant="ghost" className="h-8 w-8 text-green-500" onClick={handleSave} disabled={isLoading}>
           <Check className="h-4 w-4" />
@@ -71,7 +72,7 @@ export default function GroupActions({ tournamentId, teamName, currentGroup }: G
 
   return (
     <div className="flex items-center gap-1 group">
-      <span>{currentGroup || 'N/A'}</span>
+      <span>{currentGroup ? `Group ${currentGroup}` : 'N/A'}</span>
       <Button size="icon" variant="ghost" className="h-8 w-8 opacity-0 group-hover:opacity-100" onClick={() => setIsEditing(true)}>
         <Edit className="h-4 w-4" />
       </Button>

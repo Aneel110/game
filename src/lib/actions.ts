@@ -125,6 +125,7 @@ export async function updateRegistrationStatus(tournamentId: string, registratio
                 // Add to leaderboard if approved and not already there
                 const newEntry = {
                     teamName: teamName,
+                    logoUrl: '',
                     points: 0,
                     matches: 0,
                     kills: 0,
@@ -225,7 +226,12 @@ export async function createTournament(data: z.infer<typeof tournamentSchema>) {
     }
 
     try {
-        await db.collection('tournaments').add(validatedFields.data);
+        await db.collection('tournaments').add({
+             ...validatedFields.data, 
+             leaderboard: [],
+             finalistLeaderboard: [],
+             groups: {},
+        });
         revalidatePath('/tournaments');
         revalidatePath('/admin/tournaments');
         return { success: true, message: 'Tournament created successfully.' };
@@ -384,24 +390,31 @@ export async function createOrUpdateLeaderboardEntry(tournamentId: string, data:
         const tournamentRef = db.collection('tournaments').doc(tournamentId);
         const newEntry = validatedFields.data;
         
-        const tournamentSnap = await tournamentRef.get();
-        const tournamentData = tournamentSnap.data();
-        const leaderboard = tournamentData?.leaderboard || [];
+        await db.runTransaction(async (transaction) => {
+            const tournamentSnap = await transaction.get(tournamentRef);
+            if (!tournamentSnap.exists) {
+                throw new Error("Tournament not found!");
+            }
+            const tournamentData = tournamentSnap.data();
+            const leaderboard = tournamentData?.leaderboard || [];
 
-        const teamNameToUpdate = originalTeamName ? decodeURIComponent(originalTeamName) : newEntry.teamName;
-        const entryIndex = leaderboard.findIndex((e: any) => e.teamName === teamNameToUpdate);
+            const teamNameToUpdate = originalTeamName ? decodeURIComponent(originalTeamName) : newEntry.teamName;
+            const entryIndex = leaderboard.findIndex((e: any) => e.teamName === teamNameToUpdate);
 
-        if (entryIndex > -1) { // This is an update
-            leaderboard[entryIndex] = newEntry;
-        } else { // This is a create
-            leaderboard.push(newEntry);
-        }
+            if (entryIndex > -1) { // This is an update
+                // Update logoUrl if it has changed
+                const existingLogo = leaderboard[entryIndex].logoUrl;
+                leaderboard[entryIndex] = { ...newEntry, logoUrl: newEntry.logoUrl || existingLogo };
+            } else { // This is a create
+                leaderboard.push(newEntry);
+            }
 
-        await tournamentRef.update({ leaderboard });
+            transaction.update(tournamentRef, { leaderboard });
+        });
 
         revalidatePath(`/admin/tournaments/${tournamentId}/leaderboard`);
         revalidatePath(`/tournaments/${tournamentId}`);
-        return { success: true, message: `Leaderboard entry ${entryIndex > -1 ? 'updated' : 'created'} successfully.` };
+        return { success: true, message: `Leaderboard entry updated successfully.` };
     } catch (error) {
         console.error('Error updating leaderboard:', error);
         return { success: false, message: 'An unexpected error occurred.' };
@@ -414,18 +427,18 @@ export async function deleteLeaderboardEntry(tournamentId: string, teamName: str
     }
     try {
         const tournamentRef = db.collection('tournaments').doc(tournamentId);
-        const tournamentSnap = await tournamentRef.get();
-        const tournamentData = tournamentSnap.data();
-        let leaderboard = tournamentData?.leaderboard || [];
         
-        const entryToDelete = leaderboard.find((e: any) => e.teamName === teamName);
+        await db.runTransaction(async (transaction) => {
+            const tournamentSnap = await transaction.get(tournamentRef);
+            if (!tournamentSnap.exists) {
+                throw new Error("Tournament not found!");
+            }
+            const tournamentData = tournamentSnap.data();
+            let leaderboard = tournamentData?.leaderboard || [];
+            
+            const updatedLeaderboard = leaderboard.filter((e: any) => e.teamName !== teamName);
 
-        if(!entryToDelete) {
-             return { success: false, message: 'Entry not found.' };
-        }
-
-        await tournamentRef.update({
-            leaderboard: FieldValue.arrayRemove(entryToDelete)
+            transaction.update(tournamentRef, { leaderboard: updatedLeaderboard });
         });
 
         revalidatePath(`/admin/tournaments/${tournamentId}/leaderboard`);

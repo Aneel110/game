@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo } from "react";
@@ -137,42 +138,47 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
   
   const showGroups = approvedParticipants.length > 25;
 
-  const { groupA, groupB } = useMemo(() => {
+  const groupedTeams = useMemo(() => {
     if (!showGroups) {
-      return { groupA: [], groupB: [] };
+      return {};
     }
     
     const manualGroups = tournament.groups || {};
     const approvedTeamNames = new Set(approvedParticipants.map(p => p.teamName));
     const teamsOnLeaderboard = leaderboard.filter((l: any) => approvedTeamNames.has(l.teamName));
     
-    const groupA: any[] = [];
-    const groupB: any[] = [];
+    const groups: { [key: string]: any[] } = {};
     const unassigned: any[] = [];
 
     for (const team of teamsOnLeaderboard) {
       const assignedGroup = manualGroups[team.teamName];
-      if (assignedGroup === 'A') {
-        groupA.push(team);
-      } else if (assignedGroup === 'B') {
-        groupB.push(team);
+      if (assignedGroup) {
+        if (!groups[assignedGroup]) {
+            groups[assignedGroup] = [];
+        }
+        groups[assignedGroup].push(team);
       } else {
         unassigned.push(team);
       }
     }
     
-    const shuffledUnassigned = deterministicShuffle(unassigned, tournament.id);
+    // Distribute unassigned teams
+    if(unassigned.length > 0){
+        if (!groups['Unassigned']) {
+            groups['Unassigned'] = [];
+        }
+        groups['Unassigned'].push(...unassigned);
+    }
+    
+    return groups;
 
-    shuffledUnassigned.forEach(team => {
-      if (groupA.length <= groupB.length) {
-        groupA.push(team);
-      } else {
-        groupB.push(team);
-      }
-    });
+  }, [leaderboard, showGroups, approvedParticipants, tournament.groups]);
 
-    return { groupA, groupB };
-  }, [leaderboard, showGroups, approvedParticipants, tournament.groups, tournament.id]);
+  const sortedGroupNames = Object.keys(groupedTeams).sort((a, b) => {
+    if (a === 'Unassigned') return 1;
+    if (b === 'Unassigned') return -1;
+    return a.localeCompare(b);
+  });
   
 
   // Use the manual setting, defaulting to true if it's not set
@@ -258,8 +264,9 @@ export default function TournamentDetail({ tournament, registrations }: { tourna
                     <div className="space-y-8">
                         {showGroups ? (
                             <>
-                                <LeaderboardTable title="Group A" leaderboardData={groupA} icon={Users} />
-                                <LeaderboardTable title="Group B" leaderboardData={groupB} icon={Users} />
+                                {sortedGroupNames.map(groupName => (
+                                    <LeaderboardTable key={groupName} title={groupName} leaderboardData={groupedTeams[groupName]} icon={Users} />
+                                ))}
                             </>
                         ) : (
                             leaderboard.length > 0 ? (

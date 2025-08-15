@@ -60,11 +60,13 @@ async function getTournamentLeaderboard(tournamentId: string) {
 function LeaderboardTable({ tournament, entries, title }: { tournament: any, entries: LeaderboardEntry[], title: string }) {
     if (entries.length === 0) return null;
     
+    const groupName = title.startsWith('Group') ? title : 'Unassigned';
+
     return (
         <div className="space-y-4">
             <h3 className="text-xl font-semibold mb-2 flex items-center gap-2">
                 <Users className="w-5 h-5 text-primary"/>
-                {title} ({entries.length} teams)
+                {groupName} ({entries.length} teams)
             </h3>
             <Card>
                 <Table>
@@ -150,7 +152,7 @@ export default async function AdminTournamentLeaderboardPage({ params }: { param
     });
     
     // Sort groups alphabetically by name
-    const sortedGroupNames = Object.keys(assignedGroups).sort();
+    const sortedGroupNames = Object.keys(assignedGroups).sort((a,b) => a.localeCompare(b));
 
 
     return (
@@ -178,7 +180,7 @@ export default async function AdminTournamentLeaderboardPage({ params }: { param
                ) : (
                 <>
                     {sortedGroupNames.map(groupName => (
-                         <LeaderboardTable key={groupName} tournament={tournament} entries={assignedGroups[groupName]} title={groupName} />
+                         <LeaderboardTable key={groupName} tournament={tournament} entries={assignedGroups[groupName]} title={`Group ${groupName}`} />
                     ))}
                     <LeaderboardTable tournament={tournament} entries={unassigned} title="Unassigned" />
                 </>

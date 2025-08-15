@@ -1,5 +1,4 @@
 
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -14,18 +13,20 @@ import { Timestamp } from "firebase-admin/firestore";
 import GroupActions from "./group-actions";
 
 type LeaderboardEntry = {
-    id: string; 
-    rank: number;
     teamName: string;
     logoUrl?: string;
-    points: number;
-    matches: number;
-    kills: number;
-    chickenDinners: number;
+    points?: number;
+    matches?: number;
+    kills?: number;
+    chickenDinners?: number;
+}
+
+type CombinedTeamEntry = LeaderboardEntry & {
+    id: string; 
     group?: string;
 }
 
-async function getTournamentLeaderboard(tournamentId: string) {
+async function getTournamentData(tournamentId: string) {
     if (!db) {
         return { error: "Firebase Admin is not configured. Please set FIREBASE_SERVICE_ACCOUNT_KEY." }
     }
@@ -39,12 +40,46 @@ async function getTournamentLeaderboard(tournamentId: string) {
     const tournamentData = tournamentSnap.data();
     if (!tournamentData) return { tournament: null };
 
-    // Sort by points descending for admin view
-    const leaderboard = (tournamentData.leaderboard || []).sort((a: any, b: any) => b.points - a.points);
-    
+    // Get all approved teams
     const registrationsSnapshot = await tournamentRef.collection('registrations').where('status', '==', 'approved').get();
-    const approvedCount = registrationsSnapshot.size;
+    const approvedTeams = registrationsSnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+            teamName: data.teamName,
+            // You can add more fields from registration if needed
+        };
+    });
 
+    const leaderboardEntries = (tournamentData.leaderboard || []) as LeaderboardEntry[];
+
+    // Create a comprehensive map of all teams, ensuring every approved team is included.
+    const allTeamsMap = new Map<string, LeaderboardEntry>();
+
+    // Add all approved teams first
+    approvedTeams.forEach(team => {
+        allTeamsMap.set(team.teamName, {
+            teamName: team.teamName,
+            logoUrl: '',
+            points: 0,
+            matches: 0,
+            kills: 0,
+            chickenDinners: 0,
+        });
+    });
+
+    // Merge leaderboard data into the map
+    leaderboardEntries.forEach(entry => {
+        allTeamsMap.set(entry.teamName, {
+            ...allTeamsMap.get(entry.teamName), // Keep default values if entry is partial
+            ...entry,
+        });
+    });
+
+    const combinedTeams = Array.from(allTeamsMap.values());
+
+    // Sort by points descending for admin view
+    combinedTeams.sort((a, b) => (b.points || 0) - (a.points || 0));
+    
     return { 
         tournament: { 
             id: tournamentSnap.id, 
@@ -52,12 +87,11 @@ async function getTournamentLeaderboard(tournamentId: string) {
             groups: tournamentData.groups || {},
             groupsLastUpdated: tournamentData.groupsLastUpdated instanceof Timestamp ? tournamentData.groupsLastUpdated.toDate().toISOString() : null,
         },
-        entries: leaderboard.map((entry: any, index: number) => ({ ...entry, id: entry.teamName || index.toString() })) as LeaderboardEntry[],
-        approvedCount,
+        teams: combinedTeams.map((entry: any, index: number) => ({ ...entry, id: entry.teamName || index.toString() })) as CombinedTeamEntry[],
     };
 }
 
-function LeaderboardTable({ tournament, entries, title }: { tournament: any, entries: LeaderboardEntry[], title: string }) {
+function LeaderboardTable({ tournament, entries, title }: { tournament: any, entries: CombinedTeamEntry[], title: string }) {
     if (entries.length === 0) return null;
     
     const groupName = title.startsWith('Group') ? title : 'Unassigned';
@@ -119,7 +153,7 @@ function LeaderboardTable({ tournament, entries, title }: { tournament: any, ent
 }
 
 export default async function AdminTournamentLeaderboardPage({ params }: { params: { id: string }}) {
-    const { tournament, entries, error } = await getTournamentLeaderboard(params.id);
+    const { tournament, teams, error } = await getTournamentData(params.id);
 
     if (error) {
         return (
@@ -135,11 +169,11 @@ export default async function AdminTournamentLeaderboardPage({ params }: { param
         notFound();
     }
     
-    const assignedGroups: { [key: string]: LeaderboardEntry[] } = {};
-    const unassigned: LeaderboardEntry[] = [];
+    const assignedGroups: { [key: string]: CombinedTeamEntry[] } = {};
+    const unassigned: CombinedTeamEntry[] = [];
     const manualGroups = tournament.groups || {};
 
-    entries.forEach(entry => {
+    teams.forEach(entry => {
         const groupName = manualGroups[entry.teamName];
         if (groupName) {
             if (!assignedGroups[groupName]) {
@@ -173,9 +207,9 @@ export default async function AdminTournamentLeaderboardPage({ params }: { param
                 </Button>
             </CardHeader>
             <CardContent className="space-y-8">
-               {entries.length === 0 ? (
+               {teams.length === 0 ? (
                     <div className="h-24 text-center flex items-center justify-center text-muted-foreground">
-                        No leaderboard entries found. Add entries to begin grouping teams.
+                        No approved teams found. Approve registrations to begin grouping teams.
                     </div>
                ) : (
                 <>
@@ -189,5 +223,3 @@ export default async function AdminTournamentLeaderboardPage({ params }: { param
         </Card>
     );
 }
-
-    

@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState } from 'react';
@@ -8,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { updateTeamGroup } from '@/lib/actions';
 import { Check, Edit, X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface GroupActionsProps {
   tournamentId: string;
@@ -17,6 +17,7 @@ interface GroupActionsProps {
 
 export default function GroupActions({ tournamentId, teamName, currentGroup }: GroupActionsProps) {
   const { toast } = useToast();
+  const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [group, setGroup] = useState(currentGroup || '');
   const [isLoading, setIsLoading] = useState(false);
@@ -34,6 +35,8 @@ export default function GroupActions({ tournamentId, teamName, currentGroup }: G
       if (result.success) {
         toast({ title: 'Success', description: result.message });
         setIsEditing(false);
+        // Force a full page reload to ensure all data is re-fetched and UI is updated.
+        window.location.reload(); 
       } else {
         toast({ title: 'Error', description: result.message, variant: 'destructive' });
       }

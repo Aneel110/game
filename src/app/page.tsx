@@ -2,13 +2,6 @@
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from '@/components/ui/carousel';
 import { ArrowRight, Trophy, Users, Newspaper, Signal, AlertTriangle, Youtube, Gamepad2, Crown, Megaphone } from 'lucide-react';
 import Link from 'next/link';
 import { db } from '@/lib/firebase-admin';
@@ -16,7 +9,8 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Timestamp } from 'firebase-admin/firestore';
 import { unstable_cache } from 'next/cache';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import Autoplay from "embla-carousel-autoplay"
+import NewsSection from '@/components/home/news-section';
+
 
 const getCachedSiteSettings = unstable_cache(
     async () => {
@@ -370,55 +364,11 @@ async function RecentWinnersSection() {
     )
 }
 
-async function NewsSection() {
-    const { news, error } = await getCachedNews();
-
-    if (error) {
-        return (
-            <Alert variant="destructive" className="my-8 container">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Could not load news</AlertTitle>
-                <AlertDescription>{error}</AlertDescription>
-            </Alert>
-        );
-    }
-
-    if (news.length === 0) {
-        return null;
-    }
-
-    return (
-        <section id="news" className="w-full bg-muted/30 py-12">
-            <div className="container mx-auto">
-                <h2 className="text-4xl font-headline font-bold text-center mb-8 flex items-center justify-center gap-3">
-                    <Megaphone className="w-8 h-8 text-primary" /> Important News
-                </h2>
-                <Carousel 
-                    className="w-full max-w-4xl mx-auto"
-                    plugins={[Autoplay({ delay: 5000, stopOnInteraction: true })]}
-                    opts={{ loop: true }}
-                >
-                    <CarouselContent>
-                        {news.map((item) => (
-                            <CarouselItem key={item.id}>
-                                <Card className="p-6 text-center bg-card/80 backdrop-blur-sm border-primary/20">
-                                    <CardTitle className="mb-2 text-2xl font-headline text-primary">{item.title}</CardTitle>
-                                    <CardDescription className="text-base text-foreground/80">{item.content}</CardDescription>
-                                </Card>
-                            </CarouselItem>
-                        ))}
-                    </CarouselContent>
-                    <CarouselPrevious className="hidden sm:flex" />
-                    <CarouselNext className="hidden sm:flex" />
-                </Carousel>
-            </div>
-        </section>
-    );
-}
 
 export default async function Home() {
   const settings = await getSiteSettings();
   const { tournaments, error: tournamentsError } = await getCachedUpcomingTournaments();
+  const { news, error: newsError } = await getCachedNews();
 
   return (
     <div className="flex flex-col items-center">
@@ -457,7 +407,7 @@ export default async function Home() {
       <LiveStreamSection />
       
       {/* News Section */}
-      <NewsSection />
+      <NewsSection news={news} error={newsError} />
 
       {/* Upcoming Tournaments Section */}
       <section id="tournaments" className="w-full max-w-7xl py-16 px-4">
@@ -470,11 +420,9 @@ export default async function Home() {
             </Alert>
         )}
         {tournaments.length > 0 ? (
-            <Carousel opts={{ align: 'start', loop: tournaments.length > 2 }} className="w-full">
-              <CarouselContent>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {tournaments.map((tournament) => (
-                  <CarouselItem key={tournament.id} className="md:basis-1/2 lg:basis-1/3">
-                    <Card className="overflow-hidden transition-transform duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-primary/20">
+                    <Card key={tournament.id} className="overflow-hidden transition-transform duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-primary/20">
                       <CardHeader className="p-0">
                         <Image
                           src={tournament.image}
@@ -494,12 +442,8 @@ export default async function Home() {
                         </Button>
                       </CardContent>
                     </Card>
-                  </CarouselItem>
                 ))}
-              </CarouselContent>
-              <CarouselPrevious className="hidden sm:flex" />
-              <CarouselNext className="hidden sm:flex" />
-            </Carousel>
+              </div>
         ) : !tournamentsError && (
              <Card className="text-center p-8">
                 <CardTitle>No Upcoming Tournaments</CardTitle>

@@ -12,7 +12,7 @@ import { useParams, notFound } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import GroupActions from "./group-actions";
 import { useEffect, useState, useMemo } from "react";
-import { doc, onSnapshot, Unsubscribe } from "firebase/firestore";
+import { doc, onSnapshot, collection, Unsubscribe } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { manageTournamentGroups } from "@/lib/actions";
 import { useToast } from "@/hooks/use-toast";
@@ -160,7 +160,7 @@ export default function AdminTournamentLeaderboardPage() {
             setLoading(false);
         });
 
-        const regsRef = doc(db, 'tournaments', tournamentId).collection('registrations');
+        const regsRef = collection(db, 'tournaments', tournamentId, 'registrations');
         const unsubscribeRegs = onSnapshot(regsRef, (querySnapshot) => {
             const approvedRegs = querySnapshot.docs
                 .filter(doc => doc.data().status === 'approved')

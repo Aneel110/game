@@ -1,10 +1,9 @@
 
-
 'use server';
 
 import { auth, db } from '@/lib/firebase-admin';
 import { revalidatePath } from 'next/cache';
-import { tournamentSchema, streamSchema, registrationSchema, type RegistrationData, leaderboardEntrySchema, siteSettingsSchema, profileSchema, finalistFormSchema, type FinalistFormValues } from '@/lib/schemas';
+import { tournamentSchema, streamSchema, registrationSchema, type RegistrationData, leaderboardEntrySchema, siteSettingsSchema, profileSchema, finalistFormSchema, type FinalistFormValues, newsSchema, NewsFormValues } from '@/lib/schemas';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { UserRecord } from 'firebase-admin/auth';
 import { z } from 'zod';
@@ -247,10 +246,9 @@ export async function createTournament(data: z.infer<typeof tournamentSchema>) {
 
 export async function updateTournament(id: string, data: z.infer<typeof tournamentSchema>) {
     if (!db) {
-      return { success: false, message: 'Database not initialized.' };
+        return { success: false, message: 'Database not initialized.' };
     }
 
-    // Fetch existing tournament to merge leaderboard/groups data
     const tournamentRef = db.collection('tournaments').doc(id);
     const tournamentSnap = await tournamentRef.get();
     if (!tournamentSnap.exists) {
@@ -258,11 +256,10 @@ export async function updateTournament(id: string, data: z.infer<typeof tourname
     }
     const existingData = tournamentSnap.data() || {};
     
-    // Merge existing data with the new form data. This preserves complex fields
-    // not present in the form, like leaderboards and groups.
     const dataToValidate = {
         ...existingData,
         ...data,
+        registrationOpen: data.registrationOpen, // Ensure this value from the form is used
     };
 
     const validatedFields = tournamentSchema.safeParse(dataToValidate);
@@ -273,7 +270,6 @@ export async function updateTournament(id: string, data: z.infer<typeof tourname
     }
 
     try {
-        // Update with the validated data, which includes the merged fields
         await tournamentRef.update(validatedFields.data);
         revalidatePath('/tournaments');
         revalidatePath(`/tournaments/${id}`);
@@ -613,5 +609,66 @@ export async function listAllUsersWithVerification() {
     } catch (error: any) {
         console.error("Error listing users with verification:", error);
         return { error: `Failed to list users: ${error.message}` };
+    }
+}
+
+export async function createNews(data: NewsFormValues) {
+    if (!db) {
+      return { success: false, message: 'Database not initialized.' };
+    }
+    const validatedFields = newsSchema.safeParse(data);
+    if (!validatedFields.success) {
+        return { success: false, message: 'Invalid news data.', errors: validatedFields.error.flatten().fieldErrors };
+    }
+    try {
+        await db.collection('news').add({ 
+            ...validatedFields.data,
+            createdAt: new Date() 
+        });
+        revalidatePath('/');
+        revalidatePath('/admin/news');
+        return { success: true, message: 'News item created successfully.' };
+    } catch (error) {
+        console.error('Error creating news item:', error);
+        return { success: false, message: 'An unexpected error occurred.' };
+    }
+}
+
+export async function updateNews(id: string, data: NewsFormValues) {
+    if (!db) {
+      return { success: false, message: 'Database not initialized.' };
+    }
+    const validatedFields = newsSchema.safeParse(data);
+    if (!validatedFields.success) {
+        return { success: false, message: 'Invalid news data.', errors: validatedFields.error.flatten().fieldErrors };
+    }
+    try {
+        await db.collection('news').doc(id).update({
+            ...validatedFields.data,
+        });
+        revalidatePath('/');
+        revalidatePath('/admin/news');
+        return { success: true, message: 'News item updated successfully.' };
+    } catch (error) {
+        console.error('Error updating news item:', error);
+        return { success: false, message: 'An unexpected error occurred.' };
+    }
+}
+
+export async function deleteNews(id: string) {
+    if (!db) {
+      return { success: false, message: 'Database not initialized.' };
+    }
+    if (!id) {
+        return { success: false, message: 'News item ID is required.' };
+    }
+    try {
+        await db.collection('news').doc(id).delete();
+        revalidatePath('/');
+        revalidatePath('/admin/news');
+        return { success: true, message: 'News item deleted successfully.' };
+    } catch (error) {
+        console.error('Error deleting news item:', error);
+        return { success: false, message: 'An unexpected error occurred.' };
     }
 }

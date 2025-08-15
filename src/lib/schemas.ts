@@ -88,10 +88,15 @@ export const profileSchema = z.object({
   bio: z.string().max(160, 'Bio must be less than 160 characters.').optional(),
 });
 
+export const newsSchema = z.object({
+  title: z.string().min(3, 'Title must be at least 3 characters long.'),
+  content: z.string().min(10, 'Content must be at least 10 characters long.'),
+});
+
 
 export type RegistrationFormValues = z.infer<typeof registrationSchema>;
 export type RegistrationData = RegistrationFormValues;
 export type ProfileFormValues = z.infer<typeof profileSchema>;
 export type FinalistFormValues = z.infer<typeof finalistFormSchema>;
-
+export type NewsFormValues = z.infer<typeof newsSchema>;
     

@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,12 +8,11 @@ import RegistrationActions from "./registration-actions";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { User, Mail, CheckCircle2, XCircle } from "lucide-react";
 import { notFound, useParams } from 'next/navigation';
-import { listAllUsersWithVerification, getTournamentRegistrations } from "@/lib/actions";
-import { useEffect, useState, useMemo } from "react";
+import { listAllUsersWithVerification } from "@/lib/actions";
+import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, onSnapshot, Unsubscribe, collection, query, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-
 
 type Registration = {
     id: string;
@@ -23,7 +21,7 @@ type Registration = {
     teamTag: string;
     players: { pubgName: string; pubgId: string; discordUsername: string; }[];
     status: 'pending' | 'approved' | 'declined';
-    registeredAt: string;
+    registeredAt: { toDate: () => Date };
     userId: string;
 }
 
@@ -38,7 +36,7 @@ const getStatusBadge = (status: string) => {
         case 'approved':
             return <Badge variant="outline" className="text-green-400 border-green-400">Approved</Badge>;
         case 'declined':
-            return <Badge variant="outline" className="text-red-400 border-red-400">Declined</Badge>;
+            return <Badge variant="destructive">Declined</Badge>;
         default:
             return <Badge variant="secondary">{status}</Badge>;
     }
@@ -75,7 +73,7 @@ function RegistrationsSkeleton() {
                         <TableCell><Skeleton className="h-5 w-32" /></TableCell>
                         <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                         <TableCell><Skeleton className="h-6 w-20" /></TableCell>
-                        <TableCell className="text-right"><Skeleton className="h-8 w-16" /></TableCell>
+                        <TableCell className="text-right"><Skeleton className="h-8 w-24" /></TableCell>
                     </TableRow>
                 ))}
             </TableBody>
@@ -93,15 +91,18 @@ export default function AdminTournamentDetailPage() {
     const [loading, setLoading] = useState(true);
     
     useEffect(() => {
-        async function fetchData() {
+        if (!db || !tournamentId) {
+            setLoading(false);
+            return;
+        }
+
+        let unsubscribeTournament: Unsubscribe | undefined;
+        let unsubscribeRegistrations: Unsubscribe | undefined;
+
+        async function fetchInitialData() {
             setLoading(true);
-
-            if (!db || !tournamentId) {
-                setLoading(false);
-                return;
-            }
-
-            // Fetch tournament data using client-side SDK
+            
+            // Fetch static data once
             const tournamentDoc = await getDoc(doc(db, "tournaments", tournamentId));
             if (!tournamentDoc.exists()) {
                 notFound();
@@ -109,25 +110,28 @@ export default function AdminTournamentDetailPage() {
             }
             setTournament({ id: tournamentDoc.id, ...tournamentDoc.data() });
 
-            // Fetch registrations via server action
-            const { data, success } = await getTournamentRegistrations(tournamentId);
-            if (success) {
-                setRegistrations(data);
-            }
-
-            // Fetch all users with verification status via server action
             const { users, error } = await listAllUsersWithVerification();
             if (!error && users) {
                 const userVerificationMap = new Map(users.map(u => [u.id, { emailVerified: u.emailVerified }]));
                 setUsersMap(userVerificationMap);
             }
+
+            // Set up real-time listener for registrations
+            const q = query(collection(db, "tournaments", tournamentId, "registrations"), orderBy("registeredAt", "desc"));
+            unsubscribeRegistrations = onSnapshot(q, (querySnapshot) => {
+                const regs = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Registration));
+                setRegistrations(regs);
+            });
             
             setLoading(false);
         }
 
-        if (tournamentId) {
-          fetchData();
-        }
+        fetchInitialData();
+
+        return () => {
+            if (unsubscribeTournament) unsubscribeTournament();
+            if (unsubscribeRegistrations) unsubscribeRegistrations();
+        };
     }, [tournamentId]);
     
     if (loading || !tournament) {
@@ -203,7 +207,7 @@ export default function AdminTournamentDetailPage() {
                                 </TableCell>
                                 <TableCell>{getStatusBadge(reg.status)}</TableCell>
                                 <TableCell className="text-right">
-                                   {reg.status !== 'declined' && <RegistrationActions tournamentId={tournamentId} registrationId={reg.id} currentStatus={reg.status} teamName={reg.teamName} />}
+                                   <RegistrationActions tournamentId={tournamentId} registrationId={reg.id} currentStatus={reg.status} teamName={reg.teamName} />
                                 </TableCell>
                             </TableRow>
                         ))}

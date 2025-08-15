@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { updateTeamGroup } from '@/lib/actions';
 import { Check, Edit, X } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 
 interface GroupActionsProps {
   tournamentId: string;
@@ -17,7 +16,6 @@ interface GroupActionsProps {
 
 export default function GroupActions({ tournamentId, teamName, currentGroup }: GroupActionsProps) {
   const { toast } = useToast();
-  const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [group, setGroup] = useState(currentGroup || '');
   const [isLoading, setIsLoading] = useState(false);
@@ -35,8 +33,7 @@ export default function GroupActions({ tournamentId, teamName, currentGroup }: G
       if (result.success) {
         toast({ title: 'Success', description: result.message });
         setIsEditing(false);
-        // Force a full page reload to ensure all data is re-fetched and UI is updated.
-        window.location.reload(); 
+        // The real-time listener will handle the UI update.
       } else {
         toast({ title: 'Error', description: result.message, variant: 'destructive' });
       }
@@ -58,10 +55,14 @@ export default function GroupActions({ tournamentId, teamName, currentGroup }: G
         <Input
           value={group}
           onChange={(e) => setGroup(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSave()}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') handleSave();
+            if (e.key === 'Escape') handleCancel();
+          }}
           className="h-8 w-24"
           disabled={isLoading}
           placeholder="e.g., A"
+          autoFocus
         />
         <Button size="icon" variant="ghost" className="h-8 w-8 text-green-500" onClick={handleSave} disabled={isLoading}>
           <Check className="h-4 w-4" />
@@ -74,8 +75,8 @@ export default function GroupActions({ tournamentId, teamName, currentGroup }: G
   }
 
   return (
-    <div className="flex items-center gap-1 group">
-      <span>{currentGroup ? `Group ${currentGroup}` : 'N/A'}</span>
+    <div className="flex items-center gap-1 group min-h-[32px]">
+      <span>{currentGroup ? `Group ${currentGroup}` : 'Unassigned'}</span>
       <Button size="icon" variant="ghost" className="h-8 w-8 opacity-0 group-hover:opacity-100" onClick={() => setIsEditing(true)}>
         <Edit className="h-4 w-4" />
       </Button>

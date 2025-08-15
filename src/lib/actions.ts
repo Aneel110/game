@@ -1,5 +1,4 @@
 
-
 'use server';
 
 import { auth, db, firebaseAdmin } from '@/lib/firebase-admin';
@@ -8,6 +7,7 @@ import { tournamentSchema, streamSchema, registrationSchema, type RegistrationDa
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { UserRecord } from 'firebase-admin/auth';
 import { z } from 'zod';
+import { deterministicShuffle } from './utils';
 
 // Helper to extract YouTube video ID from various URL formats
 const getYouTubeVideoId = (url: string): string | null => {
@@ -78,15 +78,13 @@ export async function getTournamentRegistrations(tournamentId: string) {
         return { success: false, data: [], message: 'Tournament ID is required.' };
     }
     try {
-        const registrationsSnapshot = await db.collection('tournaments').doc(tournamentId).collection('registrations').get();
+        const registrationsSnapshot = await db.collection('tournaments').doc(tournamentId).collection('registrations').where('status', '==', 'approved').get();
         const registrations = registrationsSnapshot.docs.map(doc => {
             const data = doc.data();
-            const registeredAt = data.registeredAt;
             return { 
                 id: doc.id, 
                 ...data,
-                 registeredAt: registeredAt instanceof Timestamp ? registeredAt.toDate().toISOString() : new Date().toISOString(),
-                 userId: doc.id,
+                teamName: data.teamName,
             };
         });
         return { success: true, data: registrations };
@@ -140,9 +138,7 @@ export async function updateRegistrationStatus(tournamentId: string, registratio
             }
         });
 
-        revalidatePath(`/admin/tournaments/${tournamentId}`);
-        revalidatePath(`/tournaments/${tournamentId}`);
-        revalidatePath(`/admin/tournaments/${tournamentId}/leaderboard`);
+        // This action does not need to revalidate paths as the pages will be listening for real-time updates.
         return { success: true, message: `Registration status updated to ${status}.` };
     } catch (error) {
         console.error('Error updating registration status:', error);
@@ -193,18 +189,12 @@ export async function deleteUser(userId: string) {
         return { success: false, message: 'Missing user ID.' };
     }
     try {
-        // Delete from Firebase Authentication
         await auth.deleteUser(userId);
-
-        // Delete from Firestore
         const userRef = db.collection('users').doc(userId);
         await userRef.delete();
-
         revalidatePath('/admin/users');
         return { success: true, message: 'User has been permanently deleted.' };
     } catch (error: any) {
-        console.error('Error deleting user:', error);
-        // Provide more specific error messages if possible
         if (error.code === 'auth/user-not-found') {
             return { success: false, message: 'User not found in Firebase Authentication.' };
         }
@@ -221,7 +211,6 @@ export async function createTournament(data: z.infer<typeof tournamentSchema>) {
     const validatedFields = tournamentSchema.safeParse(data);
     
     if (!validatedFields.success) {
-        console.error("Validation Errors:", validatedFields.error.flatten().fieldErrors);
         return { success: false, message: 'Invalid form data.', errors: validatedFields.error.flatten().fieldErrors };
     }
 
@@ -231,12 +220,11 @@ export async function createTournament(data: z.infer<typeof tournamentSchema>) {
              leaderboard: [],
              finalistLeaderboard: [],
              groups: {},
+             groupsInitialized: false,
         });
-        revalidatePath('/tournaments');
         revalidatePath('/admin/tournaments');
         return { success: true, message: 'Tournament created successfully.' };
     } catch (error) {
-        console.error('Error creating tournament:', error);
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }
@@ -245,33 +233,24 @@ export async function updateTournament(id: string, data: Partial<z.infer<typeof 
     if (!db) {
         return { success: false, message: 'Database not initialized.' };
     }
-
     const tournamentRef = db.collection('tournaments').doc(id);
     const tournamentSnap = await tournamentRef.get();
     if (!tournamentSnap.exists) {
         return { success: false, message: 'Tournament not found.' };
     }
     const existingData = tournamentSnap.data() || {};
-    
-    // Merge existing data with new data
     const dataToUpdate = { ...existingData, ...data };
     
     const validatedFields = tournamentSchema.safeParse(dataToUpdate);
     
     if (!validatedFields.success) {
-        console.log("Validation Errors:", validatedFields.error.flatten().fieldErrors);
         return { success: false, message: 'Invalid form data.', errors: validatedFields.error.flatten().fieldErrors };
     }
 
     try {
         await tournamentRef.update(validatedFields.data);
-        revalidatePath('/tournaments');
-        revalidatePath(`/tournaments/${id}`);
-        revalidatePath('/admin/tournaments');
-        revalidatePath(`/admin/tournaments/${id}/edit`);
         return { success: true, message: 'Tournament updated successfully.' };
     } catch (error) {
-        console.error('Error updating tournament:', error);
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }
@@ -284,13 +263,10 @@ export async function deleteTournament(id: string) {
         return { success: false, message: 'Tournament ID is required.' };
     }
     try {
-        // Here you might want to also delete subcollections like registrations
         await db.collection('tournaments').doc(id).delete();
-        revalidatePath('/tournaments');
         revalidatePath('/admin/tournaments');
         return { success: true, message: 'Tournament deleted successfully.' };
     } catch (error) {
-        console.error('Error deleting tournament:', error);
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }
@@ -308,7 +284,7 @@ export async function createStream(formData: FormData) {
 
     const embedUrl = transformToEmbedUrl(validatedFields.data.youtubeUrl);
     if (!embedUrl) {
-        return { success: false, message: 'Invalid YouTube URL provided. Please use a standard YouTube video link.' };
+        return { success: false, message: 'Invalid YouTube URL provided.' };
     }
 
     try {
@@ -317,11 +293,9 @@ export async function createStream(formData: FormData) {
             youtubeUrl: embedUrl,
             createdAt: new Date() 
         });
-        revalidatePath('/streams');
         revalidatePath('/admin/streams');
         return { success: true, message: 'Stream created successfully.' };
     } catch (error) {
-        console.error('Error creating stream:', error);
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }
@@ -334,25 +308,22 @@ export async function updateStream(id: string, formData: FormData) {
     const validatedFields = streamSchema.safeParse(rawData);
 
     if (!validatedFields.success) {
-        return { success: false, message: 'Invalid stream data.', errors: validatedFields.error.flatten().fieldErrors };
+        return { success: false, message: 'Invalid stream data.' };
     }
     
     const embedUrl = transformToEmbedUrl(validatedFields.data.youtubeUrl);
     if (!embedUrl) {
-        return { success: false, message: 'Invalid YouTube URL provided. Please use a standard YouTube video link.' };
+        return { success: false, message: 'Invalid YouTube URL provided.' };
     }
-
 
     try {
         await db.collection('streams').doc(id).update({
             ...validatedFields.data,
             youtubeUrl: embedUrl,
         });
-        revalidatePath('/streams');
         revalidatePath('/admin/streams');
         return { success: true, message: 'Stream updated successfully.' };
     } catch (error) {
-        console.error('Error updating stream:', error);
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }
@@ -361,16 +332,11 @@ export async function deleteStream(id: string) {
     if (!db) {
       return { success: false, message: 'Database not initialized.' };
     }
-    if (!id) {
-        return { success: false, message: 'Stream ID is required.' };
-    }
     try {
         await db.collection('streams').doc(id).delete();
-        revalidatePath('/streams');
         revalidatePath('/admin/streams');
         return { success: true, message: 'Stream deleted successfully.' };
     } catch (error) {
-        console.error('Error deleting stream:', error);
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }
@@ -382,8 +348,7 @@ export async function createOrUpdateLeaderboardEntry(tournamentId: string, data:
     
     const validatedFields = leaderboardEntrySchema.safeParse(data);
     if (!validatedFields.success) {
-        console.error('Leaderboard validation error:', validatedFields.error.flatten().fieldErrors);
-        return { success: false, message: 'Invalid form data.', errors: validatedFields.error.flatten().fieldErrors };
+        return { success: false, message: 'Invalid form data.' };
     }
 
     try {
@@ -392,158 +357,109 @@ export async function createOrUpdateLeaderboardEntry(tournamentId: string, data:
         
         await db.runTransaction(async (transaction) => {
             const tournamentSnap = await transaction.get(tournamentRef);
-            if (!tournamentSnap.exists) {
-                throw new Error("Tournament not found!");
-            }
+            if (!tournamentSnap.exists) throw new Error("Tournament not found!");
+            
             const tournamentData = tournamentSnap.data();
             const leaderboard = tournamentData?.leaderboard || [];
-
             const teamNameToUpdate = originalTeamName ? decodeURIComponent(originalTeamName) : newEntry.teamName;
             const entryIndex = leaderboard.findIndex((e: any) => e.teamName === teamNameToUpdate);
 
-            if (entryIndex > -1) { // This is an update
-                // Update logoUrl if it has changed
+            if (entryIndex > -1) {
                 const existingLogo = leaderboard[entryIndex].logoUrl;
                 leaderboard[entryIndex] = { ...newEntry, logoUrl: newEntry.logoUrl || existingLogo };
-            } else { // This is a create
+            } else {
                 leaderboard.push(newEntry);
             }
-
             transaction.update(tournamentRef, { leaderboard });
         });
-
-        revalidatePath(`/admin/tournaments/${tournamentId}/leaderboard`);
-        revalidatePath(`/tournaments/${tournamentId}`);
         return { success: true, message: `Leaderboard entry updated successfully.` };
     } catch (error) {
-        console.error('Error updating leaderboard:', error);
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }
 
 export async function deleteLeaderboardEntry(tournamentId: string, teamName: string) {
-    if (!db) {
-      return { success: false, message: 'Database not initialized.' };
-    }
+    if (!db) return { success: false, message: 'Database not initialized.' };
+    
     try {
         const tournamentRef = db.collection('tournaments').doc(tournamentId);
-        
         await db.runTransaction(async (transaction) => {
             const tournamentSnap = await transaction.get(tournamentRef);
-            if (!tournamentSnap.exists) {
-                throw new Error("Tournament not found!");
-            }
+            if (!tournamentSnap.exists) throw new Error("Tournament not found!");
             const tournamentData = tournamentSnap.data();
-            let leaderboard = tournamentData?.leaderboard || [];
-            
+            const leaderboard = tournamentData?.leaderboard || [];
             const updatedLeaderboard = leaderboard.filter((e: any) => e.teamName !== teamName);
-
             transaction.update(tournamentRef, { leaderboard: updatedLeaderboard });
         });
-
-        revalidatePath(`/admin/tournaments/${tournamentId}/leaderboard`);
-        revalidatePath(`/tournaments/${tournamentId}`);
         return { success: true, message: 'Leaderboard entry deleted successfully.' };
     } catch (error) {
-        console.error('Error deleting leaderboard entry:', error);
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }
 
-function processSiteSettingsFormData(formData: FormData) {
-    const rawData: { [key: string]: any } = { socialLinks: {} };
-    const socialLinks: { [key: string]: string } = {};
+export async function updateSiteSettings(formData: FormData) {
+    if (!db) return { success: false, message: 'Database not initialized.' };
 
+    const socialLinks: { [key: string]: string } = {};
+    const rawData: { [key: string]: any } = { socialLinks };
     for (const [key, value] of formData.entries()) {
         if (key.startsWith('socialLinks.')) {
-            const socialKey = key.split('.')[1];
-            socialLinks[socialKey] = String(value);
+            socialLinks[key.split('.')[1]] = String(value);
         } else {
             rawData[key] = value;
         }
     }
-    rawData.socialLinks = socialLinks;
-    return rawData;
-}
-
-
-export async function updateSiteSettings(formData: FormData) {
-    if (!db) {
-      return { success: false, message: 'Database not initialized.' };
-    }
     
-    const rawData = processSiteSettingsFormData(formData)
     const validatedFields = siteSettingsSchema.safeParse(rawData);
-    
     if (!validatedFields.success) {
-        console.error(validatedFields.error.flatten().fieldErrors)
-        return { success: false, message: 'Invalid form data.', errors: validatedFields.error.flatten().fieldErrors };
+        return { success: false, message: 'Invalid form data.' };
     }
 
     try {
         await db.collection('settings').doc('siteSettings').set(validatedFields.data, { merge: true });
         revalidatePath('/');
-        revalidatePath('/admin/settings');
-        revalidatePath('/layout', 'layout'); // Revalidate layout to update header/footer
+        revalidatePath('/layout', 'layout');
         return { success: true, message: 'Settings updated successfully.' };
     } catch (error) {
-        console.error('Error updating settings:', error);
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }
 
 export async function updateUserProfile(userId: string, data: { displayName: string; bio: string; }) {
-    if (!db || !auth) {
-        return { success: false, message: 'Database not initialized.' };
-    }
-
+    if (!db || !auth) return { success: false, message: 'Database not initialized.' };
+    
     const validatedFields = profileSchema.safeParse(data);
     if (!validatedFields.success) {
-        return { success: false, message: 'Invalid form data.', errors: validatedFields.error.flatten().fieldErrors };
+        return { success: false, message: 'Invalid form data.' };
     }
 
-    const { displayName, bio } = validatedFields.data;
-
     try {
-        // Update Firebase Auth profile
-        await auth.updateUser(userId, { displayName });
-        
-        // Update Firestore document
-        const userRef = db.collection('users').doc(userId);
-        await userRef.update({ displayName, bio });
-
+        await auth.updateUser(userId, { displayName: data.displayName });
+        await db.collection('users').doc(userId).update(data);
         revalidatePath('/profile');
         return { success: true, message: 'Profile updated successfully.' };
     } catch (error) {
-        console.error('Error updating profile:', error);
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }
 
 export async function updateFinalistLeaderboard(tournamentId: string, data: FinalistFormValues) {
-    if (!db) {
-        return { success: false, message: 'Database not initialized.' };
-    }
+    if (!db) return { success: false, message: 'Database not initialized.' };
     const validatedFields = finalistFormSchema.safeParse(data);
     if (!validatedFields.success) {
-        return { success: false, message: 'Invalid form data.', errors: validatedFields.error.flatten().fieldErrors };
+        return { success: false, message: 'Invalid form data.' };
     }
     try {
-        const tournamentRef = db.collection('tournaments').doc(tournamentId);
-        await tournamentRef.update(validatedFields.data);
-        revalidatePath(`/admin/tournaments/${tournamentId}/finalists`);
-        revalidatePath(`/tournaments/${tournamentId}`);
+        await db.collection('tournaments').doc(tournamentId).update(validatedFields.data);
         return { success: true, message: 'Finalist leaderboard updated successfully.' };
     } catch (error) {
-        console.error('Error updating finalist leaderboard:', error);
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }
 
 export async function updateTeamGroup(tournamentId: string, teamName: string, group: string | null) {
-    if (!db || !firebaseAdmin) {
-        return { success: false, message: 'Database not initialized.' };
-    }
+    if (!db || !firebaseAdmin) return { success: false, message: 'Database not initialized.' };
+    
     try {
         const tournamentRef = db.collection('tournaments').doc(tournamentId);
         const groupFieldPath = new firebaseAdmin.firestore.FieldPath('groups', teamName);
@@ -552,49 +468,32 @@ export async function updateTeamGroup(tournamentId: string, teamName: string, gr
             groupsLastUpdated: FieldValue.serverTimestamp(),
         };
 
-        if (group === null) {
+        if (group === null || group.trim() === '') {
             updateData[groupFieldPath.toString()] = FieldValue.delete();
         } else {
             updateData[groupFieldPath.toString()] = group;
         }
-
         await tournamentRef.update(updateData);
-
-        revalidatePath(`/admin/tournaments/${tournamentId}/leaderboard`);
-        revalidatePath(`/tournaments/${tournamentId}`);
-        return { success: true, message: `Team ${teamName} assigned to ${group || 'unassigned'}.` };
+        return { success: true, message: `Team ${teamName} assigned to ${group || 'Unassigned'}.` };
     } catch (error) {
-        console.error('Error updating team group:', error);
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }
 
 export async function listAllUsersWithVerification() {
-    if (!db || !auth) {
-        return { error: "Firebase Admin is not configured. Please set FIREBASE_SERVICE_ACCOUNT_KEY." };
-    }
-
+    if (!db || !auth) return { error: "Firebase Admin is not configured." };
+    
     try {
         const listUsersResult = await auth.listUsers();
-        const allAuthUsers = listUsersResult.users;
-        
-        if (allAuthUsers.length === 0) {
-            return { users: [], success: true };
-        }
-
-        // Get all role data from Firestore
         const usersSnapshot = await db.collection('users').get();
-        const rolesData = new Map(usersSnapshot.docs.map(doc => {
-            const data = doc.data();
-            return [doc.id, { role: data.role, isNew: data.isNew }];
-        }));
+        const rolesData = new Map(usersSnapshot.docs.map(doc => [doc.id, doc.data()]));
         
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-        const users = allAuthUsers.map(user => {
-            const creationTime = new Date(user.metadata.creationTime);
+        const users = listUsersResult.users.map(user => {
             const userData = rolesData.get(user.uid) || {};
+            const creationTime = new Date(user.metadata.creationTime);
             return {
                 id: user.uid,
                 displayName: user.displayName || 'N/A',
@@ -603,74 +502,135 @@ export async function listAllUsersWithVerification() {
                 emailVerified: user.emailVerified,
                 role: userData.role || 'user',
                 isNew: userData.isNew === true && creationTime > sevenDaysAgo,
-                createdAt: user.metadata.creationTime,
             };
         });
 
         return { users, success: true };
     } catch (error: any) {
-        console.error("Error listing users with verification:", error);
         return { error: `Failed to list users: ${error.message}` };
     }
 }
 
 export async function createNews(data: NewsFormValues) {
-    if (!db) {
-      return { success: false, message: 'Database not initialized.' };
-    }
+    if (!db) return { success: false, message: 'Database not initialized.' };
     const validatedFields = newsSchema.safeParse(data);
     if (!validatedFields.success) {
-        return { success: false, message: 'Invalid news data.', errors: validatedFields.error.flatten().fieldErrors };
+        return { success: false, message: 'Invalid news data.' };
     }
     try {
-        await db.collection('news').add({ 
-            ...validatedFields.data,
-            createdAt: new Date() 
-        });
+        await db.collection('news').add({ ...validatedFields.data, createdAt: new Date() });
         revalidatePath('/');
         revalidatePath('/admin/news');
         return { success: true, message: 'News item created successfully.' };
     } catch (error) {
-        console.error('Error creating news item:', error);
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }
 
 export async function updateNews(id: string, data: NewsFormValues) {
-    if (!db) {
-      return { success: false, message: 'Database not initialized.' };
-    }
+    if (!db) return { success: false, message: 'Database not initialized.' };
     const validatedFields = newsSchema.safeParse(data);
-    if (!validatedFields.success) {
-        return { success: false, message: 'Invalid news data.', errors: validatedFields.error.flatten().fieldErrors };
-    }
+    if (!validatedFields.success) return { success: false, message: 'Invalid news data.' };
     try {
-        await db.collection('news').doc(id).update({
-            ...validatedFields.data,
-        });
+        await db.collection('news').doc(id).update({ ...validatedFields.data });
         revalidatePath('/');
         revalidatePath('/admin/news');
         return { success: true, message: 'News item updated successfully.' };
     } catch (error) {
-        console.error('Error updating news item:', error);
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }
 
 export async function deleteNews(id: string) {
-    if (!db) {
-      return { success: false, message: 'Database not initialized.' };
-    }
-    if (!id) {
-        return { success: false, message: 'News item ID is required.' };
-    }
+    if (!db) return { success: false, message: 'Database not initialized.' };
     try {
         await db.collection('news').doc(id).delete();
         revalidatePath('/');
         revalidatePath('/admin/news');
         return { success: true, message: 'News item deleted successfully.' };
     } catch (error) {
-        console.error('Error deleting news item:', error);
         return { success: false, message: 'An unexpected error occurred.' };
+    }
+}
+
+export async function manageTournamentGroups(tournamentId: string, reset: boolean = false) {
+    if (!db || !firebaseAdmin) return { success: false, message: "Database not initialized." };
+
+    const tournamentRef = db.collection('tournaments').doc(tournamentId);
+
+    try {
+        await db.runTransaction(async (transaction) => {
+            const tournamentDoc = await transaction.get(tournamentRef);
+            if (!tournamentDoc.exists) throw new Error("Tournament not found");
+
+            const tournamentData = tournamentDoc.data()!;
+            
+            const registrationsSnapshot = await transaction.get(
+                tournamentRef.collection('registrations').where('status', '==', 'approved')
+            );
+            const approvedTeams = registrationsSnapshot.docs.map(doc => doc.data().teamName);
+
+            if (approvedTeams.length < 25 && !reset) {
+                // Not enough teams for automatic grouping, do nothing unless it's a manual reset
+                return;
+            }
+            
+            let groups = tournamentData.groups || {};
+            const alreadyGroupedTeams = Object.keys(groups);
+            const newTeams = approvedTeams.filter(team => !alreadyGroupedTeams.includes(team));
+            
+            let teamsToGroup: string[];
+            let groupCount: number;
+
+            // Logic for initial group creation or reset
+            if (reset || !tournamentData.groupsInitialized) {
+                teamsToGroup = deterministicShuffle(approvedTeams, tournamentId);
+                const baseGroupSize = 20;
+                groupCount = Math.max(2, Math.ceil(teamsToGroup.length / baseGroupSize));
+                groups = {}; // Reset groups
+            } else { // Logic for adding new teams to existing groups
+                teamsToGroup = deterministicShuffle(newTeams, tournamentId + 'new');
+                const groupSizes = Object.values(groups).reduce((acc: any, groupName: any) => {
+                    acc[groupName] = (acc[groupName] || 0) + 1;
+                    return acc;
+                }, {});
+                groupCount = Object.keys(groupSizes).length || Math.max(2, Math.ceil(approvedTeams.length / 20));
+            }
+            
+            if (teamsToGroup.length === 0) return;
+
+            // Distribute teams into groups
+            for (let i = 0; i < teamsToGroup.length; i++) {
+                const team = teamsToGroup[i];
+                const groupName = String.fromCharCode(65 + (i % groupCount)); // A, B, C...
+                groups[team] = groupName;
+            }
+
+            // If we are adding new teams, rebalance by sorting groups by size and adding there
+            if (!reset && tournamentData.groupsInitialized) {
+                const sortedGroups = Object.keys(groups).sort((a,b) => {
+                    const countA = Object.values(groups).filter(g => g === a).length;
+                    const countB = Object.values(groups).filter(g => g === b).length;
+                    return countA - countB;
+                });
+                for (let i = 0; i < teamsToGroup.length; i++) {
+                    const team = teamsToGroup[i];
+                    const groupName = sortedGroups[i % sortedGroups.length];
+                    groups[team] = groupName;
+                }
+            }
+
+
+            transaction.update(tournamentRef, {
+                groups: groups,
+                groupsInitialized: true,
+                groupsLastUpdated: FieldValue.serverTimestamp()
+            });
+        });
+
+        return { success: true, message: "Groups managed successfully." };
+    } catch (error: any) {
+        console.error("Error managing groups:", error);
+        return { success: false, message: error.message || "An unexpected error occurred." };
     }
 }

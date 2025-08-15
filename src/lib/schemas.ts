@@ -2,7 +2,6 @@
 import { z } from 'zod';
 
 export const leaderboardEntrySchema = z.object({
-    rank: z.coerce.number().int().min(0, 'Rank must be a positive number or zero.').default(0),
     teamName: z.string().min(1, 'Team name is required.'),
     logoUrl: z.string().url('Must be a valid URL').optional().or(z.literal('')),
     points: z.coerce.number().int().min(0, 'Points must be a positive number.').default(0),
@@ -35,6 +34,7 @@ export const tournamentSchema = z.object({
   finalistLeaderboard: z.array(leaderboardEntrySchema).optional(),
   groups: z.record(z.string()).optional(),
   groupsLastUpdated: z.any().optional(),
+  groupsInitialized: z.boolean().default(false), // To track if initial grouping has been done
 });
 
 export const finalistFormSchema = z.object({
@@ -99,4 +99,3 @@ export type RegistrationData = RegistrationFormValues;
 export type ProfileFormValues = z.infer<typeof profileSchema>;
 export type FinalistFormValues = z.infer<typeof finalistFormSchema>;
 export type NewsFormValues = z.infer<typeof newsSchema>;
-    

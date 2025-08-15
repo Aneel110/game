@@ -1,4 +1,5 @@
 
+
 import admin from 'firebase-admin';
 
 // Helper to check if a string is Base64 encoded
@@ -47,7 +48,8 @@ function initializeAdminServices() {
   if (admin.apps.length > 0) {
     return { 
       db: admin.firestore(), 
-      auth: admin.auth() 
+      auth: admin.auth(),
+      firebaseAdmin: admin,
     };
   }
 
@@ -55,7 +57,7 @@ function initializeAdminServices() {
 
   if (!serviceAccount) {
     console.warn("Firebase Admin SDK not initialized due to missing or invalid service account key.");
-    return { db: null, auth: null };
+    return { db: null, auth: null, firebaseAdmin: null };
   }
 
   try {
@@ -65,12 +67,13 @@ function initializeAdminServices() {
     console.log("Firebase Admin SDK initialized successfully.");
     return { 
       db: admin.firestore(), 
-      auth: admin.auth() 
+      auth: admin.auth(),
+      firebaseAdmin: admin,
     };
   } catch (e: any) {
     console.error("Firebase Admin SDK initialization failed:", e.message);
-    return { db: null, auth: null };
+    return { db: null, auth: null, firebaseAdmin: null };
   }
 }
 
-export const { db, auth } = initializeAdminServices();
+export const { db, auth, firebaseAdmin } = initializeAdminServices();

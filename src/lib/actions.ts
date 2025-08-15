@@ -1,7 +1,8 @@
 
+
 'use server';
 
-import { auth, db } from '@/lib/firebase-admin';
+import { auth, db, firebaseAdmin } from '@/lib/firebase-admin';
 import { revalidatePath } from 'next/cache';
 import { tournamentSchema, streamSchema, registrationSchema, type RegistrationData, leaderboardEntrySchema, siteSettingsSchema, profileSchema, finalistFormSchema, type FinalistFormValues, newsSchema, NewsFormValues } from '@/lib/schemas';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
@@ -216,17 +217,7 @@ export async function createTournament(data: z.infer<typeof tournamentSchema>) {
       return { success: false, message: 'Database not initialized.' };
     }
     
-    // Ensure optional/array fields exist before validation for a new tournament
-    const dataToValidate = {
-        ...data,
-        leaderboard: [],
-        finalistLeaderboard: [],
-        finalistLeaderboardActive: false,
-        groups: {},
-        groupsLastUpdated: null,
-    };
-    
-    const validatedFields = tournamentSchema.safeParse(dataToValidate);
+    const validatedFields = tournamentSchema.safeParse(data);
     
     if (!validatedFields.success) {
         console.error("Validation Errors:", validatedFields.error.flatten().fieldErrors);
@@ -244,7 +235,7 @@ export async function createTournament(data: z.infer<typeof tournamentSchema>) {
     }
 }
 
-export async function updateTournament(id: string, data: z.infer<typeof tournamentSchema>) {
+export async function updateTournament(id: string, data: Partial<z.infer<typeof tournamentSchema>>) {
     if (!db) {
         return { success: false, message: 'Database not initialized.' };
     }
@@ -256,13 +247,10 @@ export async function updateTournament(id: string, data: z.infer<typeof tourname
     }
     const existingData = tournamentSnap.data() || {};
     
-    const dataToValidate = {
-        ...existingData,
-        ...data,
-        registrationOpen: data.registrationOpen, // Ensure this value from the form is used
-    };
-
-    const validatedFields = tournamentSchema.safeParse(dataToValidate);
+    // Merge existing data with new data
+    const dataToUpdate = { ...existingData, ...data };
+    
+    const validatedFields = tournamentSchema.safeParse(dataToUpdate);
     
     if (!validatedFields.success) {
         console.log("Validation Errors:", validatedFields.error.flatten().fieldErrors);
@@ -539,28 +527,29 @@ export async function updateFinalistLeaderboard(tournamentId: string, data: Fina
     }
 }
 
-export async function updateTeamGroup(tournamentId: string, teamName: string, group: 'A' | 'B' | null) {
-    if (!db) {
+export async function updateTeamGroup(tournamentId: string, teamName: string, group: string | null) {
+    if (!db || !firebaseAdmin) {
         return { success: false, message: 'Database not initialized.' };
     }
     try {
         const tournamentRef = db.collection('tournaments').doc(tournamentId);
-        const groupField = `groups.${teamName}`;
+        const groupFieldPath = new firebaseAdmin.firestore.FieldPath('groups', teamName);
 
         const updateData: { [key: string]: any } = {
-            [groupField]: group,
             groupsLastUpdated: FieldValue.serverTimestamp(),
         };
 
         if (group === null) {
-            updateData[groupField] = FieldValue.delete();
+            updateData[groupFieldPath.toString()] = FieldValue.delete();
+        } else {
+            updateData[groupFieldPath.toString()] = group;
         }
 
         await tournamentRef.update(updateData);
 
         revalidatePath(`/admin/tournaments/${tournamentId}/leaderboard`);
         revalidatePath(`/tournaments/${tournamentId}`);
-        return { success: true, message: `Team ${teamName} moved to Group ${group}.` };
+        return { success: true, message: `Team ${teamName} assigned to ${group || 'unassigned'}.` };
     } catch (error) {
         console.error('Error updating team group:', error);
         return { success: false, message: 'An unexpected error occurred.' };

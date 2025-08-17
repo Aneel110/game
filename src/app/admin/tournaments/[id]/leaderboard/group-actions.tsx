@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -19,6 +19,13 @@ export default function GroupActions({ tournamentId, teamName, currentGroup }: G
   const [isEditing, setIsEditing] = useState(false);
   const [group, setGroup] = useState(currentGroup || '');
   const [isLoading, setIsLoading] = useState(false);
+
+  // This useEffect ensures the local state updates when the prop changes.
+  // This is crucial for the real-time update to work correctly.
+  useEffect(() => {
+    setGroup(currentGroup || '');
+  }, [currentGroup]);
+
 
   const handleSave = async () => {
     if (group === currentGroup) {

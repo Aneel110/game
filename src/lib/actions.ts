@@ -1,10 +1,9 @@
 
-
 'use server';
 
 import { auth, db, firebaseAdmin } from '@/lib/firebase-admin';
 import { revalidatePath } from 'next/cache';
-import { tournamentSchema, streamSchema, registrationSchema, type RegistrationData, leaderboardEntrySchema, siteSettingsSchema, profileSchema, finalistFormSchema, type FinalistFormValues, newsSchema, NewsFormValues } from '@/lib/schemas';
+import { tournamentSchema, streamSchema, registrationSchema, type RegistrationData, leaderboardEntrySchema, siteSettingsSchema, profileSchema, finalistFormSchema, type FinalistFormValues, newsSchema, NewsFormValues, photoSchema, PhotoFormValues } from '@/lib/schemas';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { UserRecord } from 'firebase-admin/auth';
 import { z } from 'zod';
@@ -666,5 +665,44 @@ export async function manageTournamentGroups(tournamentId: string, reset: boolea
     } catch (error: any) {
         console.error("Error managing groups:", error);
         return { success: false, message: error.message || "An unexpected error occurred." };
+    }
+}
+
+export async function createPhoto(data: PhotoFormValues) {
+    if (!db) return { success: false, message: 'Database not initialized.' };
+    const validatedFields = photoSchema.safeParse(data);
+    if (!validatedFields.success) {
+        return { success: false, message: 'Invalid photo data.' };
+    }
+    try {
+        await db.collection('photos').add({ ...validatedFields.data, createdAt: new Date() });
+        revalidatePath('/admin/photos');
+        return { success: true, message: 'Photo added successfully.' };
+    } catch (error) {
+        return { success: false, message: 'An unexpected error occurred.' };
+    }
+}
+
+export async function updatePhoto(id: string, data: PhotoFormValues) {
+    if (!db) return { success: false, message: 'Database not initialized.' };
+    const validatedFields = photoSchema.safeParse(data);
+    if (!validatedFields.success) return { success: false, message: 'Invalid photo data.' };
+    try {
+        await db.collection('photos').doc(id).update({ ...validatedFields.data });
+        revalidatePath('/admin/photos');
+        return { success: true, message: 'Photo updated successfully.' };
+    } catch (error) {
+        return { success: false, message: 'An unexpected error occurred.' };
+    }
+}
+
+export async function deletePhoto(id: string) {
+    if (!db) return { success: false, message: 'Database not initialized.' };
+    try {
+        await db.collection('photos').doc(id).delete();
+        revalidatePath('/admin/photos');
+        return { success: true, message: 'Photo deleted successfully.' };
+    } catch (error) {
+        return { success: false, message: 'An unexpected error occurred.' };
     }
 }

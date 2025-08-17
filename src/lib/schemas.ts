@@ -93,9 +93,15 @@ export const newsSchema = z.object({
   content: z.string().min(10, 'Content must be at least 10 characters long.'),
 });
 
+export const photoSchema = z.object({
+  title: z.string().min(1, 'Title is required.'),
+  imageUrl: z.string().url('Must be a valid URL.'),
+});
+
 
 export type RegistrationFormValues = z.infer<typeof registrationSchema>;
 export type RegistrationData = RegistrationFormValues;
 export type ProfileFormValues = z.infer<typeof profileSchema>;
 export type FinalistFormValues = z.infer<typeof finalistFormSchema>;
 export type NewsFormValues = z.infer<typeof newsSchema>;
+export type PhotoFormValues = z.infer<typeof photoSchema>;

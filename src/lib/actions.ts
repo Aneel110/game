@@ -494,24 +494,28 @@ export async function updateTeamGroup(tournamentId: string, teamName: string, gr
     
     try {
         const tournamentRef = db.collection('tournaments').doc(tournamentId);
-        const groupFieldPath = new firebaseAdmin.firestore.FieldPath('groups', teamName);
-
+        
         const updateData: { [key: string]: any } = {
             groupsLastUpdated: FieldValue.serverTimestamp(),
         };
 
         if (group === null || group.trim() === '') {
+            // To delete a field within a map, you need to use FieldPath with FieldValue.delete()
+            const groupFieldPath = new firebaseAdmin.firestore.FieldPath('groups', teamName);
             updateData[groupFieldPath.toString()] = FieldValue.delete();
         } else {
-            updateData[groupFieldPath.toString()] = group;
+            // To update or set a field within a map, use dot notation
+            updateData[`groups.${teamName}`] = group;
         }
         await tournamentRef.update(updateData);
         // Do not revalidate here, as real-time listeners will handle the update.
         return { success: true, message: `Team ${teamName} assigned to ${group || 'Unassigned'}.` };
-    } catch (error) {
+    } catch (error: any) {
+        console.error('Error updating team group:', error);
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }
+
 
 export async function listAllUsersWithVerification() {
     if (!db || !auth) return { error: "Firebase Admin is not configured." };
@@ -706,3 +710,5 @@ export async function deletePhoto(id: string) {
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }
+
+    

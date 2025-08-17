@@ -16,6 +16,7 @@ import { doc, getDoc } from 'firebase/firestore';
 const navLinks = [
   { href: '/tournaments', label: 'Tournaments' },
   { href: '/streams', label: 'Streams' },
+  { href: '/ladder', label: 'Ladder' },
 ];
 
 export default function Header() {

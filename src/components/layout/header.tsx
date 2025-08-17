@@ -15,7 +15,6 @@ import { doc, getDoc } from 'firebase/firestore';
 
 const navLinks = [
   { href: '/tournaments', label: 'Tournaments' },
-  { href: '/leaderboards', label: 'Leaderboards' },
   { href: '/streams', label: 'Streams' },
 ];
 

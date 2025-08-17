@@ -396,9 +396,6 @@ export default async function Home() {
             <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold">
               <Link href="/tournaments">Find Tournaments <ArrowRight className="ml-2 h-5 w-5" /></Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="border-accent text-accent hover:bg-accent/10 font-bold">
-              <Link href="/leaderboards">View Leaderboards</Link>
-            </Button>
           </div>
         </div>
       </section>

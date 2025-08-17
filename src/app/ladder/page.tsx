@@ -7,14 +7,28 @@ import { Crown, AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
+type LadderTeam = {
+  id: string;
+  teamName: string;
+  logoUrl?: string;
+  points: number;
+  rank: number;
+};
+
+type TournamentLadder = {
+  tournamentId: string;
+  tournamentName: string;
+  teams: LadderTeam[];
+};
+
 const getLadderData = unstable_cache(
   async () => {
     if (!db) {
       return { error: "Firebase Admin is not configured." };
     }
     try {
-      const tournamentsSnapshot = await db.collection("tournaments").get();
-      const allLadderTeams: any[] = [];
+      const tournamentsSnapshot = await db.collection("tournaments").orderBy('date', 'desc').get();
+      const allTournamentLadders: TournamentLadder[] = [];
 
       for (const tournamentDoc of tournamentsSnapshot.docs) {
         const registrationsSnapshot = await tournamentDoc.ref
@@ -22,36 +36,47 @@ const getLadderData = unstable_cache(
           .where('status', '==', 'approved')
           .where('selected', '==', true)
           .get();
+        
+        if (registrationsSnapshot.empty) {
+            continue; // Skip tournaments with no selected teams
+        }
 
         const tournamentData = tournamentDoc.data();
         const leaderboard = tournamentData.leaderboard || [];
         const leaderboardMap = new Map(leaderboard.map((t: any) => [t.teamName, t]));
 
+        const ladderTeams: Omit<LadderTeam, 'rank'>[] = [];
+
         registrationsSnapshot.docs.forEach(regDoc => {
           const regData = regDoc.data();
           const leaderboardStats = leaderboardMap.get(regData.teamName) || {};
 
-          allLadderTeams.push({
+          ladderTeams.push({
             id: `${tournamentDoc.id}-${regDoc.id}`,
             teamName: regData.teamName,
             logoUrl: leaderboardStats.logoUrl,
             points: leaderboardStats.points || 0,
-            tournamentName: tournamentData.name,
-            tournamentId: tournamentDoc.id,
           });
         });
+
+        // Sort by points descending for this specific tournament
+        ladderTeams.sort((a, b) => b.points - a.points);
+      
+        // Assign rank within the tournament
+        const rankedTeams = ladderTeams.map((team, index) => ({
+          ...team,
+          rank: index + 1,
+        }));
+        
+        allTournamentLadders.push({
+            tournamentId: tournamentDoc.id,
+            tournamentName: tournamentData.name,
+            teams: rankedTeams,
+        });
+
       }
 
-      // Sort by points descending
-      allLadderTeams.sort((a, b) => b.points - a.points);
-      
-      // Assign rank
-      const rankedTeams = allLadderTeams.map((team, index) => ({
-        ...team,
-        rank: index + 1,
-      }));
-
-      return { teams: rankedTeams };
+      return { tournaments: allTournamentLadders };
     } catch (error) {
       console.error("Error fetching ladder data:", error);
       return { error: "Failed to fetch ladder data." };
@@ -61,24 +86,17 @@ const getLadderData = unstable_cache(
   { revalidate: 300, tags: ['tournaments', 'registrations'] } // Revalidate every 5 minutes
 );
 
-function LadderTable({ teams }: { teams: any[] }) {
-     if (teams.length === 0) {
-        return (
-            <Card className="text-center p-8 bg-card/50">
-                <CardTitle>The Ladder is Empty</CardTitle>
-                <p className="text-muted-foreground mt-2">No teams have been selected for the ladder yet. Check back soon!</p>
-            </Card>
-        )
-    }
-    
+function LadderTable({ teams, tournamentName }: { teams: LadderTeam[], tournamentName: string }) {
     return (
          <Card className="overflow-hidden bg-card/80 backdrop-blur-sm border-primary/20">
+          <CardHeader>
+            <CardTitle>{tournamentName}</CardTitle>
+          </CardHeader>
           <Table>
             <TableHeader>
               <TableRow className="border-b-primary/20">
                 <TableHead className="text-center w-[100px]">Rank</TableHead>
                 <TableHead>Team</TableHead>
-                <TableHead>Tournament</TableHead>
                 <TableHead className="text-right">Points</TableHead>
               </TableRow>
             </TableHeader>
@@ -111,9 +129,6 @@ function LadderTable({ teams }: { teams: any[] }) {
                       <span className="font-medium text-lg">{p.teamName}</span>
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <span className="text-sm text-muted-foreground">{p.tournamentName}</span>
-                  </TableCell>
                   <TableCell className="text-right font-bold text-primary text-lg">{p.points.toLocaleString()}</TableCell>
                 </TableRow>
               ))}
@@ -124,13 +139,13 @@ function LadderTable({ teams }: { teams: any[] }) {
 }
 
 export default async function LadderPage() {
-  const { teams, error } = await getLadderData();
+  const { tournaments, error } = await getLadderData();
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="text-center mb-12">
         <h1 className="text-5xl font-headline font-bold">Ladder</h1>
-        <p className="text-muted-foreground mt-2">View the competitive ladder rankings.</p>
+        <p className="text-muted-foreground mt-2">View the competitive ladder rankings by tournament.</p>
       </div>
       
       {error && (
@@ -141,8 +156,18 @@ export default async function LadderPage() {
         </Alert>
       )}
 
-      {teams && <LadderTable teams={teams} />}
+      {tournaments && tournaments.length > 0 ? (
+        <div className="space-y-12">
+          {tournaments.map((ladder) => (
+            <LadderTable key={ladder.tournamentId} teams={ladder.teams} tournamentName={ladder.tournamentName} />
+          ))}
+        </div>
+      ) : (
+         <Card className="text-center p-8 bg-card/50">
+            <CardTitle>The Ladder is Empty</CardTitle>
+            <p className="text-muted-foreground mt-2">No teams have been selected for any tournament ladders yet. Check back soon!</p>
+        </Card>
+      )}
     </div>
   );
 }
-

@@ -40,7 +40,6 @@ function LadderSkeleton() {
             <TableRow>
               <TableHead className="text-center w-[100px]">Rank</TableHead>
               <TableHead>Team</TableHead>
-              <TableHead className="text-right">Points</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -53,7 +52,6 @@ function LadderSkeleton() {
                     <Skeleton className="h-6 w-32" />
                   </div>
                 </TableCell>
-                <TableCell className="text-right"><Skeleton className="h-6 w-12 ml-auto" /></TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -78,7 +76,6 @@ function LadderTable({ teams, tournamentName }: { teams: LadderTeam[], tournamen
               <TableRow className="border-b-primary/20">
                 <TableHead className="text-center w-[100px]">Rank</TableHead>
                 <TableHead>Team</TableHead>
-                <TableHead className="text-right">Points</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -110,7 +107,6 @@ function LadderTable({ teams, tournamentName }: { teams: LadderTeam[], tournamen
                       <span className="font-medium text-lg">{p.teamName}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-right font-bold text-primary text-lg">{p.points.toLocaleString()}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

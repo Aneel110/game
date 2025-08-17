@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { auth, db, firebaseAdmin } from '@/lib/firebase-admin';
@@ -58,6 +59,7 @@ export async function registerForTournament(tournamentId: string, data: Registra
     await registrationRef.set({
       ...validatedFields.data,
       status: 'pending',
+      selected: false, // Default selected to false
       registeredAt: new Date(),
     });
 
@@ -113,9 +115,16 @@ export async function updateRegistrationStatus(tournamentId: string, registratio
             }
             const tournamentData = tournamentDoc.data();
             let leaderboard = tournamentData?.leaderboard || [];
+
+            const registrationDoc = await transaction.get(registrationRef);
+            const registrationData = registrationDoc.data() || {};
             
-            // Update registration status
-            transaction.update(registrationRef, { status });
+            // Update registration status and ensure 'selected' field exists
+            const updateData: { status: string, selected?: boolean } = { status };
+            if (status === 'approved' && typeof registrationData.selected === 'undefined') {
+                updateData.selected = false; // Set default value for 'selected' when approving for the first time
+            }
+            transaction.update(registrationRef, updateData);
 
             const leaderboardEntryExists = leaderboard.some((e: any) => e.teamName === teamName);
 
@@ -145,6 +154,30 @@ export async function updateRegistrationStatus(tournamentId: string, registratio
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }
+
+
+export async function updateLadderSelection(tournamentId: string, registrationId: string, selected: boolean) {
+    if (!db) {
+      return { success: false, message: 'Database not initialized.' };
+    }
+    if (!tournamentId || !registrationId || typeof selected !== 'boolean') {
+        return { success: false, message: 'Missing required parameters.' };
+    }
+
+    try {
+        const registrationRef = db.collection('tournaments').doc(tournamentId).collection('registrations').doc(registrationId);
+        await registrationRef.update({ selected });
+
+        revalidatePath(`/ladder`); // Revalidate the public ladder page
+        // No need to revalidate the admin page as it uses real-time listeners
+
+        return { success: true, message: `Team selection updated.` };
+    } catch (error) {
+        console.error('Error updating ladder selection:', error);
+        return { success: false, message: 'An unexpected error occurred.' };
+    }
+}
+
 
 export async function updateUserRole(userId: string, role: 'admin' | 'user' | 'moderator') {
     if (!db) {
@@ -635,5 +668,3 @@ export async function manageTournamentGroups(tournamentId: string, reset: boolea
         return { success: false, message: error.message || "An unexpected error occurred." };
     }
 }
-
-    

@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, Gamepad2, Users, Trophy, Settings, LogOut, ShieldAlert, Clapperboard, Newspaper, BarChart, Image as ImageIcon } from "lucide-react";
+import { LayoutDashboard, Gamepad2, Users, Trophy, Settings, LogOut, ShieldAlert, Clapperboard, Newspaper, Image as ImageIcon } from "lucide-react";
 import Link from "next/link";
 import { Logo } from "@/components/icons/logo";
 import { useAuth } from "@/hooks/use-auth";

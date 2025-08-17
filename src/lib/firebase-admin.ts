@@ -20,7 +20,6 @@ function getServiceAccount() {
     let serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
 
     if (!serviceAccountKey) {
-        console.warn("FIREBASE_SERVICE_ACCOUNT_KEY environment variable not set.");
         return null;
     }
 
@@ -56,7 +55,6 @@ function initializeAdminServices() {
   const serviceAccount = getServiceAccount();
 
   if (!serviceAccount) {
-    console.warn("Firebase Admin SDK not initialized due to missing or invalid service account key.");
     return { db: null, auth: null, firebaseAdmin: null };
   }
 
@@ -64,7 +62,6 @@ function initializeAdminServices() {
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
     });
-    console.log("Firebase Admin SDK initialized successfully.");
     return { 
       db: admin.firestore(), 
       auth: admin.auth(),

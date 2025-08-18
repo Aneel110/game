@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { auth, db, firebaseAdmin } from '@/lib/firebase-admin';
@@ -44,10 +45,22 @@ export async function registerForTournament(tournamentId: string, data: Registra
       return { success: false, message: 'Invalid form data.', errors: validatedFields.error.flatten().fieldErrors };
   }
 
-  const { registeredById } = validatedFields.data;
+  const { registeredById, registrationCode } = validatedFields.data;
 
   try {
-    const registrationRef = db.collection('tournaments').doc(tournamentId).collection('registrations').doc(registeredById);
+    const tournamentRef = db.collection('tournaments').doc(tournamentId);
+    const tournamentDoc = await tournamentRef.get();
+
+    if (!tournamentDoc.exists) {
+        return { success: false, message: 'Tournament not found.' };
+    }
+
+    const tournamentData = tournamentDoc.data();
+    if (tournamentData?.registrationCodeEnabled && tournamentData?.registrationCode !== registrationCode) {
+        return { success: false, message: 'The provided registration code is incorrect.' };
+    }
+
+    const registrationRef = tournamentRef.collection('registrations').doc(registeredById);
 
     const doc = await registrationRef.get();
 
@@ -58,12 +71,10 @@ export async function registerForTournament(tournamentId: string, data: Registra
     await registrationRef.set({
       ...validatedFields.data,
       status: 'pending',
-      selected: false, // Default selected to false
+      selected: false,
       registeredAt: new Date(),
     });
 
-    revalidatePath(`/tournaments/${tournamentId}`);
-    revalidatePath(`/admin/tournaments/${tournamentId}`);
     return { success: true, message: 'Registration successful! Your registration is pending approval.' };
   } catch (error) {
     console.error('Error registering for tournament:', error);
@@ -118,17 +129,15 @@ export async function updateRegistrationStatus(tournamentId: string, registratio
             const registrationDoc = await transaction.get(registrationRef);
             const registrationData = registrationDoc.data() || {};
             
-            // Update registration status and ensure 'selected' field exists
             const updateData: { status: string, selected?: boolean } = { status };
             if (status === 'approved' && typeof registrationData.selected === 'undefined') {
-                updateData.selected = false; // Set default value for 'selected' when approving for the first time
+                updateData.selected = false; 
             }
             transaction.update(registrationRef, updateData);
 
             const leaderboardEntryExists = leaderboard.some((e: any) => e.teamName === teamName);
 
             if (status === 'approved' && !leaderboardEntryExists) {
-                // Add to leaderboard if approved and not already there
                 const newEntry = {
                     teamName: teamName,
                     logoUrl: '',
@@ -140,13 +149,11 @@ export async function updateRegistrationStatus(tournamentId: string, registratio
                 leaderboard.push(newEntry);
                 transaction.update(tournamentRef, { leaderboard });
             } else if (status !== 'approved' && leaderboardEntryExists) {
-                // Remove from leaderboard if not approved and is there
                 const updatedLeaderboard = leaderboard.filter((e: any) => e.teamName !== teamName);
                 transaction.update(tournamentRef, { leaderboard: updatedLeaderboard });
             }
         });
 
-        // This action does not need to revalidate paths as the pages will be listening for real-time updates.
         return { success: true, message: `Registration status updated to ${status}.` };
     } catch (error) {
         console.error('Error updating registration status:', error);
@@ -167,8 +174,7 @@ export async function updateLadderSelection(tournamentId: string, registrationId
         const registrationRef = db.collection('tournaments').doc(tournamentId).collection('registrations').doc(registrationId);
         await registrationRef.update({ selected });
 
-        revalidatePath(`/ladder`); // Revalidate the public ladder page
-        // No need to revalidate the admin page as it uses real-time listeners
+        revalidatePath(`/ladder`); 
 
         return { success: true, message: `Team selection updated.` };
     } catch (error) {
@@ -500,15 +506,12 @@ export async function updateTeamGroup(tournamentId: string, teamName: string, gr
         };
 
         if (group === null || group.trim() === '') {
-            // To delete a field within a map, you need to use FieldPath with FieldValue.delete()
             const groupFieldPath = new firebaseAdmin.firestore.FieldPath('groups', teamName);
             updateData[groupFieldPath.toString()] = FieldValue.delete();
         } else {
-            // To update or set a field within a map, use dot notation
             updateData[`groups.${teamName}`] = group;
         }
         await tournamentRef.update(updateData);
-        // Do not revalidate here, as real-time listeners will handle the update.
         return { success: true, message: `Team ${teamName} assigned to ${group || 'Unassigned'}.` };
     } catch (error: any) {
         console.error('Error updating team group:', error);
@@ -608,7 +611,6 @@ export async function manageTournamentGroups(tournamentId: string, reset: boolea
             const approvedTeams = registrationsSnapshot.docs.map(doc => doc.data().teamName);
 
             if (approvedTeams.length < 25 && !reset) {
-                // Not enough teams for automatic grouping, do nothing unless it's a manual reset
                 return;
             }
             
@@ -619,13 +621,12 @@ export async function manageTournamentGroups(tournamentId: string, reset: boolea
             let teamsToGroup: string[];
             let groupCount: number;
 
-            // Logic for initial group creation or reset
             if (reset || !tournamentData.groupsInitialized) {
                 teamsToGroup = deterministicShuffle(approvedTeams, tournamentId);
                 const baseGroupSize = 20;
                 groupCount = Math.max(2, Math.ceil(teamsToGroup.length / baseGroupSize));
-                groups = {}; // Reset groups
-            } else { // Logic for adding new teams to existing groups
+                groups = {}; 
+            } else { 
                 teamsToGroup = deterministicShuffle(newTeams, tournamentId + 'new');
                 const groupSizes = Object.values(groups).reduce((acc: any, groupName: any) => {
                     acc[groupName] = (acc[groupName] || 0) + 1;
@@ -636,14 +637,12 @@ export async function manageTournamentGroups(tournamentId: string, reset: boolea
             
             if (teamsToGroup.length === 0) return;
 
-            // Distribute teams into groups
             for (let i = 0; i < teamsToGroup.length; i++) {
                 const team = teamsToGroup[i];
-                const groupName = String.fromCharCode(65 + (i % groupCount)); // A, B, C...
+                const groupName = String.fromCharCode(65 + (i % groupCount)); 
                 groups[team] = groupName;
             }
 
-            // If we are adding new teams, rebalance by sorting groups by size and adding there
             if (!reset && tournamentData.groupsInitialized) {
                 const sortedGroups = Object.keys(groups).sort((a,b) => {
                     const countA = Object.values(groups).filter(g => g === a).length;
@@ -710,5 +709,3 @@ export async function deletePhoto(id: string) {
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }
-
-    

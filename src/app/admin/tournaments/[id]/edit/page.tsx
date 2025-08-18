@@ -1,4 +1,5 @@
 
+
 import TournamentForm from '../../tournament-form';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { db } from '@/lib/firebase-admin';
@@ -35,7 +36,9 @@ async function getTournamentData(id: string) {
         dataAiHint: data.dataAiHint || '',
         description: data.description || '',
         rules: data.rules || '',
-        registrationOpen: data.registrationOpen !== false, // Default to true if not set
+        registrationOpen: data.registrationOpen !== false,
+        registrationCodeEnabled: data.registrationCodeEnabled === true,
+        registrationCode: data.registrationCode || '',
     };
 }
 

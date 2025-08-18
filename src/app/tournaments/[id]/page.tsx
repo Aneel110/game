@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo } from "react";
@@ -34,6 +35,7 @@ type Tournament = {
     finalistLeaderboardActive?: boolean;
     groups?: { [key: string]: string };
     registrationOpen?: boolean;
+    registrationCodeEnabled?: boolean;
 };
 
 type Registration = {
@@ -284,9 +286,10 @@ export default function TournamentDetailPage() {
                             </Button>
                         ) : (
                             <TournamentRegistrationForm 
-                            tournamentId={tournament.id}
-                            isLoggedIn={!!user}
-                            isAlreadyRegistered={!!isAlreadyRegistered}
+                                tournamentId={tournament.id}
+                                isLoggedIn={!!user}
+                                isAlreadyRegistered={!!isAlreadyRegistered}
+                                isCodeProtected={!!tournament.registrationCodeEnabled}
                             />
                         )}
                         </div>

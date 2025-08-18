@@ -30,11 +30,21 @@ export const tournamentSchema = z.object({
   rules: z.string().optional(),
   leaderboard: z.array(leaderboardEntrySchema).optional(),
   registrationOpen: z.coerce.boolean().default(true),
+  registrationCodeEnabled: z.coerce.boolean().default(false),
+  registrationCode: z.string().optional(),
   finalistLeaderboardActive: z.boolean().default(false),
   finalistLeaderboard: z.array(leaderboardEntrySchema).optional(),
   groups: z.record(z.string()).optional(),
   groupsLastUpdated: z.any().optional(),
   groupsInitialized: z.boolean().default(false), // To track if initial grouping has been done
+}).refine(data => {
+    if (data.registrationCodeEnabled) {
+        return data.registrationCode && data.registrationCode.length > 0;
+    }
+    return true;
+}, {
+    message: 'Registration code is required when enabled.',
+    path: ['registrationCode'],
 });
 
 export const finalistFormSchema = z.object({
@@ -66,6 +76,7 @@ export const registrationSchema = z.object({
     }),
   registeredById: z.string().min(1),
   registeredByName: z.string().min(1),
+  registrationCode: z.string().optional(),
 });
 
 const socialLinksSchema = z.object({

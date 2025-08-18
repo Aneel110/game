@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
+import { Loader2, PlusCircle, Trash2, KeyRound } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { registerForTournament } from '@/lib/actions';
 import { registrationSchema, type RegistrationFormValues } from '@/lib/schemas';
@@ -37,9 +37,10 @@ interface TournamentRegistrationFormProps {
   tournamentId: string;
   isLoggedIn: boolean;
   isAlreadyRegistered: boolean;
+  isCodeProtected: boolean;
 }
 
-export default function TournamentRegistrationForm({ tournamentId, isLoggedIn, isAlreadyRegistered }: TournamentRegistrationFormProps) {
+export default function TournamentRegistrationForm({ tournamentId, isLoggedIn, isAlreadyRegistered, isCodeProtected }: TournamentRegistrationFormProps) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -54,6 +55,7 @@ export default function TournamentRegistrationForm({ tournamentId, isLoggedIn, i
       ],
       registeredById: user?.uid || '',
       registeredByName: user?.displayName || '',
+      registrationCode: '',
     },
   });
 
@@ -62,7 +64,6 @@ export default function TournamentRegistrationForm({ tournamentId, isLoggedIn, i
     name: 'players',
   });
   
-  // Set user info when auth state changes
   useState(() => {
     if (user) {
       form.setValue('registeredById', user.uid);
@@ -129,6 +130,24 @@ export default function TournamentRegistrationForm({ tournamentId, isLoggedIn, i
             </DialogHeader>
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    {isCodeProtected && (
+                        <FormField
+                            control={form.control}
+                            name="registrationCode"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="flex items-center gap-2">
+                                        <KeyRound className="w-4 h-4 text-primary" />
+                                        Registration Code
+                                    </FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="Enter tournament code" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    )}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField
                             control={form.control}
@@ -257,7 +276,6 @@ export default function TournamentRegistrationForm({ tournamentId, isLoggedIn, i
     if (isAlreadyRegistered) {
         return <Button size="lg" disabled>Already Registered</Button>
     }
-    // The dialog itself handles the login prompt
     return <Button size="lg">Register Your Team</Button>
   }
 

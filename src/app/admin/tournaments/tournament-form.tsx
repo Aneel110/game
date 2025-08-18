@@ -14,8 +14,8 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { createTournament, updateTournament } from '@/lib/actions';
 import { tournamentSchema } from '@/lib/schemas';
-import { Form, FormControl, FormField, FormItem, FormMessage, FormLabel } from '@/components/ui/form';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Form, FormControl, FormField, FormItem, FormMessage, FormLabel, FormDescription } from '@/components/ui/form';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { useEffect } from 'react';
 
@@ -49,14 +49,14 @@ export default function TournamentForm({ tournamentId, defaultValues }: Tourname
         description: '',
         rules: 'Be respectful to all players and staff.\nNo cheating, scripting, or exploiting bugs.\nAdmins have the final say in all disputes.\nCheck-in is required 30 minutes before the tournament starts.\nTeams must have between 4 and 6 players.',
         registrationOpen: true,
+        registrationCodeEnabled: false,
+        registrationCode: '',
     }
   });
   
-  // This is a workaround to ensure the date from Firestore is formatted correctly for the datetime-local input
   useEffect(() => {
     if (defaultValues?.date) {
       const date = new Date(defaultValues.date);
-      // Format to YYYY-MM-DDTHH:mm
       const formattedDate = date.toISOString().slice(0, 16);
       form.setValue('date', formattedDate);
     }
@@ -81,6 +81,8 @@ export default function TournamentForm({ tournamentId, defaultValues }: Tourname
         toast({ title: 'Error', description: result.message, variant: 'destructive' });
     }
   }
+
+  const registrationCodeEnabled = form.watch('registrationCodeEnabled');
 
   return (
     <Form {...form}>
@@ -185,31 +187,75 @@ export default function TournamentForm({ tournamentId, defaultValues }: Tourname
           )}
         />
         
-        <FormField
-          control={form.control}
-          name="registrationOpen"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-              <div className="space-y-0.5">
-                <FormLabel className="text-base">
-                  Registration Status
-                </FormLabel>
-                <p className="text-sm text-muted-foreground">
-                  Allow users to register for this tournament.
-                </p>
-              </div>
-              <FormControl>
-                <Switch
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                  name={field.name}
-                  ref={field.ref}
-                  onBlur={field.onBlur}
+        <Card>
+            <CardHeader>
+                <CardTitle>Registration Settings</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                <FormField
+                    control={form.control}
+                    name="registrationOpen"
+                    render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                            <FormLabel className="text-base">
+                            Registration Status
+                            </FormLabel>
+                            <FormDescription>
+                            Allow users to register for this tournament.
+                            </FormDescription>
+                        </div>
+                        <FormControl>
+                            <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            />
+                        </FormControl>
+                        </FormItem>
+                    )}
                 />
-              </FormControl>
-            </FormItem>
-          )}
-        />
+
+                <FormField
+                    control={form.control}
+                    name="registrationCodeEnabled"
+                    render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                            <FormLabel className="text-base">
+                            Require Registration Code
+                            </FormLabel>
+                            <FormDescription>
+                            If enabled, users must enter a secret code to register.
+                            </FormDescription>
+                        </div>
+                        <FormControl>
+                            <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            />
+                        </FormControl>
+                        </FormItem>
+                    )}
+                />
+
+                {registrationCodeEnabled && (
+                    <FormField
+                        control={form.control}
+                        name="registrationCode"
+                        render={({ field }) => (
+                            <FormItem>
+                                <Label>Registration Code</Label>
+                                <FormControl>
+                                    <Input placeholder="Enter the secret code" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                )}
+            </CardContent>
+        </Card>
+
 
         <div className="flex justify-end gap-4">
           <Button variant="outline" type="button" onClick={() => router.back()}>Cancel</Button>

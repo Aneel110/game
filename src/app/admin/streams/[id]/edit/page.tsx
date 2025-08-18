@@ -11,6 +11,12 @@ type EditStreamPageProps = {
     }
 }
 
+function getWatchUrl(embedUrl: string | undefined): string {
+    if (!embedUrl) return '';
+    const videoId = embedUrl.split('/').pop()?.split('?')[0];
+    return `https://www.youtube.com/watch?v=${videoId}`;
+}
+
 async function getStreamData(id: string) {
     if (!db) return null;
     const docRef = db.collection("streams").doc(id);
@@ -23,9 +29,8 @@ async function getStreamData(id: string) {
     const data = docSnap.data();
     if (!data) return null;
 
-    // The form expects a regular youtube.com/watch?v=... URL
-    const videoId = data.youtubeUrl.split('/').pop();
-    const originalUrl = `https://www.youtube.com/watch?v=${videoId}`;
+    // The form expects a regular youtube.com/watch?v=... URL, but we store the embed URL.
+    const originalUrl = getWatchUrl(data.youtubeUrl);
     
     return {
         id: docSnap.id,
